@@ -1,5 +1,5 @@
 """Mentions API endpoints."""
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
@@ -19,7 +19,7 @@ async def list_mentions(
     db: Session = Depends(get_db),
 ):
     """List recent mentions. Limits to max_per_contact per person on dashboard."""
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = datetime.now(UTC) - timedelta(days=days)
     query = (
         db.query(Mention)
         .options(joinedload(Mention.contact))

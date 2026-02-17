@@ -1,5 +1,5 @@
 """SQLAlchemy models for Phase 1 data model."""
-from datetime import datetime
+from datetime import UTC, datetime
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float
 from sqlalchemy.orm import relationship
 
@@ -18,8 +18,8 @@ class Contact(Base):
     role_org = Column(Text, nullable=True)
     connection_to_solomon = Column(Text, nullable=True)
     primary_interests = Column(Text, nullable=True)  # For future enrichment
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
     mentions = relationship("Mention", back_populates="contact")
     outreach_log = relationship("OutreachLog", back_populates="contact")
@@ -35,7 +35,7 @@ class ContactInfo(Base):
     type = Column(String(50), nullable=False)  # email, linkedin, twitter, phone, etc.
     value = Column(String(500), nullable=False)
     is_primary = Column(Integer, default=0)  # 0 or 1
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     contact = relationship("Contact", back_populates="contact_info")
 
@@ -52,7 +52,7 @@ class Mention(Base):
     snippet = Column(Text, nullable=True)
     published_at = Column(DateTime, nullable=True)
     relevance_score = Column(Float, nullable=True)  # Phase 3
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     contact = relationship("Contact", back_populates="mentions")
 
@@ -68,6 +68,6 @@ class OutreachLog(Base):
     content = Column(Text, nullable=True)
     sent_at = Column(DateTime, nullable=True)
     response_status = Column(String(50), nullable=True)  # sent, replied, no_response, bounced
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     contact = relationship("Contact", back_populates="outreach_log")
