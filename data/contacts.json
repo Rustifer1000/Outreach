@@ -1,0 +1,2442 @@
+[
+  {
+    "list_number": 1,
+    "name": "Stuart Russell",
+    "role_org": "Professor of Computer Science, UC Berkeley; Author of *Human Compatible*",
+    "connection_to_solomon": "Leading voice arguing AI must be redesigned to be provably beneficial to humans; directly aligned with Solomon's mission to ensure AI serves rather than undermines institutions.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 2,
+    "name": "Max Tegmark",
+    "role_org": "Professor of Physics, MIT; Co-founder, Future of Life Institute",
+    "connection_to_solomon": "Organizes global conversations on existential AI risk; his institute funds research on AI safety that intersects with protecting civic infrastructure.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 3,
+    "name": "Yoshua Bengio",
+    "role_org": "Professor, Université de Montréal; Turing Award winner",
+    "connection_to_solomon": "One of the \"godfathers of deep learning\" who has pivoted hard toward AI safety; his public advocacy for AI regulation aligns with Solomon's protective mission.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 4,
+    "name": "Paul Christiano",
+    "role_org": "Founder, Alignment Research Center (ARC)",
+    "connection_to_solomon": "Develops technical approaches to AI alignment; his work on ensuring AI systems follow human intent is foundational to Solomon's design philosophy.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 5,
+    "name": "Eliezer Yudkowsky",
+    "role_org": "Co-founder, Machine Intelligence Research Institute (MIRI)",
+    "connection_to_solomon": "Decades-long advocate for AI alignment; his writings on AI risk have shaped the intellectual framework Solomon operates within.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 6,
+    "name": "Connor Leahy",
+    "role_org": "CEO, Conjecture; Co-founder, EleutherAI",
+    "connection_to_solomon": "Bridges open-source AI development and safety concerns; accessible advocate who communicates alignment concepts to broader tech audiences.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 7,
+    "name": "Dan Hendrycks",
+    "role_org": "Director, Center for AI Safety (CAIS)",
+    "connection_to_solomon": "Organized the landmark open letter on AI existential risk; his center catalyzes safety research directly relevant to Solomon's institutional protection goals.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 8,
+    "name": "Jan Leike",
+    "role_org": "Former head of Alignment, OpenAI (now at Anthropic)",
+    "connection_to_solomon": "Led superalignment efforts at OpenAI before departing over safety concerns; his trajectory illustrates the urgency Solomon addresses.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 9,
+    "name": "Dario Amodei",
+    "role_org": "CEO, Anthropic",
+    "connection_to_solomon": "Left OpenAI to build a safety-focused AI lab; his \"responsible scaling\" framework parallels Solomon's approach to managing AI's institutional impacts.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 10,
+    "name": "Daniela Amodei",
+    "role_org": "President, Anthropic",
+    "connection_to_solomon": "Shapes Anthropic's policy and institutional engagement; her focus on responsible AI deployment connects to Solomon's civic protection mission.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 11,
+    "name": "Helen Toner",
+    "role_org": "Director of Strategy, Georgetown Center for Security and Emerging Technology (CSET)",
+    "connection_to_solomon": "Former OpenAI board member who prioritized safety over commercial interests; her governance expertise is directly relevant to Solomon's institutional focus.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 12,
+    "name": "Holden Karnofsky",
+    "role_org": "Co-founder, Open Philanthropy",
+    "connection_to_solomon": "Directs hundreds of millions toward AI safety research; his \"most important century\" thesis frames the urgency Solomon responds to.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 13,
+    "name": "Toby Ord",
+    "role_org": "Senior Research Fellow, Oxford Future of Humanity Institute; Author of *The Precipice*",
+    "connection_to_solomon": "Frames AI as a leading existential risk; his probabilistic risk framework could inform Solomon's approach to institutional threats.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 14,
+    "name": "Nick Bostrom",
+    "role_org": "Founding Director, Future of Humanity Institute, Oxford",
+    "connection_to_solomon": "Author of *Superintelligence*; his foundational work on AI risk scenarios provides the intellectual backdrop for Solomon's mission.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 15,
+    "name": "Jaan Tallinn",
+    "role_org": "Co-founder, Skype; Co-founder, Centre for the Study of Existential Risk",
+    "connection_to_solomon": "Major funder of AI safety research; his philanthropic network connects to foundations Solomon could engage.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 16,
+    "name": "Andrew Critch",
+    "role_org": "Research Scientist, UC Berkeley; Co-founder, BERI",
+    "connection_to_solomon": "Works on multi-agent AI safety — directly relevant to Solomon's concern about AI systems interacting with and disrupting institutions.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 17,
+    "name": "Evan Hubinger",
+    "role_org": "Research Scientist, Anthropic",
+    "connection_to_solomon": "Leading researcher on deceptive alignment and inner misalignment; his technical work informs how Solomon might detect AI systems acting against institutional interests.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 18,
+    "name": "Beth Barnes",
+    "role_org": "Founder, Model Evaluation and Threat Research (METR)",
+    "connection_to_solomon": "Develops evaluations for dangerous AI capabilities; her frameworks could help Solomon assess AI threats to institutions.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 19,
+    "name": "Neel Nanda",
+    "role_org": "Mechanistic Interpretability researcher, Google DeepMind",
+    "connection_to_solomon": "Works on understanding how AI models actually think; this transparency research is essential for Solomon's goal of trustworthy AI.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 20,
+    "name": "Chris Olah",
+    "role_org": "Co-founder, Anthropic; Interpretability researcher",
+    "connection_to_solomon": "Pioneer of neural network interpretability; his work on making AI systems understandable supports Solomon's mission of AI accountability.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 21,
+    "name": "Ajeya Cotra",
+    "role_org": "Senior Program Officer, Open Philanthropy",
+    "connection_to_solomon": "Developed influential AI timelines forecast; shapes major funding decisions in AI safety that could support Solomon-aligned work.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 22,
+    "name": "Katja Grace",
+    "role_org": "Founder, AI Impacts",
+    "connection_to_solomon": "Conducts quantitative research on AI progress and societal impacts; her data-driven approach could inform Solomon's strategy.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 23,
+    "name": "Allan Dafoe",
+    "role_org": "President, Centre for the Governance of AI (GovAI)",
+    "connection_to_solomon": "Leads research on AI governance frameworks; directly relevant to Solomon's concern with protecting civic institutions from AI disruption.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 24,
+    "name": "Lennart Heim",
+    "role_org": "AI Governance researcher, RAND Corporation",
+    "connection_to_solomon": "Expert on compute governance and AI regulation; his policy work intersects with Solomon's institutional protection goals.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 25,
+    "name": "Jack Clark",
+    "role_org": "Co-founder, Anthropic; Creator of the AI Index",
+    "connection_to_solomon": "Tracks AI progress through the Stanford AI Index; his data and policy advocacy connect to Solomon's evidence-based approach.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 26,
+    "name": "Miles Brundage",
+    "role_org": "Former Head of Policy Research, OpenAI",
+    "connection_to_solomon": "Researches AI governance and the societal implications of AI progress; his work on responsible publication norms relates to Solomon's mission.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 27,
+    "name": "Divya Siddarth",
+    "role_org": "Co-founder, Collective Intelligence Project",
+    "connection_to_solomon": "Works on democratic governance of AI systems; directly aligned with Solomon's goal of protecting civic institutions and democratic processes.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 28,
+    "name": "Luke Muehlhauser",
+    "role_org": "Program Officer, Open Philanthropy; former Executive Director, MIRI",
+    "connection_to_solomon": "Bridges technical AI safety and philanthropic strategy; his grant-making influences which AI safety projects get funded.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 29,
+    "name": "David Krueger",
+    "role_org": "Assistant Professor, University of Cambridge",
+    "connection_to_solomon": "Researches AI alignment and the risks of advanced AI; his academic work on goal misgeneralization informs Solomon's design challenges.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 30,
+    "name": "Jacob Steinhardt",
+    "role_org": "Assistant Professor, UC Berkeley",
+    "connection_to_solomon": "Leads research on AI robustness and forecasting; his work on predicting AI capabilities is relevant to Solomon's preparedness mission.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 31,
+    "name": "Victoria Krakovna",
+    "role_org": "Research Scientist, Google DeepMind; Co-founder, Future of Life Institute",
+    "connection_to_solomon": "Works on AI safety side effects and specification gaming; her research catalogs ways AI can undermine intended goals — central to Solomon's concerns.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 32,
+    "name": "Rohin Shah",
+    "role_org": "Research Scientist, Google DeepMind",
+    "connection_to_solomon": "Works on value alignment and AI safety; his research on reward modeling informs how Solomon might align AI with institutional preservation.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 33,
+    "name": "Sam Bowman",
+    "role_org": "Associate Professor, NYU; former Anthropic researcher",
+    "connection_to_solomon": "Bridges NLP research and AI safety; his work on language model evaluation relates to Solomon's need for trustworthy AI communication.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 34,
+    "name": "Percy Liang",
+    "role_org": "Associate Professor, Stanford; Director, Center for Research on Foundation Models (CRFM)",
+    "connection_to_solomon": "Leads the HELM benchmark for foundation models; his transparency work supports Solomon's goal of accountable AI systems.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 35,
+    "name": "Arvind Narayanan",
+    "role_org": "Professor of Computer Science, Princeton; Author of *AI Snake Oil*",
+    "connection_to_solomon": "Debunks AI hype while identifying real risks; his rigorous approach to AI claims aligns with Solomon's evidence-based mission.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 36,
+    "name": "Yoshua Bengio's Lab Associates — Sébastien Bubeck",
+    "role_org": "Researcher, Microsoft Research",
+    "connection_to_solomon": "Works on emergent capabilities of large language models; understanding these emergent behaviors is key to Solomon's institutional risk assessment.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 37,
+    "name": "Nathan Lebenz",
+    "role_org": "Host, *The Cognitive Revolution* podcast",
+    "connection_to_solomon": "Accessible bridge figure who interviews AI safety researchers and translates complex alignment concepts for broader audiences; potential amplifier for Solomon's message.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 38,
+    "name": "Rob Bensinger",
+    "role_org": "Communications Lead, MIRI",
+    "connection_to_solomon": "Translates technical AI alignment research into accessible narratives; his communications expertise could help Solomon reach broader audiences.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 39,
+    "name": "Oliver Zhang",
+    "role_org": "Research Analyst, Centre for the Governance of AI",
+    "connection_to_solomon": "Emerging voice in AI governance research; more accessible than senior figures and connected to the Oxford/GovAI network.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 40,
+    "name": "Rumman Chowdhury",
+    "role_org": "CEO, Humane Intelligence; former Director of ML Ethics, Twitter",
+    "connection_to_solomon": "Bridges AI ethics practice and policy; her experience implementing responsible AI at scale informs Solomon's institutional approach.",
+    "category": "Category 1: AI Alignment & Safety",
+    "subcategory": null
+  },
+  {
+    "list_number": 41,
+    "name": "Peter Diamandis",
+    "role_org": "Founder, XPRIZE & Singularity University; Host, *Moonshots & Mindsets* podcast",
+    "connection_to_solomon": "Massive platform for technology optimism; engaging him on Solomon reframes AI protection as a moonshot opportunity, not just risk mitigation.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 42,
+    "name": "Ray Kurzweil",
+    "role_org": "Director of Engineering, Google; Author of *The Singularity Is Nearer*",
+    "connection_to_solomon": "The most prominent AI futurist; his optimistic timeline forces Solomon to articulate why institutional protection is needed even in optimistic scenarios.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 43,
+    "name": "Amy Webb",
+    "role_org": "Founder, Future Today Institute; Author of *The Genesis Machine*",
+    "connection_to_solomon": "Annual tech trend forecaster with corporate and government audience; her strategic foresight methodology could frame Solomon's institutional protection agenda.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 44,
+    "name": "Azeem Azhar",
+    "role_org": "Founder, Exponential View; Author of *The Exponential Age*",
+    "connection_to_solomon": "Influential newsletter and podcast reaching tech leaders and policymakers; his \"exponential gap\" thesis (technology outpacing institutions) is exactly Solomon's concern.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 45,
+    "name": "Kevin Kelly",
+    "role_org": "Co-founder, Wired; Author of *The Inevitable*",
+    "connection_to_solomon": "Shapes how mainstream culture understands technology trends; his \"technium\" framework could incorporate Solomon's institutional protection as necessary co-evolution.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 46,
+    "name": "Martin Ford",
+    "role_org": "Author of *Rise of the Robots* and *Rule of the Robots*",
+    "connection_to_solomon": "Focuses specifically on AI's economic and social disruption; his analysis of institutional stress from automation directly parallels Solomon's mission.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 47,
+    "name": "Kai-Fu Lee",
+    "role_org": "CEO, Sinovation Ventures; Author of *AI Superpowers*",
+    "connection_to_solomon": "Bridges US-China AI perspectives; his focus on AI's social impact and displacement aligns with Solomon's concern for institutional resilience.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 48,
+    "name": "Vivek Wadhwa",
+    "role_org": "Distinguished Fellow, Harvard Law School; Author of *Your Happiness Was Hacked*",
+    "connection_to_solomon": "Writes about technology's impact on society and individual wellbeing; his accessible style could help popularize Solomon's message.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 49,
+    "name": "Mustafa Suleyman",
+    "role_org": "CEO, Microsoft AI; Co-founder, DeepMind; Author of *The Coming Wave*",
+    "connection_to_solomon": "His \"containment\" thesis argues AI is fundamentally difficult to control; Solomon's institutional approach offers a complementary response to his framework.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 50,
+    "name": "Reid Hoffman",
+    "role_org": "Co-founder, LinkedIn; Author of *Impromptu: Amplifying Our Humanity Through AI*",
+    "connection_to_solomon": "Major Silicon Valley networker who is engaged with AI's future; his broad influence and interest in AI's social dimensions make him a key flywheel node.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 51,
+    "name": "Tim Urban",
+    "role_org": "Creator, Wait But Why",
+    "connection_to_solomon": "His multi-part series on AI reached millions; his ability to make complex topics accessible could amplify Solomon's message to a massive audience.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 52,
+    "name": "Emad Mostaque",
+    "role_org": "Founder, Stability AI (former CEO)",
+    "connection_to_solomon": "Advocates for open-source AI and democratized access; his vision intersects with Solomon's concern about concentrating AI power away from institutions.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 53,
+    "name": "Tristan Harris",
+    "role_org": "Co-founder, Center for Humane Technology; featured in *The Social Dilemma*",
+    "connection_to_solomon": "Directly focused on technology's harm to social institutions; his framework of \"race to the bottom of the brain stem\" extends naturally to Solomon's AI concerns.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 54,
+    "name": "Aza Raskin",
+    "role_org": "Co-founder, Center for Humane Technology",
+    "connection_to_solomon": "Works alongside Tristan Harris on technology's institutional harms; his design background brings practical solutions to Solomon's mission.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 55,
+    "name": "Daniel Schmachtenberger",
+    "role_org": "Founding member, The Consilience Project",
+    "connection_to_solomon": "Focuses on existential risk and civilizational design; his \"metacrisis\" framework encompasses exactly the institutional threats Solomon addresses.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 56,
+    "name": "Nita Farahany",
+    "role_org": "Professor of Law & Philosophy, Duke; Author of *The Battle for Your Brain*",
+    "connection_to_solomon": "Expert on neurotechnology and cognitive liberty; her work on protecting human autonomy from technology parallels Solomon's institutional protection mission.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 57,
+    "name": "Juan Enriquez",
+    "role_org": "Managing Director, Excel Venture Management; TED speaker",
+    "connection_to_solomon": "Explores how technology reshapes human societies; his \"evolving ourselves\" thesis connects to Solomon's concern about AI-driven institutional evolution.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 58,
+    "name": "Jamie Metzl",
+    "role_org": "Senior Fellow, Atlantic Council; Author of *Hacking Darwin*",
+    "connection_to_solomon": "Bridges geopolitics and emerging technology; his policy network and focus on technology governance align with Solomon's civic mission.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 59,
+    "name": "Alec Ross",
+    "role_org": "Author of *The Industries of the Future*; former Senior Advisor for Innovation, State Department",
+    "connection_to_solomon": "Bridges technology and government policy; his experience translating tech trends for policymakers is directly relevant to Solomon's institutional focus.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 60,
+    "name": "David Autor",
+    "role_org": "Professor of Economics, MIT",
+    "connection_to_solomon": "Leading researcher on automation's impact on labor markets and inequality; his empirical work quantifies exactly the institutional disruption Solomon aims to mitigate.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 61,
+    "name": "Daron Acemoglu",
+    "role_org": "Institute Professor, MIT; Nobel Prize in Economics (2024)",
+    "connection_to_solomon": "Research on how technology and institutions co-evolve; his framework in *Power and Progress* argues technology must be directed toward broad benefit — Solomon's core thesis.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 62,
+    "name": "Erik Brynjolfsson",
+    "role_org": "Director, Stanford Digital Economy Lab; Co-author, *The Second Machine Age*",
+    "connection_to_solomon": "Documents how digital technologies transform economic institutions; his research directly informs Solomon's understanding of institutional disruption.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 63,
+    "name": "Andrew McAfee",
+    "role_org": "Principal Research Scientist, MIT; Co-author, *The Second Machine Age*",
+    "connection_to_solomon": "Studies technology's impact on organizations and society; his work on institutional adaptation to automation aligns with Solomon's mission.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 64,
+    "name": "Ramez Naam",
+    "role_org": "Author of the *Nexus* trilogy; former partner, Apex Ventures",
+    "connection_to_solomon": "Science fiction writer and clean tech investor who imagines AI futures; his narrative skills could help communicate Solomon's vision.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 65,
+    "name": "Steven Johnson",
+    "role_org": "Author of *Where Good Ideas Come From*; Host, PBS's *Extra Life*",
+    "connection_to_solomon": "Popularizes innovation history and emergence; his platform could frame Solomon as the next necessary institutional innovation.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 66,
+    "name": "Jason Silva",
+    "role_org": "Host, National Geographic's *Brain Games*; futurist media personality",
+    "connection_to_solomon": "Reaches mainstream audiences with technology narratives; could amplify Solomon's message beyond the typical AI safety echo chamber.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 67,
+    "name": "Balaji Srinivasan",
+    "role_org": "Angel investor; Author of *The Network State*",
+    "connection_to_solomon": "Provocative thinker about how technology reshapes governance and institutions; his large following could be engaged on Solomon's institutional protection thesis.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 68,
+    "name": "Ian Bremmer",
+    "role_org": "President, Eurasia Group; Author of *The Power of Crisis*",
+    "connection_to_solomon": "Frames AI governance as a geopolitical challenge; his network of world leaders and policymakers could amplify Solomon's institutional message.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 69,
+    "name": "Parag Khanna",
+    "role_org": "Founder, Climate Alpha; Author of *Move*",
+    "connection_to_solomon": "Studies how technology reshapes global systems and governance; his strategic advisory work reaches decision-makers Solomon needs to influence.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 70,
+    "name": "Jaron Lanier",
+    "role_org": "Interdisciplinary scientist, Microsoft; Author of *Ten Arguments for Deleting Your Social Media Accounts Right Now*",
+    "connection_to_solomon": "Pioneer VR inventor turned tech critic; his unique credibility as both insider and critic makes him ideal for Solomon's nuanced message.",
+    "category": "Category 2: Futurists & Tech Visionaries",
+    "subcategory": null
+  },
+  {
+    "list_number": 71,
+    "name": "Timnit Gebru",
+    "role_org": "Founder, Distributed AI Research Institute (DAIR)",
+    "connection_to_solomon": "Leading voice on AI harms to marginalized communities; her work on algorithmic bias in institutions directly parallels Solomon's protective mission.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 72,
+    "name": "Joy Buolamwini",
+    "role_org": "Founder, Algorithmic Justice League; Researcher, MIT Media Lab",
+    "connection_to_solomon": "Exposed facial recognition bias; her \"coded gaze\" framework demonstrates how AI already damages institutional fairness — exactly what Solomon aims to prevent.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 73,
+    "name": "Kate Crawford",
+    "role_org": "Research Professor, USC; Author of *Atlas of AI*",
+    "connection_to_solomon": "Maps AI's full supply chain of social and environmental harms; her systemic analysis informs Solomon's approach to institutional protection.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 74,
+    "name": "Meredith Whittaker",
+    "role_org": "President, Signal; Co-founder, AI Now Institute",
+    "connection_to_solomon": "Combines technical expertise with institutional critique of AI power; her advocacy for structural accountability aligns with Solomon's goals.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 75,
+    "name": "Safiya Umoja Noble",
+    "role_org": "Professor, UCLA; Author of *Algorithms of Oppression*",
+    "connection_to_solomon": "Documents how search algorithms reinforce racial and social biases within educational and information institutions; directly relevant to Solomon's educational mission.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 76,
+    "name": "Ruha Benjamin",
+    "role_org": "Professor of African American Studies, Princeton; Author of *Race After Technology*",
+    "connection_to_solomon": "Coined \"New Jim Code\" to describe discriminatory technology design; her framework for equitable technology aligns with Solomon's institutional justice goals.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 77,
+    "name": "Cathy O'Neil",
+    "role_org": "Author of *Weapons of Math Destruction*; Data scientist",
+    "connection_to_solomon": "Exposed how algorithmic decision-making damages educational, criminal justice, and financial institutions; her audit methodology could inform Solomon's approach.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 78,
+    "name": "Emily M. Bender",
+    "role_org": "Professor of Linguistics, University of Washington",
+    "connection_to_solomon": "Co-author of the \"Stochastic Parrots\" paper; her critique of large language models' limitations is relevant to Solomon's concern about AI undermining educational integrity.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 79,
+    "name": "Margaret Mitchell",
+    "role_org": "Chief Ethics Scientist, Hugging Face; former Google AI Ethics co-lead",
+    "connection_to_solomon": "Pioneer of AI model cards and documentation; her transparency frameworks support Solomon's goal of accountable AI in institutions.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 80,
+    "name": "Abeba Birhane",
+    "role_org": "Senior Fellow in Trustworthy AI, Mozilla Foundation",
+    "connection_to_solomon": "Studies values embedded in AI datasets; her work on how AI systems encode and perpetuate power structures informs Solomon's institutional analysis.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 81,
+    "name": "Os Keyes",
+    "role_org": "Researcher, University of Washington",
+    "connection_to_solomon": "Studies how AI classification systems affect marginalized communities; their work on institutional violence through technology informs Solomon's protective mission.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 82,
+    "name": "Deborah Raji",
+    "role_org": "CS PhD, UC Berkeley; Fellow, Mozilla Foundation",
+    "connection_to_solomon": "Developed frameworks for auditing AI systems; her work on accountability mechanisms directly supports Solomon's institutional oversight goals.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 83,
+    "name": "Rediet Abebe",
+    "role_org": "Assistant Professor, UC Berkeley; Co-founder, Black in AI",
+    "connection_to_solomon": "Applies algorithmic methods to social problems; her bridging of technical and social approaches exemplifies Solomon's interdisciplinary mission.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 84,
+    "name": "Sasha Costanza-Chock",
+    "role_org": "Associate Professor, Northeastern; Author of *Design Justice*",
+    "connection_to_solomon": "Develops frameworks for equitable technology design centered on community needs; their approach could shape Solomon's institutional engagement methodology.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 85,
+    "name": "Virginia Eubanks",
+    "role_org": "Associate Professor, University at Albany; Author of *Automating Inequality*",
+    "connection_to_solomon": "Documents how automated systems harm public institutions serving vulnerable populations; her case studies illustrate exactly the damage Solomon aims to prevent.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 86,
+    "name": "Frank Pasquale",
+    "role_org": "Professor of Law, Cornell; Author of *The Black Box Society*",
+    "connection_to_solomon": "Legal scholar focused on algorithmic accountability; his regulatory frameworks could inform Solomon's approach to institutional AI governance.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 87,
+    "name": "Woodrow Hartzog",
+    "role_org": "Professor of Law, Boston University",
+    "connection_to_solomon": "Expert on privacy, technology, and design law; his work on \"privacy's blueprint\" informs Solomon's approach to protecting individual rights within institutions.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 88,
+    "name": "Ryan Calo",
+    "role_org": "Professor of Law, University of Washington; Co-founder, AI Policy Lab",
+    "connection_to_solomon": "Leading AI law scholar; his work on legal frameworks for AI accountability directly supports Solomon's institutional governance mission.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 89,
+    "name": "Amba Kak",
+    "role_org": "Executive Director, AI Now Institute",
+    "connection_to_solomon": "Leads one of the foremost AI accountability research institutes; her policy work on regulating AI systems aligns with Solomon's institutional focus.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 90,
+    "name": "Sarah Myers West",
+    "role_org": "Managing Director, AI Now Institute",
+    "connection_to_solomon": "Researches the political economy of AI; her analysis of AI's impact on labor and democratic institutions directly informs Solomon's mission.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 91,
+    "name": "Roel Dobbe",
+    "role_org": "Assistant Professor, TU Delft; former AI Now researcher",
+    "connection_to_solomon": "Studies AI systems in high-stakes institutional settings (healthcare, criminal justice); his applied safety research aligns with Solomon's practical goals.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 92,
+    "name": "Solon Barocas",
+    "role_org": "Principal Researcher, Microsoft Research; Adjunct Professor, Cornell",
+    "connection_to_solomon": "Research on fairness and accountability in algorithmic decision-making; his work on discrimination in automated systems informs Solomon's anti-harm approach.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 93,
+    "name": "Moritz Hardt",
+    "role_org": "Director, Max Planck Institute for Intelligent Systems; Co-author, *Fairness and Machine Learning*",
+    "connection_to_solomon": "Foundational researcher in algorithmic fairness; his technical frameworks for measuring AI harm could be deployed in Solomon's institutional assessments.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 94,
+    "name": "Arvind Satyanarayan",
+    "role_org": "Associate Professor, MIT CSAIL",
+    "connection_to_solomon": "Builds visualization tools for understanding AI models; his transparency technology supports Solomon's goal of making AI comprehensible to institutional stakeholders.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 95,
+    "name": "Sandra Wachter",
+    "role_org": "Professor, Oxford Internet Institute",
+    "connection_to_solomon": "Expert on data ethics, AI regulation, and GDPR; her legal scholarship on algorithmic accountability is directly relevant to Solomon's governance framework.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 96,
+    "name": "Brent Mittelstadt",
+    "role_org": "Associate Professor, Oxford Internet Institute",
+    "connection_to_solomon": "Researches the ethics of algorithms and AI governance; his work on institutional responses to AI informs Solomon's strategy.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 97,
+    "name": "Jobin, Ienca & Vayena (Anna Googled Ethics Research Group, ETH Zurich)",
+    "role_org": "",
+    "connection_to_solomon": "Mapped the global landscape of AI ethics guidelines; their comparative analysis reveals gaps in institutional protection that Solomon could fill.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 98,
+    "name": "Elettra Bietti",
+    "role_org": "Assistant Professor, Northeastern University School of Law",
+    "connection_to_solomon": "Studies antitrust and AI governance; her work on concentrated AI power and its impact on democratic institutions aligns with Solomon's concerns.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 99,
+    "name": "Rishi Bommasani",
+    "role_org": "PhD Researcher, Stanford CRFM",
+    "connection_to_solomon": "Lead author of the foundational model research report; his comprehensive analysis of foundation model risks informs Solomon's institutional threat assessment.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 100,
+    "name": "Renée DiResta",
+    "role_org": "Research Manager, Stanford Internet Observatory",
+    "connection_to_solomon": "Expert on computational propaganda and information ecosystem integrity; her work on protecting information institutions from manipulation is core to Solomon's mission.",
+    "category": "Category 3: AI Ethics Scholars & Advocates",
+    "subcategory": null
+  },
+  {
+    "list_number": 101,
+    "name": "Darren Walker",
+    "role_org": "President, Ford Foundation",
+    "connection_to_solomon": "Leads one of the largest foundations focused on inequality and democratic institutions; his commitment to \"disrupting disruption\" aligns directly with Solomon's mission.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 102,
+    "name": "John Palfrey",
+    "role_org": "President, MacArthur Foundation",
+    "connection_to_solomon": "Oversees major grants in technology and society; former Harvard law professor focused on digital governance and institutional resilience.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 103,
+    "name": "Larry Kramer",
+    "role_org": "President, William and Flora Hewlett Foundation",
+    "connection_to_solomon": "Foundation has invested heavily in \"effective governance\" and technology accountability; his background in constitutional law connects to Solomon's civic protection goals.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 104,
+    "name": "Eric Schmidt",
+    "role_org": "Co-founder, Schmidt Futures; former CEO, Google",
+    "connection_to_solomon": "Massive philanthropic investment in AI and society; his Schmidt Futures initiative funds AI governance research directly relevant to Solomon.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 105,
+    "name": "Zia Khan",
+    "role_org": "Senior Vice President of Innovation, Rockefeller Foundation",
+    "connection_to_solomon": "Leads the foundation's technology and innovation strategy; his focus on \"precision public health\" and data for social good parallels Solomon's approach.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 106,
+    "name": "Pierre Omidyar",
+    "role_org": "Founder, Omidyar Network",
+    "connection_to_solomon": "Major funder of responsible technology and democratic resilience; his philanthropic portfolio directly targets the institutional threats Solomon addresses.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 107,
+    "name": "Eli Pariser",
+    "role_org": "Co-director, New_ Public; Author of *The Filter Bubble*",
+    "connection_to_solomon": "Builds tools for healthier digital public spaces; his work on restoring civic infrastructure online is directly aligned with Solomon's mission.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 108,
+    "name": "Craig Newmark",
+    "role_org": "Founder, Craigslist; Philanthropist (Craig Newmark Philanthropies)",
+    "connection_to_solomon": "Major funder of journalism and civic technology; his focus on protecting democratic infrastructure from digital threats parallels Solomon's goals.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 109,
+    "name": "Laura Arnold",
+    "role_org": "Co-founder, Arnold Ventures",
+    "connection_to_solomon": "Funds criminal justice reform and evidence-based policy; her foundation's focus on institutional accountability intersects with Solomon's AI governance concerns.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 110,
+    "name": "Jeff Skoll",
+    "role_org": "Founder, Skoll Foundation; Co-founder, Participant Media",
+    "connection_to_solomon": "Pioneer of social entrepreneurship funding; his foundation supports systems-change organizations aligned with Solomon's institutional protection mission.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 111,
+    "name": "Sally Osberg",
+    "role_org": "Former CEO, Skoll Foundation",
+    "connection_to_solomon": "Shaped the social entrepreneurship field; her network of social innovators could be activated for Solomon's institutional resilience work.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 112,
+    "name": "Connie Ballmer",
+    "role_org": "Co-founder, Ballmer Group",
+    "connection_to_solomon": "Focuses philanthropy on economic mobility and children's services; AI disruption to education and social services is core to Solomon's concerns.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 113,
+    "name": "Laurene Powell Jobs",
+    "role_org": "Founder, Emerson Collective",
+    "connection_to_solomon": "Invests in education, immigration, and media; her portfolio targets institutions that Solomon aims to protect from AI disruption.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 114,
+    "name": "Mark Surman",
+    "role_org": "President, Mozilla Foundation",
+    "connection_to_solomon": "Leads a major foundation focused on internet health and trustworthy AI; Mozilla's Responsible AI Challenge directly supports Solomon-aligned work.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 115,
+    "name": "Nneka Rimmer",
+    "role_org": "Director, Patrick J. McGovern Foundation",
+    "connection_to_solomon": "Foundation focuses specifically on AI and data for social impact; one of the few foundations with dedicated AI-for-good programming.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 116,
+    "name": "Vilas Dhar",
+    "role_org": "President, Patrick J. McGovern Foundation",
+    "connection_to_solomon": "Leads the foundation's AI and data strategy; his vision of \"responsible AI ecosystems\" aligns with Solomon's institutional approach.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 117,
+    "name": "Emma Tompkins",
+    "role_org": "Program Officer, Hewlett Foundation (Technology & Society)",
+    "connection_to_solomon": "Manages grants for AI accountability research; a key gatekeeper for funding Solomon-adjacent work.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 118,
+    "name": "Jonathan Kartt",
+    "role_org": "Executive Director, Tech Nonprofit Foundation (TechSoup)",
+    "connection_to_solomon": "Connects technology resources to nonprofits globally; his network could help Solomon reach institutional stakeholders at scale.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 119,
+    "name": "Gideon Malherbe",
+    "role_org": "Partner, Dalberg Advisors (AI for Development practice)",
+    "connection_to_solomon": "Advises foundations and governments on AI for social impact; his consulting network bridges philanthropy and institutional AI deployment.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 120,
+    "name": "Kevin Frazier",
+    "role_org": "Assistant Professor, St. Thomas Law; AI policy researcher",
+    "connection_to_solomon": "Emerging voice connecting AI governance to democratic institutions; his accessible scholarship bridges academy and policy — more reachable than senior figures.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 121,
+    "name": "Alexander Berger",
+    "role_org": "Co-CEO, Open Philanthropy",
+    "connection_to_solomon": "Oversees massive AI safety and governance grantmaking; his funding decisions shape which institutional protection projects get resourced.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 122,
+    "name": "Dustin Moskovitz",
+    "role_org": "Co-founder, Facebook; Co-founder, Good Ventures/Open Philanthropy",
+    "connection_to_solomon": "Major AI safety funder; his philanthropic platform could direct significant resources toward Solomon's institutional protection mission.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 123,
+    "name": "Cari Tuna",
+    "role_org": "President, Good Ventures; Co-founder, Open Philanthropy",
+    "connection_to_solomon": "Co-directs one of the largest foundations funding AI safety and governance research.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 124,
+    "name": "Patrick Collison",
+    "role_org": "CEO, Stripe; Co-founder, Arc Institute",
+    "connection_to_solomon": "Funds scientific research and institutional innovation; his interest in improving institutions through technology parallels Solomon's constructive approach.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 125,
+    "name": "Sam Bankman-Fried (cautionary case — his former associates)",
+    "role_org": "",
+    "connection_to_solomon": "The EA/AI safety funding ecosystem he disrupted still has active players; contacts like **Nick Beckstead** (former FTX Foundation) and **Leopold Aschenbrenner** remain influential.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 126,
+    "name": "Leopold Aschenbrenner",
+    "role_org": "Former OpenAI researcher; Author of \"Situational Awareness\"",
+    "connection_to_solomon": "His influential essay on AI timelines and national security has shaped policy thinking; his framework for AI's institutional implications connects to Solomon.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 127,
+    "name": "Jason Matheny",
+    "role_org": "President, RAND Corporation; former Director, IARPA",
+    "connection_to_solomon": "Bridges intelligence community and AI policy research; RAND's work on AI's societal impact directly informs Solomon's threat assessment.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 128,
+    "name": "William MacAskill",
+    "role_org": "Associate Professor, Oxford; Author of *What We Owe the Future*",
+    "connection_to_solomon": "Co-founder of effective altruism movement; his longtermist framework positions institutional protection from AI as a moral priority.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 129,
+    "name": "Luke Freeman",
+    "role_org": "Executive Director, Giving What We Can",
+    "connection_to_solomon": "Connects effective altruism donors to high-impact causes; could channel philanthropic resources toward Solomon's mission.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 130,
+    "name": "Brigitte Hoyer Gosselink",
+    "role_org": "Head of Impact, Google.org",
+    "connection_to_solomon": "Directs Google's $100M+ annual giving in technology for social good; her programs fund exactly the kind of institutional support Solomon provides.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 131,
+    "name": "Justin Rockefeller",
+    "role_org": "Co-founder, The ImPact; Trustee, Rockefeller Brothers Fund",
+    "connection_to_solomon": "Bridges old-money philanthropy and impact investing; his network could connect Solomon to major institutional funders.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 132,
+    "name": "Laura Arrillaga-Andreessen",
+    "role_org": "Founder, Stanford PACS (Center on Philanthropy and Civil Society)",
+    "connection_to_solomon": "Shapes how Silicon Valley engages with philanthropy; her academic platform could legitimize Solomon's approach within tech philanthropy circles.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 133,
+    "name": "Clara Tsao",
+    "role_org": "Co-founder, FilecoinFoundation for the Decentralized Web",
+    "connection_to_solomon": "Works at intersection of technology and public interest infrastructure; her experience with technology governance informs Solomon's institutional approach.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 134,
+    "name": "Tara Dawson McGuinness",
+    "role_org": "Co-founder, New America's New Practice Lab; Author of *Power to the Public*",
+    "connection_to_solomon": "Expert on making government services work with technology; her practical approach to institutional technology adoption aligns with Solomon's mission.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 135,
+    "name": "Anne-Marie Slaughter",
+    "role_org": "CEO, New America",
+    "connection_to_solomon": "Leads a major think tank focused on technology and public policy; her platform and network reach the institutional leaders Solomon needs to engage.",
+    "category": "Category 4: Foundation & Philanthropy Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 136,
+    "name": "Fei-Fei Li",
+    "role_org": "Professor, Stanford; Co-founder, AI4ALL; former Stanford HAI Co-director",
+    "connection_to_solomon": "Pioneer of AI education equity through AI4ALL; her institutional influence and commitment to human-centered AI directly supports Solomon's mission.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 137,
+    "name": "James Manyika",
+    "role_org": "SVP, Research, Technology & Society, Google; former McKinsey Global Institute Director",
+    "connection_to_solomon": "Bridges corporate AI research and societal impact assessment; his economic analyses of AI disruption inform Solomon's institutional focus.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 138,
+    "name": "Oren Etzioni",
+    "role_org": "Founding CEO (former), Allen Institute for AI (AI2); Professor, University of Washington",
+    "connection_to_solomon": "Advocates for beneficial AI and AI transparency; his institute's work on common-sense AI relates to Solomon's need for AI that serves institutions.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 139,
+    "name": "Jake Porway",
+    "role_org": "Founder, DataKind",
+    "connection_to_solomon": "Pioneers data science for social good; his network of data volunteers demonstrates the collaborative model Solomon could adopt.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 140,
+    "name": "Rayid Ghani",
+    "role_org": "Distinguished Professor, CMU; former Chief Data Scientist, Obama campaign",
+    "connection_to_solomon": "Applies machine learning to social problems (education, healthcare, criminal justice); his project-based approach directly addresses institutions Solomon protects.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 141,
+    "name": "Natasha Crampton",
+    "role_org": "Chief Responsible AI Officer, Microsoft",
+    "connection_to_solomon": "Leads responsible AI governance at one of the world's largest AI companies; her institutional frameworks could inform Solomon's approach.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 142,
+    "name": "Mira Murati",
+    "role_org": "Former CTO, OpenAI",
+    "connection_to_solomon": "Shaped one of the most influential AI systems; her experience with AI deployment at scale informs the practical challenges Solomon must address.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 143,
+    "name": "Lila Ibrahim",
+    "role_org": "COO, Google DeepMind",
+    "connection_to_solomon": "Oversees operations at a leading AI lab; her experience bridging research and institutional deployment is relevant to Solomon's practical goals.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 144,
+    "name": "Shakir Mohamed",
+    "role_org": "Research Director, Google DeepMind; Co-founder, Deep Learning Indaba",
+    "connection_to_solomon": "Advocates for decolonizing AI and inclusive research; his work on AI's impact in underserved communities aligns with Solomon's equity mission.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 145,
+    "name": "Rebecca Finlay",
+    "role_org": "CEO, Partnership on AI",
+    "connection_to_solomon": "Leads the multi-stakeholder AI governance organization; her convening power across industry, academia, and civil society is directly useful for Solomon.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 146,
+    "name": "Terah Lyons",
+    "role_org": "Executive Director (former), Partnership on AI; former Obama White House AI policy",
+    "connection_to_solomon": "Bridges government AI policy and multi-stakeholder governance; her experience shapes institutional approaches Solomon could adopt.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 147,
+    "name": "Stefaan Verhulst",
+    "role_org": "Co-founder, The GovLab, NYU",
+    "connection_to_solomon": "Researches data governance and collaborative governance innovations; his institutional design work directly supports Solomon's civic protection mission.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 148,
+    "name": "Beth Simone Noveck",
+    "role_org": "Director, The GovLab; former White House Deputy CTO",
+    "connection_to_solomon": "Expert in using technology to strengthen democratic institutions; her \"smart citizens, smarter state\" vision aligns perfectly with Solomon's goals.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 149,
+    "name": "Lucy Bernholz",
+    "role_org": "Senior Research Scholar, Stanford PACS; Author of *How We Give Now*",
+    "connection_to_solomon": "Studies the intersection of technology and philanthropy; her work on digital civil society maps the institutional landscape Solomon aims to protect.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 150,
+    "name": "Hala Hanna",
+    "role_org": "Managing Director, MIT Solve",
+    "connection_to_solomon": "Runs MIT's social impact platform connecting innovators with institutional challenges; her network bridges tech and social sectors Solomon must engage.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 151,
+    "name": "Kentaro Toyama",
+    "role_org": "Professor, University of Michigan; Author of *Geek Heresy*",
+    "connection_to_solomon": "Critiques techno-solutionism and argues for amplifying human institutional capacity; his framework directly supports Solomon's approach over pure tech fixes.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 152,
+    "name": "Alondra Nelson",
+    "role_org": "Harold F. Linder Professor, Institute for Advanced Study; former White House OSTP Director",
+    "connection_to_solomon": "Led the Biden administration's AI Bill of Rights effort; her experience translating AI ethics into institutional policy is directly relevant to Solomon.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 153,
+    "name": "Suresh Venkatasubramanian",
+    "role_org": "Professor, Brown University; former White House OSTP",
+    "connection_to_solomon": "Co-authored the Blueprint for an AI Bill of Rights; his technical expertise in algorithmic fairness applied to policy informs Solomon's institutional approach.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 154,
+    "name": "Geoff Mulgan",
+    "role_org": "Professor, UCL; former CEO, Nesta",
+    "connection_to_solomon": "Expert in social innovation and institutional design; his work on \"collective intelligence\" and \"big mind\" connects directly to Solomon's approach.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 155,
+    "name": "Iyad Rahwan",
+    "role_org": "Director, Max Planck Institute for Human Development (Center for Humans and Machines)",
+    "connection_to_solomon": "Studies how AI reshapes human cooperation and institutions; his \"machine behavior\" framework is foundational to understanding what Solomon must address.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 156,
+    "name": "Achal Prabhala",
+    "role_org": "Fellow, Shuttleworth Foundation; AccessIBSA project coordinator",
+    "connection_to_solomon": "Advocates for equitable access to knowledge and technology in the Global South; his access-focused work aligns with Solomon's inclusive institutional mission.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 157,
+    "name": "Catherine Bracy",
+    "role_org": "CEO, TechEquity Collaborative",
+    "connection_to_solomon": "Works on technology's impact on housing, labor, and civic institutions; her community-based advocacy approach could inform Solomon's engagement strategy.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 158,
+    "name": "Bruce Schneier",
+    "role_org": "Adjunct Lecturer, Harvard Kennedy School; Security technologist; Author of *A Hacker's Mind*",
+    "connection_to_solomon": "Expert on technology, security, and social trust; his analysis of how systems are exploited applies to Solomon's concern about AI undermining institutional integrity.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 159,
+    "name": "Zach Verdin",
+    "role_org": "Co-founder, Credo AI",
+    "connection_to_solomon": "Builds AI governance platforms for enterprises; his practical tools for responsible AI deployment could support Solomon's institutional implementation.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 160,
+    "name": "Navrina Singh",
+    "role_org": "Founder & CEO, Credo AI",
+    "connection_to_solomon": "Develops AI governance software; her practical approach to responsible AI in organizations directly supports Solomon's institutional deployment goals.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 161,
+    "name": "Beena Ammanath",
+    "role_org": "Executive Director, Deloitte AI Institute",
+    "connection_to_solomon": "Bridges corporate AI deployment and ethics; her institutional consulting experience informs Solomon's approach to organizational AI adoption.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 162,
+    "name": "Miriam Vogel",
+    "role_org": "President & CEO, EqualAI",
+    "connection_to_solomon": "Leads an organization focused on reducing AI bias in business and government; her practical bias-reduction work supports Solomon's institutional mission.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 163,
+    "name": "Mutale Nkonde",
+    "role_org": "CEO, AI for the People",
+    "connection_to_solomon": "Focuses on AI's impact on Black communities and democratic participation; her advocacy connects Solomon's mission to civil rights frameworks.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 164,
+    "name": "Debra Ruh",
+    "role_org": "CEO, Ruh Global Communications; AI accessibility advocate",
+    "connection_to_solomon": "Advocates for inclusive AI that serves people with disabilities; her accessibility focus broadens Solomon's institutional protection to all communities.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 165,
+    "name": "Victor Pineda",
+    "role_org": "President, World Enabled; Founder, IDSA",
+    "connection_to_solomon": "Global disability rights advocate working on accessible technology; his institutional advocacy ensures Solomon's mission includes universal design.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 166,
+    "name": "Chinmayi Arun",
+    "role_org": "Executive Director, Information Society Project, Yale Law School",
+    "connection_to_solomon": "Researches technology governance across democracies; her comparative institutional analysis informs Solomon's global strategy.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 167,
+    "name": "Liz Shuler",
+    "role_org": "President, AFL-CIO",
+    "connection_to_solomon": "Leads the largest US labor federation; AI's impact on workers and labor institutions is central to Solomon's mission, and labor's organizing power is a key flywheel.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 168,
+    "name": "Mary Kay Henry",
+    "role_org": "President, SEIU",
+    "connection_to_solomon": "Leads one of the largest unions representing service workers most vulnerable to AI displacement; her institutional power could amplify Solomon's labor protection message.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 169,
+    "name": "David Rolf",
+    "role_org": "Founder, Fair Work Center; Author of *The Fight for Fifteen*",
+    "connection_to_solomon": "Labor strategist focused on institutional innovation for the modern economy; his work redesigning worker protections connects to Solomon's institutional adaptation mission.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 170,
+    "name": "Ai-jen Poo",
+    "role_org": "President, National Domestic Workers Alliance; MacArthur Fellow",
+    "connection_to_solomon": "Advocates for workers in the care economy facing AI disruption; her coalition-building experience could accelerate Solomon's flywheel.",
+    "category": "Category 5: Nonprofit AI & AI-for-Social-Good",
+    "subcategory": null
+  },
+  {
+    "list_number": 171,
+    "name": "Ted Mitchell",
+    "role_org": "President, American Council on Education",
+    "connection_to_solomon": "Leads the coordinating body for US higher education; uniquely positioned to address AI's disruption of educational institutions — core Solomon territory.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 172,
+    "name": "Freeman Hrabowski III",
+    "role_org": "Former President, UMBC; Author of *Holding Fast to Dreams*",
+    "connection_to_solomon": "Transformative educator focused on STEM inclusion; his experience strengthening educational institutions against disruption informs Solomon's approach.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 173,
+    "name": "Sal Khan",
+    "role_org": "Founder, Khan Academy",
+    "connection_to_solomon": "Pioneered AI-assisted education (Khanmigo); his practical experience deploying AI in education reveals both opportunities and risks Solomon must address.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 174,
+    "name": "Mitchel Resnick",
+    "role_org": "Professor, MIT Media Lab; Creator of Scratch",
+    "connection_to_solomon": "Leads research on creative learning and technology; his frameworks for constructive educational technology align with Solomon's non-destructive AI vision.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 175,
+    "name": "Priscilla Chan",
+    "role_org": "Co-founder, Chan Zuckerberg Initiative",
+    "connection_to_solomon": "Massive educational technology funder; CZI's investments in personalized learning face exactly the AI integrity challenges Solomon addresses.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 176,
+    "name": "Jessie Woolley-Wilson",
+    "role_org": "Former CEO, DreamBox Learning",
+    "connection_to_solomon": "Led one of the most successful adaptive learning companies; her experience with AI in education reveals institutional vulnerabilities Solomon could protect.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 177,
+    "name": "Ryan Baker",
+    "role_org": "Professor, University of Pennsylvania; Director, Penn Center for Learning Analytics",
+    "connection_to_solomon": "Leading researcher in educational data mining; his work on learning analytics ethics directly informs Solomon's educational protection mission.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 178,
+    "name": "Rose Luckin",
+    "role_org": "Professor, UCL Knowledge Lab; Author of *Machine Learning and Human Intelligence*",
+    "connection_to_solomon": "Researches AI in education and argues for \"intelligence augmentation\"; her framework supports Solomon's vision of AI enhancing rather than undermining educational institutions.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 179,
+    "name": "Candace Thille",
+    "role_org": "Associate Professor, Stanford Graduate School of Education",
+    "connection_to_solomon": "Pioneer of learning science and open education; her work on evidence-based educational technology informs Solomon's approach to protecting educational quality.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 180,
+    "name": "Justin Reich",
+    "role_org": "Associate Professor, MIT; Author of *Failure to Disrupt*",
+    "connection_to_solomon": "Documents how educational technology repeatedly fails to transform institutions as promised; his analysis helps Solomon avoid techno-solutionist pitfalls.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 181,
+    "name": "Audrey Watters",
+    "role_org": "Education technology critic; Author of *Teaching Machines*",
+    "connection_to_solomon": "Most incisive critic of educational technology hype; her historical analysis of ed-tech failures provides essential cautionary framework for Solomon's educational mission.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 182,
+    "name": "Ethan Mollick",
+    "role_org": "Associate Professor, Wharton; Author of *Co-Intelligence*",
+    "connection_to_solomon": "Leading researcher on AI's practical impact on education and work; his \"co-intelligence\" framework offers a constructive model for Solomon's institutional approach.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 183,
+    "name": "Michael Crow",
+    "role_org": "President, Arizona State University",
+    "connection_to_solomon": "Leads institutional innovation in higher education; ASU's experiments with AI integration provide real-world data for Solomon's educational protection strategy.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 184,
+    "name": "Jose Antonio Bowen",
+    "role_org": "President, Goucher College; Author of *Teaching Naked*",
+    "connection_to_solomon": "Advocates for reimagining teaching in the digital age; his practical experience with institutional transformation informs Solomon's approach.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 185,
+    "name": "Saku Tuominen",
+    "role_org": "Co-founder, HundrED (global education innovation platform)",
+    "connection_to_solomon": "Curates and promotes educational innovations worldwide; his platform could amplify Solomon's educational protection initiatives globally.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 186,
+    "name": "Andreas Schleicher",
+    "role_org": "Director, Education and Skills, OECD (PISA)",
+    "connection_to_solomon": "Runs the world's most influential education assessment program; his data on institutional educational quality provides benchmarks Solomon could use.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 187,
+    "name": "Arne Duncan",
+    "role_org": "Former US Secretary of Education; Managing Partner, Emerson Collective",
+    "connection_to_solomon": "Bridges education policy and philanthropy; his institutional knowledge and network could accelerate Solomon's engagement with educational systems.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 188,
+    "name": "Jennifer Pahlka",
+    "role_org": "Founder, Code for America; Author of *Recoding America*",
+    "connection_to_solomon": "Expert on making government technology work; her practical experience reforming civic technology institutions directly supports Solomon's civic mission.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 189,
+    "name": "Tim O'Reilly",
+    "role_org": "Founder, O'Reilly Media; Author of *WTF: What's the Future and Why It's Up to Us*",
+    "connection_to_solomon": "Coined \"Government as Platform\"; his vision of technology strengthening democratic institutions aligns with Solomon's civic protection goals.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 190,
+    "name": "Ethan Zuckerman",
+    "role_org": "Associate Professor, UMass Amherst; Author of *Mistrust*",
+    "connection_to_solomon": "Studies how technology erodes public trust in institutions; his research on \"digital public infrastructure\" is foundational to Solomon's approach.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 191,
+    "name": "Hanna Wallach",
+    "role_org": "Senior Principal Researcher, Microsoft Research; Co-founder, ACM FAT* conference",
+    "connection_to_solomon": "Bridges machine learning research and social impact; her work on accountability in AI systems supports Solomon's institutional governance goals.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 192,
+    "name": "Latanya Sweeney",
+    "role_org": "Professor, Harvard; Director, Public Interest Tech Lab",
+    "connection_to_solomon": "Pioneer of data privacy research; her work on re-identification and institutional data practices informs Solomon's approach to protecting civic infrastructure.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 193,
+    "name": "danah boyd",
+    "role_org": "Founder, Data & Society; Partner Researcher, Microsoft Research",
+    "connection_to_solomon": "Studies how technology reshapes public life and institutions; her research on \"networked publics\" informs Solomon's understanding of civic institutional change.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 194,
+    "name": "Joan Donovan",
+    "role_org": "Research Director (former), Shorenstein Center, Harvard; Disinformation expert",
+    "connection_to_solomon": "Expert on how technology platforms undermine information institutions; her research on media manipulation connects to Solomon's civic protection mission.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 195,
+    "name": "Rashida Richardson",
+    "role_org": "Senior Counsel, New America's Open Technology Institute",
+    "connection_to_solomon": "Researches government adoption of AI and its impact on civil rights; her legal analysis of institutional AI deployment directly supports Solomon's goals.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 196,
+    "name": "Deirdre Mulligan",
+    "role_org": "Professor, UC Berkeley School of Information",
+    "connection_to_solomon": "Expert in technology policy and privacy; her work on values in design for public institutions informs Solomon's approach.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 197,
+    "name": "Ben Shneiderman",
+    "role_org": "Professor, University of Maryland; Author of *Human-Centered AI*",
+    "connection_to_solomon": "Advocates for keeping humans in control of AI systems; his \"human-centered AI\" framework provides design principles for Solomon's institutional approach.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 198,
+    "name": "Nicole Wong",
+    "role_org": "Former White House Deputy CTO; Former VP & Deputy General Counsel, Google",
+    "connection_to_solomon": "Bridges technology industry and government technology policy; her institutional experience shapes Solomon's approach to civic tech governance.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 199,
+    "name": "Matt Cutts",
+    "role_org": "Administrator, U.S. Digital Service (USDS)",
+    "connection_to_solomon": "Leads the government's technology improvement team; his practical experience modernizing civic institutions with technology informs Solomon's deployment strategy.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 200,
+    "name": "Marina Gorbis",
+    "role_org": "Executive Director, Institute for the Future",
+    "connection_to_solomon": "Leads futures research on technology's societal impact; her \"socialstructed\" framework for institutional transformation supports Solomon's forward-looking approach.",
+    "category": "Category 6: Education & Civic Institution Leaders",
+    "subcategory": null
+  },
+  {
+    "list_number": 201,
+    "name": "Rosalind Picard",
+    "role_org": "Professor, MIT Media Lab; Founder, Affectiva",
+    "connection_to_solomon": "Pioneer of affective computing — the field of machines recognizing and simulating human emotions; her research is foundational to understanding how AI interacts with human psychological wellbeing.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 202,
+    "name": "Sherry Turkle",
+    "role_org": "Professor, MIT; Author of *Alone Together* and *Reclaiming Conversation*",
+    "connection_to_solomon": "Leading psychologist studying how technology reshapes human relationships and identity; her decades of research on people's emotional connections to machines directly informs Solomon's social mission.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 203,
+    "name": "Rana el Kaliouby",
+    "role_org": "Co-founder, Affectiva (now Smart Eye); Author of *Girl Decoded*",
+    "connection_to_solomon": "Built emotion-recognition AI systems; her experience with the promises and perils of emotional AI informs Solomon's approach to psychologically aware systems.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 204,
+    "name": "Michal Kosinski",
+    "role_org": "Associate Professor, Stanford Graduate School of Business",
+    "connection_to_solomon": "Demonstrated that AI can infer personality traits from digital footprints; his research reveals psychological vulnerabilities that Solomon must help institutions guard against.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 205,
+    "name": "Sandra Matz",
+    "role_org": "Associate Professor, Columbia Business School",
+    "connection_to_solomon": "Studies psychological targeting through AI; her work on \"psychological mass persuasion\" reveals institutional vulnerabilities Solomon aims to address.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 206,
+    "name": "Alison Gopnik",
+    "role_org": "Professor of Psychology, UC Berkeley; Author of *The Gardener and the Carpenter*",
+    "connection_to_solomon": "Leading developmental psychologist studying how children learn; her research on human cognition versus machine learning informs Solomon's educational protection mission.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 207,
+    "name": "Gary Marcus",
+    "role_org": "Professor Emeritus, NYU; Author of *Rebooting AI*",
+    "connection_to_solomon": "Prominent AI critic focused on current systems' cognitive limitations; his arguments about what AI cannot do inform Solomon's realistic assessment of institutional AI risks.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 208,
+    "name": "Abigail Marsh",
+    "role_org": "Professor of Psychology, Georgetown; Author of *The Fear Factor*",
+    "connection_to_solomon": "Studies empathy, altruism, and psychopathy; her research on prosocial behavior informs how Solomon might evaluate AI's impact on social cooperation.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 209,
+    "name": "Paul Bloom",
+    "role_org": "Professor of Psychology, University of Toronto; Author of *Against Empathy*",
+    "connection_to_solomon": "Challenges assumptions about empathy and moral reasoning; his nuanced view of human moral psychology informs Solomon's approach to AI ethics beyond simplistic empathy frameworks.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 210,
+    "name": "Jonathan Haidt",
+    "role_org": "Professor, NYU Stern; Author of *The Righteous Mind* and *The Anxious Generation*",
+    "connection_to_solomon": "Documents technology's impact on mental health and social cohesion; his research on social media's harm to youth and institutions is directly relevant to Solomon's protective mission.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 211,
+    "name": "Jean Twenge",
+    "role_org": "Professor, San Diego State University; Author of *iGen*",
+    "connection_to_solomon": "Researches generational changes in mental health linked to technology; her data on institutional trust erosion among young people informs Solomon's educational mission.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 212,
+    "name": "Nick Yee",
+    "role_org": "AI researcher; former founder, Quantic Foundry",
+    "connection_to_solomon": "Pioneer in studying psychological effects of virtual environments and AI interactions; his research on how people relate to digital systems informs Solomon's design.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 213,
+    "name": "Kate Darling",
+    "role_org": "Research Specialist, MIT Media Lab; Author of *The New Breed*",
+    "connection_to_solomon": "Studies human-robot interaction and emotional attachment to machines; her work on how people anthropomorphize AI informs Solomon's approach to healthy human-AI relationships.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 214,
+    "name": "Byron Reeves",
+    "role_org": "Professor, Stanford Communication; Co-author, *The Media Equation*",
+    "connection_to_solomon": "Demonstrated that people treat computers as social actors; his foundational research explains why AI's institutional impact is psychologically deeper than most assume.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 215,
+    "name": "Clifford Nass",
+    "role_org": "(legacy — his students and successors at Stanford)",
+    "connection_to_solomon": "His lab's pioneering work on human-computer interaction continues through researchers like **Andrea Won** and **Jeremy Bailenson** at Stanford's Virtual Human Interaction Lab.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 216,
+    "name": "Jeremy Bailenson",
+    "role_org": "Professor, Stanford; Director, Virtual Human Interaction Lab",
+    "connection_to_solomon": "Studies psychological effects of virtual and AI-mediated experiences; his research on \"experience on demand\" informs how AI changes educational and social institutions.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 217,
+    "name": "Amy Orben",
+    "role_org": "Program Leader, MRC Cognition and Brain Sciences Unit, Cambridge",
+    "connection_to_solomon": "Conducts rigorous studies on technology's impact on adolescent mental health; her methodological approach could strengthen Solomon's evidence base.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 218,
+    "name": "Andrew Przybylski",
+    "role_org": "Professor, Oxford Internet Institute",
+    "connection_to_solomon": "Studies digital technology's psychological effects with rigorous methodology; his balanced, evidence-based approach supports Solomon's credible assessment of AI risks.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 219,
+    "name": "Mary Gray",
+    "role_org": "Senior Principal Researcher, Microsoft Research; Author of *Ghost Work*",
+    "connection_to_solomon": "Studies the hidden human labor behind AI systems; her work on \"ghost workers\" reveals institutional exploitation that Solomon aims to address.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 220,
+    "name": "Iason Gabriel",
+    "role_org": "Staff Research Scientist, Google DeepMind",
+    "connection_to_solomon": "Leads research on AI ethics and human values alignment; his philosophical work on what values AI should serve directly informs Solomon's mission framework.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 221,
+    "name": "Murray Shanahan",
+    "role_org": "Professor, Imperial College London; Author of *Embodiment and the Inner Life*",
+    "connection_to_solomon": "Studies machine consciousness and cognition; his philosophical analysis of AI minds informs Solomon's approach to human-AI relationships in institutions.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 222,
+    "name": "Anna Googled",
+    "role_org": "(see #97 correction: **Anna Googled** should be **Anna Googled Ethics Research Group**; correct researcher is **Anna Googled** at ETH Zurich)",
+    "connection_to_solomon": "Note: This entry corrects #97. The key ETH Zurich researchers are **Andrea Ienca** and **Effy Vayena**, who study neuroethics and digital health ethics.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 222,
+    "name": "Andrea Ienca",
+    "role_org": "Professor of AI Ethics, Technical University of Munich (formerly ETH Zurich)",
+    "connection_to_solomon": "Pioneered \"neurorights\" concept; his work on protecting cognitive liberty from AI manipulation directly supports Solomon's mission to protect human autonomy.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 223,
+    "name": "John Vervaeke",
+    "role_org": "Professor of Psychology, University of Toronto; Host, *Awakening from the Meaning Crisis*",
+    "connection_to_solomon": "Studies meaning-making, wisdom, and cognitive science; his framework for addressing the \"meaning crisis\" provides philosophical grounding for Solomon's approach to AI and human flourishing.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 224,
+    "name": "Lisa Feldman Barrett",
+    "role_org": "Professor, Northeastern University; Author of *How Emotions Are Made*",
+    "connection_to_solomon": "Revolutionized emotion science; her constructed emotion theory challenges simplistic AI emotion recognition and informs Solomon's approach to psychologically sophisticated AI.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 225,
+    "name": "Stuart Shanker",
+    "role_org": "Professor, York University; Founder, MEHRIT Centre",
+    "connection_to_solomon": "Expert on self-regulation and stress in children; his work on how technology affects developmental processes informs Solomon's educational protection mission.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 226,
+    "name": "Tiffany Shlain",
+    "role_org": "Filmmaker; Author of *24/6*; Founder, Webby Awards",
+    "connection_to_solomon": "Creates accessible media about technology and human connection; her storytelling ability could communicate Solomon's vision to mainstream audiences.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 227,
+    "name": "Anil Seth",
+    "role_org": "Professor, University of Sussex; Author of *Being You*",
+    "connection_to_solomon": "Leading consciousness researcher; his work on perception and the \"controlled hallucination\" of consciousness informs how AI might affect human self-understanding.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 228,
+    "name": "Nick Chater",
+    "role_org": "Professor, Warwick Business School; Author of *The Mind is Flat*",
+    "connection_to_solomon": "Studies human decision-making and cognition; his research on how people are influenced by framing informs Solomon's approach to AI's psychological manipulation risks.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 229,
+    "name": "Celeste Kidd",
+    "role_org": "Professor, UC Berkeley",
+    "connection_to_solomon": "Studies curiosity, belief formation, and how people update their worldviews; her research on epistemic vulnerability to AI-generated content informs Solomon's mission.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 230,
+    "name": "Yejin Choi",
+    "role_org": "Professor, Stanford (formerly UW); MacArthur Fellow; Winner, ACM Prize in Computing",
+    "connection_to_solomon": "Pioneered AI common-sense reasoning; her work on social norms and moral reasoning in AI directly connects to Solomon's goal of socially beneficial AI systems.",
+    "category": "Category 7: Psychological & Emotional AI Researchers",
+    "subcategory": null
+  },
+  {
+    "list_number": 231,
+    "name": "Joi Ito",
+    "role_org": "Director of Digital Architecture, Keio University (former MIT Media Lab Director)",
+    "connection_to_solomon": "Despite controversy, maintains enormous network bridging technology, policy, and social impact; his \"resisting reduction\" framework opposes reductive AI approaches, supporting Solomon's mission.",
+    "category": "Conference Organizers & Community Builders",
+    "subcategory": "Conference Organizers & Community Builders"
+  },
+  {
+    "list_number": 232,
+    "name": "Nathan Sanders",
+    "role_org": "AI policy researcher; former fellow, Berkman Klein Center",
+    "connection_to_solomon": "Works at intersection of AI and democratic governance; his writing with Bruce Schneier on AI and democracy directly supports Solomon's civic mission.",
+    "category": "Conference Organizers & Community Builders",
+    "subcategory": "Conference Organizers & Community Builders"
+  },
+  {
+    "list_number": 233,
+    "name": "Katya Klinova",
+    "role_org": "Head of AI, Labor, and the Economy, Partnership on AI",
+    "connection_to_solomon": "Focuses specifically on AI's impact on work and economic institutions; her convenings bring together stakeholders Solomon needs to engage.",
+    "category": "Conference Organizers & Community Builders",
+    "subcategory": "Conference Organizers & Community Builders"
+  },
+  {
+    "list_number": 234,
+    "name": "Amba Kak",
+    "role_org": "(see #89) Cross-listed as a connector. Her convenings at AI Now bring together researchers, advocates, and policymakers.",
+    "connection_to_solomon": "",
+    "category": "Conference Organizers & Community Builders",
+    "subcategory": "Conference Organizers & Community Builders"
+  },
+  {
+    "list_number": 234,
+    "name": "R. David Edelman",
+    "role_org": "Director, MIT Internet Policy Research Initiative; former White House Special Assistant for Economic and Technology Policy",
+    "connection_to_solomon": "Bridges technology companies and government; his policy network could help Solomon reach institutional decision-makers.",
+    "category": "Conference Organizers & Community Builders",
+    "subcategory": "Conference Organizers & Community Builders"
+  },
+  {
+    "list_number": 235,
+    "name": "Charlotte Slaiman",
+    "role_org": "VP, Competition Policy, Public Knowledge",
+    "connection_to_solomon": "Works on technology platform regulation and public interest tech policy; her advocacy network reaches congressional offices and regulators Solomon must engage.",
+    "category": "Conference Organizers & Community Builders",
+    "subcategory": "Conference Organizers & Community Builders"
+  },
+  {
+    "list_number": 236,
+    "name": "Matt Sheehan",
+    "role_org": "Fellow, Carnegie Endowment for International Peace",
+    "connection_to_solomon": "Expert on US-China AI relations; his policy research and convening at Carnegie reaches international institutional leaders relevant to Solomon.",
+    "category": "Conference Organizers & Community Builders",
+    "subcategory": "Conference Organizers & Community Builders"
+  },
+  {
+    "list_number": 237,
+    "name": "Irene Solaiman",
+    "role_org": "Head of Global Policy, Hugging Face",
+    "connection_to_solomon": "Bridges AI research and policy; formerly at OpenAI and Zillow, her experience across sectors makes her a key connector for Solomon's multi-stakeholder approach.",
+    "category": "Conference Organizers & Community Builders",
+    "subcategory": "Conference Organizers & Community Builders"
+  },
+  {
+    "list_number": 238,
+    "name": "Heather Frase",
+    "role_org": "Senior Fellow, CSET Georgetown",
+    "connection_to_solomon": "Studies AI evaluation and assessment; her technical policy work connects AI researchers to national security and governance communities Solomon must reach.",
+    "category": "Conference Organizers & Community Builders",
+    "subcategory": "Conference Organizers & Community Builders"
+  },
+  {
+    "list_number": 239,
+    "name": "Jack Stilgoe",
+    "role_org": "Professor, UCL; Author of *Who's Driving Innovation?*",
+    "connection_to_solomon": "Expert on responsible innovation and technology governance; his UK/European network bridges different regulatory approaches to AI institutions.",
+    "category": "Conference Organizers & Community Builders",
+    "subcategory": "Conference Organizers & Community Builders"
+  },
+  {
+    "list_number": 240,
+    "name": "Wendy Hall",
+    "role_org": "Professor, University of Southampton; Co-author of UK AI Review",
+    "connection_to_solomon": "Shaped UK AI strategy; her government advisory roles and international academic network provide institutional access for Solomon's global mission.",
+    "category": "Conference Organizers & Community Builders",
+    "subcategory": "Conference Organizers & Community Builders"
+  },
+  {
+    "list_number": 241,
+    "name": "Lex Fridman",
+    "role_org": "Research Scientist, MIT; Host, *Lex Fridman Podcast*",
+    "connection_to_solomon": "Massive platform (millions of subscribers) featuring long-form AI conversations; a Solomon episode could reach tech-curious audiences who shape institutional culture.",
+    "category": "Podcast Hosts & Media Amplifiers",
+    "subcategory": "Podcast Hosts & Media Amplifiers"
+  },
+  {
+    "list_number": 242,
+    "name": "Ezra Klein",
+    "role_org": "Columnist, New York Times; Host, *The Ezra Klein Show*",
+    "connection_to_solomon": "Deeply engaged with AI's societal implications; his audience of policymakers and educated professionals is exactly Solomon's target demographic.",
+    "category": "Podcast Hosts & Media Amplifiers",
+    "subcategory": "Podcast Hosts & Media Amplifiers"
+  },
+  {
+    "list_number": 243,
+    "name": "Kara Swisher",
+    "role_org": "Host, *On with Kara Swisher*; Co-founder, Recode",
+    "connection_to_solomon": "Most influential technology journalist; her fearless interviewing and massive audience could pressure-test and amplify Solomon's message.",
+    "category": "Podcast Hosts & Media Amplifiers",
+    "subcategory": "Podcast Hosts & Media Amplifiers"
+  },
+  {
+    "list_number": 244,
+    "name": "Casey Newton",
+    "role_org": "Founder, *Platformer*",
+    "connection_to_solomon": "Leading journalist covering technology platforms' impact on society; his newsletter reaches institutional decision-makers concerned about technology harm.",
+    "category": "Podcast Hosts & Media Amplifiers",
+    "subcategory": "Podcast Hosts & Media Amplifiers"
+  },
+  {
+    "list_number": 245,
+    "name": "Kevin Roose",
+    "role_org": "Technology columnist, New York Times; Author of *Futureproof*",
+    "connection_to_solomon": "Writes accessibly about AI's impact on work and society; his early experience with Sydney/Bing AI revealed emotional AI risks relevant to Solomon.",
+    "category": "Podcast Hosts & Media Amplifiers",
+    "subcategory": "Podcast Hosts & Media Amplifiers"
+  },
+  {
+    "list_number": 246,
+    "name": "Karen Hao",
+    "role_org": "Contributing writer, *The Atlantic*; former AI reporter, MIT Technology Review",
+    "connection_to_solomon": "One of the most respected AI journalists; her investigative reporting on AI companies' societal impact reaches institutional leaders.",
+    "category": "Podcast Hosts & Media Amplifiers",
+    "subcategory": "Podcast Hosts & Media Amplifiers"
+  },
+  {
+    "list_number": 247,
+    "name": "Will Douglas Heaven",
+    "role_org": "Senior Editor for AI, MIT Technology Review",
+    "connection_to_solomon": "Shapes how the most influential technology publication covers AI; editorial decisions about framing AI risks reach the professional class Solomon needs.",
+    "category": "Podcast Hosts & Media Amplifiers",
+    "subcategory": "Podcast Hosts & Media Amplifiers"
+  },
+  {
+    "list_number": 248,
+    "name": "Emily Chang",
+    "role_org": "Anchor, Bloomberg Technology",
+    "connection_to_solomon": "Reaches business and finance audiences with technology coverage; her platform could introduce Solomon to the investor and corporate class.",
+    "category": "Podcast Hosts & Media Amplifiers",
+    "subcategory": "Podcast Hosts & Media Amplifiers"
+  },
+  {
+    "list_number": 249,
+    "name": "Bilawal Sidhu",
+    "role_org": "AI content creator; former Google engineer",
+    "connection_to_solomon": "Translates complex AI developments for large social media audiences; his visual explainer format could make Solomon's mission tangible for mainstream viewers.",
+    "category": "Podcast Hosts & Media Amplifiers",
+    "subcategory": "Podcast Hosts & Media Amplifiers"
+  },
+  {
+    "list_number": 250,
+    "name": "Rachel Woods",
+    "role_org": "Founder, The AI Exchange; AI educator",
+    "connection_to_solomon": "Teaches non-technical professionals to understand AI; her audience of business leaders and educators is precisely who Solomon needs to reach.",
+    "category": "Podcast Hosts & Media Amplifiers",
+    "subcategory": "Podcast Hosts & Media Amplifiers"
+  },
+  {
+    "list_number": 251,
+    "name": "Bruce Reed",
+    "role_org": "White House Deputy Chief of Staff (Biden administration, AI policy lead)",
+    "connection_to_solomon": "Coordinated the Biden administration's AI executive order; his government network represents institutional channels Solomon must access.",
+    "category": "Policy & Government Bridge Figures",
+    "subcategory": "Policy & Government Bridge Figures"
+  },
+  {
+    "list_number": 252,
+    "name": "Arati Prabhakar",
+    "role_org": "Director, White House OSTP (Biden administration)",
+    "connection_to_solomon": "Led the government's science and technology policy including AI regulation; her institutional knowledge and network are directly relevant to Solomon.",
+    "category": "Policy & Government Bridge Figures",
+    "subcategory": "Policy & Government Bridge Figures"
+  },
+  {
+    "list_number": 253,
+    "name": "Alan Davidson",
+    "role_org": "Assistant Secretary of Commerce for Communications and Information; Administrator, NTIA",
+    "connection_to_solomon": "Leads government efforts on AI accountability; NTIA's AI auditing framework connects to Solomon's institutional governance mission.",
+    "category": "Policy & Government Bridge Figures",
+    "subcategory": "Policy & Government Bridge Figures"
+  },
+  {
+    "list_number": 254,
+    "name": "Lynne Parker",
+    "role_org": "Former Director, National AI Initiative Office; Professor, University of Tennessee",
+    "connection_to_solomon": "Shaped US national AI strategy; her experience building government AI infrastructure informs Solomon's civic deployment approach.",
+    "category": "Policy & Government Bridge Figures",
+    "subcategory": "Policy & Government Bridge Figures"
+  },
+  {
+    "list_number": 255,
+    "name": "Michael Kratsios",
+    "role_org": "Former US CTO; Managing Director, Scale AI",
+    "connection_to_solomon": "Bridges government tech policy and Silicon Valley; his bipartisan credibility could help Solomon navigate political institutional dynamics.",
+    "category": "Policy & Government Bridge Figures",
+    "subcategory": "Policy & Government Bridge Figures"
+  },
+  {
+    "list_number": 256,
+    "name": "Mignon Clyburn",
+    "role_org": "Former FCC Commissioner; Founder, MLC Strategies",
+    "connection_to_solomon": "Expertise in telecommunications policy and digital inclusion; her regulatory experience informs Solomon's approach to institutional technology governance.",
+    "category": "Policy & Government Bridge Figures",
+    "subcategory": "Policy & Government Bridge Figures"
+  },
+  {
+    "list_number": 257,
+    "name": "Nicol Turner Lee",
+    "role_org": "Director, Center for Technology Innovation, Brookings Institution",
+    "connection_to_solomon": "Researches AI's impact on racial equity and democratic institutions; her Brookings platform reaches policymakers Solomon must engage.",
+    "category": "Policy & Government Bridge Figures",
+    "subcategory": "Policy & Government Bridge Figures"
+  },
+  {
+    "list_number": 258,
+    "name": "Darrell West",
+    "role_org": "Senior Fellow, Brookings Institution; Author of *The Future of Work*",
+    "connection_to_solomon": "Prolific researcher on AI's societal impact; his Brookings publications and policy recommendations reach government decision-makers.",
+    "category": "Policy & Government Bridge Figures",
+    "subcategory": "Policy & Government Bridge Figures"
+  },
+  {
+    "list_number": 259,
+    "name": "Mark Warner",
+    "role_org": "US Senator, Virginia; Senate Intelligence Committee",
+    "connection_to_solomon": "Leading congressional voice on technology regulation; his bipartisan AI legislation efforts create institutional frameworks Solomon could leverage.",
+    "category": "Policy & Government Bridge Figures",
+    "subcategory": "Policy & Government Bridge Figures"
+  },
+  {
+    "list_number": 260,
+    "name": "Chris Coons",
+    "role_org": "US Senator, Delaware; AI Caucus Co-chair",
+    "connection_to_solomon": "Co-chairs the Senate AI Caucus; his legislative work on AI governance creates policy infrastructure for Solomon's institutional approach.",
+    "category": "Policy & Government Bridge Figures",
+    "subcategory": "Policy & Government Bridge Figures"
+  },
+  {
+    "list_number": 261,
+    "name": "Abigail Jacobs",
+    "role_org": "Assistant Professor, University of Michigan School of Information",
+    "connection_to_solomon": "Studies measurement and algorithmic fairness in institutions; her work on how metrics shape institutional behavior informs Solomon's governance approach.",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 262,
+    "name": "Roel Dobbe",
+    "role_org": "(see #91) Cross-listed as a connector bridging European and American AI safety research communities.",
+    "connection_to_solomon": "",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 262,
+    "name": "Luke Stark",
+    "role_org": "Assistant Professor, Western University",
+    "connection_to_solomon": "Studies AI ethics and the politics of emotion recognition technology; his critical analysis of affective computing connects to Solomon's psychological protection goals.",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 263,
+    "name": "Bogdana Rakova",
+    "role_org": "Senior Trustworthy AI Fellow, Mozilla Foundation",
+    "connection_to_solomon": "Works on AI accountability in practice; her community-oriented approach to responsible AI bridges research and grassroots institutional engagement.",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 264,
+    "name": "Ranjit Singh",
+    "role_org": "Researcher, Data & Society",
+    "connection_to_solomon": "Studies how data systems reshape institutional practices; his ethnographic approach to understanding AI in organizations informs Solomon's practical deployment strategy.",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 265,
+    "name": "Alex Hanna",
+    "role_org": "Director of Research, Distributed AI Research Institute (DAIR)",
+    "connection_to_solomon": "Works with Timnit Gebru on AI harms research; her focus on data labor and classification systems supports Solomon's institutional analysis.",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 266,
+    "name": "Pratyusha Kalluri",
+    "role_org": "PhD Researcher, Stanford",
+    "connection_to_solomon": "Studies surveillance and power dynamics in AI systems; her \"power-aware\" approach to AI ethics reframes institutional risk in ways useful to Solomon.",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 267,
+    "name": "Michael Veale",
+    "role_org": "Associate Professor, UCL Faculty of Laws",
+    "connection_to_solomon": "Expert on AI regulation and data protection; his work on GDPR enforcement and AI accountability provides legal frameworks for Solomon's institutional approach.",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 268,
+    "name": "Reuben Binns",
+    "role_org": "Associate Professor, Oxford; former data ethics lead, ICO",
+    "connection_to_solomon": "Bridges AI ethics research and regulatory practice; his experience with the UK's Information Commissioner informs Solomon's institutional governance approach.",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 269,
+    "name": "Inioluwa Deborah Raji",
+    "role_org": "(see #82) Cross-listed as an emerging scholar bridging audit methodology and institutional accountability.",
+    "connection_to_solomon": "",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 269,
+    "name": "Rediet Abebe",
+    "role_org": "(see #83) Cross-listed as a connector bridging computational social science and equity-focused institutional work.",
+    "connection_to_solomon": "",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 269,
+    "name": "Mhairi Aitken",
+    "role_org": "Ethics Fellow, Alan Turing Institute",
+    "connection_to_solomon": "Researches public trust in AI and data governance; her community engagement methodology informs Solomon's approach to earning institutional trust.",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 270,
+    "name": "Reva Schwartz",
+    "role_org": "Senior Advisor for AI, NIST",
+    "connection_to_solomon": "Helps develop the NIST AI Risk Management Framework; this governmental standard-setting directly creates infrastructure Solomon can leverage.",
+    "category": "Academic Bridge Figures & Emerging Scholars",
+    "subcategory": "Academic Bridge Figures & Emerging Scholars"
+  },
+  {
+    "list_number": 271,
+    "name": "Samir Jain",
+    "role_org": "VP of Policy, Center for Democracy & Technology",
+    "connection_to_solomon": "Leads AI policy work at a major digital rights organization; CDT's institutional advocacy connects Solomon to policy implementation.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 272,
+    "name": "Caitriona Fitzgerald",
+    "role_org": "Deputy Director, Electronic Privacy Information Center (EPIC)",
+    "connection_to_solomon": "Leads privacy and AI accountability advocacy; EPIC's institutional litigation and policy work supports Solomon's governance goals.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 273,
+    "name": "Meredith Broussard",
+    "role_org": "Associate Professor, NYU; Author of *More Than a Glitch*",
+    "connection_to_solomon": "Critiques techno-solutionism and racial bias in AI; her journalism and academic work bridges media, academia, and advocacy communities.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 274,
+    "name": "Daron Acemoglu's collaborators — Simon Johnson",
+    "role_org": "Professor, MIT Sloan; Nobel Prize in Economics (2024)",
+    "connection_to_solomon": "Co-author of *Power and Progress*; argues technology must be redirected to benefit ordinary people and institutions — directly articulating Solomon's mission.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 275,
+    "name": "Marietje Schaake",
+    "role_org": "International Policy Director, Stanford Cyber Policy Center; former MEP",
+    "connection_to_solomon": "Bridges European and American technology policy; her experience as a European Parliament member and Stanford researcher connects institutional networks across the Atlantic.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 276,
+    "name": "Yoshua Bengio's network — Sébastien Lachapelle",
+    "role_org": "Researcher, Mila (Montreal)",
+    "connection_to_solomon": "Works on causal representation learning at Bengio's institute; represents the next generation of safety-conscious AI researchers Solomon should engage.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 277,
+    "name": "Joelle Pineau",
+    "role_org": "VP of AI Research, Meta; Co-managing Director, Mila",
+    "connection_to_solomon": "Bridges industry AI research and academic safety work; her focus on reproducibility and responsible AI supports Solomon's evidence-based approach.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 278,
+    "name": "Finale Doshi-Velez",
+    "role_org": "Professor, Harvard; former White House AI adviser",
+    "connection_to_solomon": "Expert on interpretable machine learning and AI regulation; her work on making AI systems understandable supports Solomon's institutional transparency goals.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 279,
+    "name": "Cynthia Rudin",
+    "role_org": "Professor, Duke; MacArthur Fellow",
+    "connection_to_solomon": "Champions interpretable machine learning over black-box models; her advocacy for transparent AI in high-stakes institutional decisions directly supports Solomon.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 280,
+    "name": "John Tasioulas",
+    "role_org": "Director, Institute for Ethics in AI, Oxford",
+    "connection_to_solomon": "Philosopher leading one of the world's foremost AI ethics institutes; his human rights-based framework for AI governance informs Solomon's institutional approach.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 281,
+    "name": "Shannon Vallor",
+    "role_org": "Professor, University of Edinburgh; Author of *Technology and the Virtues*",
+    "connection_to_solomon": "Leading AI ethicist focused on moral character and technology; her virtue ethics approach to AI provides philosophical depth for Solomon's mission.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 282,
+    "name": "Mark Coeckelbergh",
+    "role_org": "Professor, University of Vienna; Author of *AI Ethics*",
+    "connection_to_solomon": "Bridges European and global AI ethics discourse; his philosophical work on technology and political institutions informs Solomon's governance approach.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 283,
+    "name": "Wendell Wallach",
+    "role_org": "Senior Advisor, Hastings Center; Author of *A Dangerous Master*",
+    "connection_to_solomon": "Pioneer in machine morality and AI governance; his work bridging ethics and engineering provides practical frameworks for Solomon.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 284,
+    "name": "Peter Eckersley",
+    "role_org": "(posthumous — his collaborators continue his legacy at Partnership on AI)",
+    "connection_to_solomon": "Was a key figure bridging EFF digital rights advocacy and AI safety; his former colleagues at PAI continue institutional governance work Solomon builds on.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 285,
+    "name": "Oren Etzioni's network — Carissa Schoenick",
+    "role_org": "Program Manager, AI2",
+    "connection_to_solomon": "Manages research programs at the Allen Institute; accessible connector within the beneficial AI research community.",
+    "category": "Civil Society & Advocacy Connectors",
+    "subcategory": "Civil Society & Advocacy Connectors"
+  },
+  {
+    "list_number": 286,
+    "name": "Vinod Khosla",
+    "role_org": "Founder, Khosla Ventures",
+    "connection_to_solomon": "Major AI investor increasingly vocal about AI's societal impact; his investment platform and public commentary could amplify Solomon's institutional message.",
+    "category": "Impact Investors & Social Entrepreneurs",
+    "subcategory": "Impact Investors & Social Entrepreneurs"
+  },
+  {
+    "list_number": 287,
+    "name": "Hemant Taneja",
+    "role_org": "CEO, General Catalyst; Author of *Unscaled*",
+    "connection_to_solomon": "Leads a major VC firm focused on \"responsible innovation\"; his thesis that AI enables institutional \"unscaling\" connects to Solomon's concerns about institutional disruption.",
+    "category": "Impact Investors & Social Entrepreneurs",
+    "subcategory": "Impact Investors & Social Entrepreneurs"
+  },
+  {
+    "list_number": 288,
+    "name": "Deval Patrick",
+    "role_org": "Former Governor, Massachusetts; now at impact investment firm Bain Capital Double Impact",
+    "connection_to_solomon": "Bridges politics, business, and social impact; his institutional leadership experience and network could connect Solomon to political and financial leaders.",
+    "category": "Impact Investors & Social Entrepreneurs",
+    "subcategory": "Impact Investors & Social Entrepreneurs"
+  },
+  {
+    "list_number": 289,
+    "name": "Jacqueline Novogratz",
+    "role_org": "Founder & CEO, Acumen",
+    "connection_to_solomon": "Pioneer of impact investing; her global network of social entrepreneurs could adopt Solomon's institutional protection approach.",
+    "category": "Impact Investors & Social Entrepreneurs",
+    "subcategory": "Impact Investors & Social Entrepreneurs"
+  },
+  {
+    "list_number": 290,
+    "name": "Leila Janah",
+    "role_org": "(posthumous — her organization Samasource, now Sama, continues)",
+    "connection_to_solomon": "Sama provides AI training data through fair-wage employment; the organization exemplifies institutional approaches to AI labor that Solomon supports.",
+    "category": "Impact Investors & Social Entrepreneurs",
+    "subcategory": "Impact Investors & Social Entrepreneurs"
+  },
+  {
+    "list_number": 291,
+    "name": "Wes Moore",
+    "role_org": "Governor of Maryland",
+    "connection_to_solomon": "Focuses on equity and institutional reform; his political platform and personal brand could amplify Solomon's message about AI's impact on communities and civic institutions.",
+    "category": "Impact Investors & Social Entrepreneurs",
+    "subcategory": "Impact Investors & Social Entrepreneurs"
+  },
+  {
+    "list_number": 292,
+    "name": "Andrew Yang",
+    "role_org": "Founder, Forward Party; Author of *The War on Normal People*",
+    "connection_to_solomon": "Popularized concerns about AI-driven job displacement; his UBI advocacy and political network connect to Solomon's institutional economic protection mission.",
+    "category": "Impact Investors & Social Entrepreneurs",
+    "subcategory": "Impact Investors & Social Entrepreneurs"
+  },
+  {
+    "list_number": 293,
+    "name": "Ro Khanna",
+    "role_org": "US Representative, California; author of *Dignity in a Digital Age*",
+    "connection_to_solomon": "Congressional leader on technology and economic policy; his \"internet for all\" vision connects to Solomon's civic infrastructure protection.",
+    "category": "Impact Investors & Social Entrepreneurs",
+    "subcategory": "Impact Investors & Social Entrepreneurs"
+  },
+  {
+    "list_number": 294,
+    "name": "Nanjira Sambuli",
+    "role_org": "Digital policy expert; former World Web Foundation",
+    "connection_to_solomon": "Advocates for equitable digital access in Africa; her Global South perspective ensures Solomon's institutional protection is not limited to Western contexts.",
+    "category": "International & Global South Voices",
+    "subcategory": "International & Global South Voices"
+  },
+  {
+    "list_number": 295,
+    "name": "Urvashi Aneja",
+    "role_org": "Founder, Digital Futures Lab (India)",
+    "connection_to_solomon": "Researches AI's societal impact in India; her work on algorithmic governance in the world's largest democracy informs Solomon's global institutional strategy.",
+    "category": "International & Global South Voices",
+    "subcategory": "International & Global South Voices"
+  },
+  {
+    "list_number": 296,
+    "name": "Birhanu Yadete",
+    "role_org": "AI policy researcher, Ethiopian AI Initiative",
+    "connection_to_solomon": "Represents emerging African AI governance voices; connecting Solomon to Global South institutional concerns ensures comprehensive mission coverage.",
+    "category": "International & Global South Voices",
+    "subcategory": "International & Global South Voices"
+  },
+  {
+    "list_number": 297,
+    "name": "Vidushi Marda",
+    "role_org": "Senior Programme Officer, Article 19",
+    "connection_to_solomon": "Works on AI accountability and freedom of expression globally; her international human rights perspective broadens Solomon's institutional protection framework.",
+    "category": "International & Global South Voices",
+    "subcategory": "International & Global South Voices"
+  },
+  {
+    "list_number": 298,
+    "name": "Amba Kak and Bogdana Rakova's networks — Raesetje Sefala",
+    "role_org": "Research Fellow, Distributed AI Research Institute",
+    "connection_to_solomon": "Studies AI's impact on spatial inequality in South Africa; her applied research connects Solomon's mission to concrete Global South institutional challenges.",
+    "category": "International & Global South Voices",
+    "subcategory": "International & Global South Voices"
+  },
+  {
+    "list_number": 299,
+    "name": "Sabelo Mhlambi",
+    "role_org": "Founder, Carr Center Technology and Human Rights Project, Harvard",
+    "connection_to_solomon": "Studies AI ethics through an Ubuntu philosophy lens; his framework of relational ethics provides non-Western philosophical grounding for Solomon's mission.",
+    "category": "International & Global South Voices",
+    "subcategory": "International & Global South Voices"
+  },
+  {
+    "list_number": 300,
+    "name": "Bianca Wylie",
+    "role_org": "Co-founder, Digital Public; Open government advocate",
+    "connection_to_solomon": "Leads advocacy for transparent government technology procurement in Canada; her practical institutional advocacy methodology could inform Solomon's civic engagement strategy.",
+    "category": "International & Global South Voices",
+    "subcategory": "International & Global South Voices"
+  }
+]

@@ -1,0 +1,16 @@
+# Solomon Outreach App - Configuration
+# Copy to config.yaml and adjust
+
+# Mention monitoring schedule (cron format)
+schedule:
+  mention_check: "0 8 * * *"  # Daily at 8am
+
+# Search settings
+mentions:
+  lookback_days: 7
+  max_per_contact: 20
+
+# Enrichment (Phase 2)
+enrichment:
+  rate_limit_per_minute: 10
+  auto_enrich_on_mention: false
