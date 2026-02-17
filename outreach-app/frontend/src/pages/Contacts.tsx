@@ -14,23 +14,38 @@ export default function Contacts() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    setLoading(true)
+    setError(null)
     const params = new URLSearchParams({ limit: '50' })
     if (search) params.set('q', search)
     fetch(`/api/contacts?${params}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`Server error (${res.status})`)
+        return res.json()
+      })
       .then((data) => {
         setContacts(data.contacts || [])
         setTotal(data.total || 0)
       })
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err)
+        setError('Failed to load contacts. Please try refreshing the page.')
+      })
       .finally(() => setLoading(false))
   }, [search])
 
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-slate-800">Contacts</h1>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+          {error}
+        </div>
+      )}
 
       <div className="mb-6">
         <input

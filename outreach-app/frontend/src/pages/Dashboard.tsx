@@ -16,20 +16,34 @@ interface Mention {
 export default function Dashboard() {
   const [mentions, setMentions] = useState<Mention[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    setError(null)
     fetch('/api/mentions?days=7&limit=20')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`Server error (${res.status})`)
+        return res.json()
+      })
       .then((data) => {
         setMentions(data.mentions || [])
       })
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error(err)
+        setError('Failed to load recent mentions. Please try refreshing the page.')
+      })
       .finally(() => setLoading(false))
   }, [])
 
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-slate-800">Dashboard</h1>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+          {error}
+        </div>
+      )}
 
       <section className="mb-8 rounded-lg bg-white p-6 shadow">
         <h2 className="mb-4 text-lg font-semibold text-slate-700">

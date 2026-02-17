@@ -34,27 +34,64 @@ export default function ContactDetail() {
   const [mentions, setMentions] = useState<Mention[]>([])
   const [outreach, setOutreach] = useState<OutreachEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const safeFetch = async (url: string) => {
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`Server error (${res.status})`)
+    return res.json()
+  }
 
   useEffect(() => {
     if (!id) return
-    Promise.all([
-      fetch(`/api/contacts/${id}`).then((r) => r.json()),
-      fetch(`/api/mentions?contact_id=${id}`).then((r) => r.json()),
-      fetch(`/api/outreach?contact_id=${id}`).then((r) => r.json()),
+    setError(null)
+    setLoading(true)
+
+    Promise.allSettled([
+      safeFetch(`/api/contacts/${id}`),
+      safeFetch(`/api/mentions?contact_id=${id}`),
+      safeFetch(`/api/outreach?contact_id=${id}`),
     ])
-      .then(([contactData, mentionsData, outreachData]) => {
-        setContact(contactData)
-        setMentions(mentionsData.mentions || [])
-        setOutreach(outreachData.entries || [])
+      .then(([contactResult, mentionsResult, outreachResult]) => {
+        if (contactResult.status === 'fulfilled') {
+          setContact(contactResult.value)
+        } else {
+          console.error('Failed to load contact:', contactResult.reason)
+          setError('Failed to load contact details.')
+        }
+
+        if (mentionsResult.status === 'fulfilled') {
+          setMentions(mentionsResult.value.mentions || [])
+        } else {
+          console.error('Failed to load mentions:', mentionsResult.reason)
+        }
+
+        if (outreachResult.status === 'fulfilled') {
+          setOutreach(outreachResult.value.entries || [])
+        } else {
+          console.error('Failed to load outreach:', outreachResult.reason)
+        }
       })
-      .catch((err) => console.error(err))
       .finally(() => setLoading(false))
   }, [id])
 
-  if (loading || !contact) {
+  if (loading) {
     return (
       <div className="py-8">
         <p className="text-slate-500">Loading...</p>
+      </div>
+    )
+  }
+
+  if (error || !contact) {
+    return (
+      <div className="py-8">
+        <Link to="/contacts" className="mb-4 inline-block text-sm text-slate-600 hover:text-slate-800">
+          &larr; Back to Contacts
+        </Link>
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+          {error || 'Contact not found.'}
+        </div>
       </div>
     )
   }
