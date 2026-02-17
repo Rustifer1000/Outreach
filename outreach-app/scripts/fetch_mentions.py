@@ -14,7 +14,7 @@ import hashlib
 import os
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
@@ -28,7 +28,7 @@ def fetch_newsapi(api_key: str, name: str, days: int) -> list[dict]:
     """Fetch articles from NewsAPI.org for a person's name."""
     import httpx
 
-    from_date = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
+    from_date = (datetime.now(UTC) - timedelta(days=days)).strftime("%Y-%m-%d")
     url = "https://newsapi.org/v2/everything"
     params = {
         "q": f'"{name}"',

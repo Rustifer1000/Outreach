@@ -6,7 +6,7 @@ Usage:
     python seed_sample_mentions.py [--db path]
 """
 import argparse
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import sys
 
@@ -97,7 +97,7 @@ def main():
         contacts = {c.name: c for c in session.query(Contact).all()}
 
         added = 0
-        base_date = datetime.utcnow() - timedelta(days=3)
+        base_date = datetime.now(UTC) - timedelta(days=3)
 
         for i, sample in enumerate(SAMPLE_MENTIONS):
             # Find matching contact
