@@ -20,6 +20,15 @@ export default function Layout({ children }: LayoutProps) {
               <Link to="/contacts" className="text-slate-300 hover:text-white">
                 Contacts
               </Link>
+              <Link to="/rotation" className="text-slate-300 hover:text-white">
+                Rotation
+              </Link>
+              <Link to="/map" className="text-slate-300 hover:text-white">
+                Map
+              </Link>
+              <Link to="/names-file" className="text-slate-300 hover:text-white">
+                Names file
+              </Link>
             </div>
           </div>
         </div>

@@ -15,12 +15,12 @@
 | **News reports** | ✅ | NewsAPI integration |
 | **Record contact info** | ⚠️ Structure only | `contact_info` table exists; no enrichment yet |
 | **Record bio** | ⚠️ Partial | `connection_to_solomon` + `role_org` from Names; no auto-enrichment |
-| **Interconnections with others on list** | ❌ | Not built |
+| **Interconnections with others on list** | ✅ | `contact_connections` table + UI (first/second degree, same_org, co_author) |
 | **Relevance to Solomon** | ⚠️ Partial | `connection_to_solomon` from Names; no scoring |
 | **Primary interests/concerns** | ⚠️ Structure only | `primary_interests` field exists; empty |
 | **Track outreach method and content** | ✅ | Outreach log with form (method, subject, content, response status) |
-| **First-time contact recommendations** | ❌ | Not built |
-| **Notes for subsequent contacts** | ❌ | Outreach log has content field; no dedicated notes/timeline |
+| **First-time contact recommendations** | ✅ | Email > LinkedIn > Twitter > website on contact detail |
+| **Notes for subsequent contacts** | ✅ | Notes table + form + timeline; relationship stage (Cold/Warm/Engaged/Partner-Advocate) |
 | **Podcasts, presentations, speeches** | ❌ | News only |
 
 ### Modifications We Made
@@ -39,8 +39,8 @@
 | **Media sources** | News only; no podcasts, presentations, speeches |
 | **Contact enrichment** | No email/LinkedIn lookup (Hunter, Kaspr) |
 | **First-contact recommendations** | No "use email first" / "LinkedIn (email not found)" logic |
-| **Conversation notes** | Outreach log is one-way; no notes timeline for ongoing conversations |
-| **Interconnections** | No "Person A knows Person B" mapping |
+| **Conversation notes** | ✅ Done — notes + timeline + relationship stage |
+| **Interconnections** | ✅ Basic — contact_connections (first/second degree, same_org, co_author) |
 | **Relevance scoring** | No 0–10 or keyword-based scoring |
 
 ---
@@ -54,12 +54,13 @@
 - Show "Recommended: Email (available)" or "Recommended: LinkedIn (email not found)" on contact detail
 - Uses existing `contact_info` table; can start with manual entry, then enrich later
 
-### 2. **Phase 2B: Conversation Notes** (1–2 days)
+### 2. **Phase 2B: Conversation Notes** ✅ Done
 *For subsequent contacts / follow-ups*
 
-- Add `notes` table: contact_id, note_text, note_date, channel
-- Add notes form + timeline on contact detail
-- Optional: relationship stage (Cold / Warm / Engaged / Partner-Advocate)
+- `notes` table: contact_id, note_text, note_date, optional channel
+- Notes form + timeline on contact detail
+- Relationship stage (Cold / Warm / Engaged / Partner-Advocate) on contact
+- Contact connections: how this contact is related to others on the list (first_degree, second_degree, same_org, co_author) with add/remove UI
 
 ### 3. **Phase 2C: Contact Enrichment** (2–3 days)
 *Email, LinkedIn, bio*
@@ -87,7 +88,7 @@
 
 ## Recommended Immediate Next Step
 
-**Phase 2A: First-Contact Recommendations** — Small, high-impact, and directly from your original request. It works with manual contact info today and will improve once enrichment is added.
+**Phase 2C: Contact Enrichment** — Hunter/Kaspr for email/LinkedIn lookup; or **Phase 2D: Additional Media Sources** (podcasts, presentations).
 
 ---
 

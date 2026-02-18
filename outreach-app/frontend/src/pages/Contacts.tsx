@@ -7,6 +7,7 @@ interface Contact {
   name: string
   category: string | null
   role_org: string | null
+  in_mention_rotation?: boolean
 }
 
 export default function Contacts() {
@@ -14,10 +15,13 @@ export default function Contacts() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [rotationOnly, setRotationOnly] = useState(false)
+  const [togglingId, setTogglingId] = useState<number | null>(null)
 
   useEffect(() => {
-    const params = new URLSearchParams({ limit: '50' })
+    const params = new URLSearchParams({ limit: '100' })
     if (search) params.set('q', search)
+    if (rotationOnly) params.set('in_rotation', '1')
     fetch(`/api/contacts?${params}`)
       .then((res) => res.json())
       .then((data) => {
@@ -26,13 +30,30 @@ export default function Contacts() {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
-  }, [search])
+  }, [search, rotationOnly])
+
+  const toggleRotation = (c: Contact) => {
+    setTogglingId(c.id)
+    fetch(`/api/contacts/${c.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ in_mention_rotation: !c.in_mention_rotation }),
+    })
+      .then((r) => r.json())
+      .then(() => {
+        setContacts((prev) =>
+          prev.map((x) => (x.id === c.id ? { ...x, in_mention_rotation: !x.in_mention_rotation } : x)),
+        )
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setTogglingId(null))
+  }
 
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-slate-800">Contacts</h1>
 
-      <div className="mb-6">
+      <div className="mb-6 flex flex-wrap items-center gap-4">
         <input
           type="search"
           placeholder="Search by name or category..."
@@ -40,6 +61,18 @@ export default function Contacts() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full max-w-md rounded-md border border-slate-300 px-4 py-2 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
         />
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={rotationOnly}
+            onChange={(e) => setRotationOnly(e.target.checked)}
+            className="rounded border-slate-300"
+          />
+          In rotation only
+        </label>
+        <Link to="/rotation" className="text-sm text-slate-600 hover:text-slate-800">
+          Manage rotation →
+        </Link>
       </div>
 
       {loading ? (
@@ -60,6 +93,9 @@ export default function Contacts() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                   Role/Org
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                  Rotation
                 </th>
               </tr>
             </thead>
@@ -82,6 +118,17 @@ export default function Contacts() {
                   </td>
                   <td className="max-w-xs truncate px-6 py-4 text-sm text-slate-500">
                     {c.role_org ?? '-'}
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      type="button"
+                      onClick={() => toggleRotation(c)}
+                      disabled={togglingId === c.id}
+                      title={c.in_mention_rotation ? 'Remove from rotation' : 'Add to rotation'}
+                      className={`rounded px-2 py-1 text-xs font-medium ${c.in_mention_rotation ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'} hover:opacity-80 disabled:opacity-50`}
+                    >
+                      {togglingId === c.id ? '…' : c.in_mention_rotation ? 'In rotation' : 'Add'}
+                    </button>
                   </td>
                 </tr>
               ))}

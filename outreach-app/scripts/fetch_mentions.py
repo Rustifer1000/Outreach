@@ -102,9 +102,14 @@ def main():
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    # Exclude contacts we've already reached out to (one-time outreach + follow-up in 2 weeks)
+    # Exclude contacts we've already reached out to
     contacted_ids = {r.contact_id for r in session.query(OutreachLog.contact_id).distinct().all()}
     query = session.query(Contact).order_by(Contact.list_number)
+    # If any contact is in the "mention rotation", fetch only those (daily core group)
+    use_rotation = session.query(Contact).filter(Contact.in_mention_rotation == 1).limit(1).first() is not None
+    if use_rotation:
+        query = query.filter(Contact.in_mention_rotation == 1)
+        print("Using mention rotation: only fetching for tagged contacts.")
     if contacted_ids:
         query = query.filter(Contact.id.notin_(contacted_ids))
     contacts = query.all()

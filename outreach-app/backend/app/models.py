@@ -18,12 +18,20 @@ class Contact(Base):
     role_org = Column(Text, nullable=True)
     connection_to_solomon = Column(Text, nullable=True)
     primary_interests = Column(Text, nullable=True)  # For future enrichment
+    relationship_stage = Column(String(50), nullable=True)  # Cold, Warm, Engaged, Partner-Advocate
+    in_mention_rotation = Column(Integer, default=0)  # 1 = include in daily mention fetch (tagged core group)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
     mentions = relationship("Mention", back_populates="contact")
     outreach_log = relationship("OutreachLog", back_populates="contact")
     contact_info = relationship("ContactInfo", back_populates="contact")
+    notes = relationship("Note", back_populates="contact")
+    connections = relationship(
+        "ContactConnection",
+        back_populates="contact",
+        foreign_keys="ContactConnection.contact_id",
+    )
 
 
 class ContactInfo(Base):
@@ -71,3 +79,32 @@ class OutreachLog(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     contact = relationship("Contact", back_populates="outreach_log")
+
+
+class Note(Base):
+    """Conversation note for a contact (follow-ups, call notes, etc.)."""
+    __tablename__ = "notes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=False, index=True)
+    note_text = Column(Text, nullable=False)
+    note_date = Column(DateTime, nullable=False)  # When the conversation/note occurred
+    channel = Column(String(50), nullable=True)  # email, call, meeting, etc.
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+
+    contact = relationship("Contact", back_populates="notes")
+
+
+class ContactConnection(Base):
+    """How this contact is related to others on the list (first/second degree, same org, co-author, etc.)."""
+    __tablename__ = "contact_connections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=False, index=True)
+    other_contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=False, index=True)
+    relationship_type = Column(String(100), nullable=False)  # first_degree, second_degree, same_org, co_author, etc.
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+
+    contact = relationship("Contact", back_populates="connections", foreign_keys=[contact_id])
+    other_contact = relationship("Contact", foreign_keys=[other_contact_id])

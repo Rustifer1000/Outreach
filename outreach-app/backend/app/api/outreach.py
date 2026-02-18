@@ -31,7 +31,24 @@ async def list_outreach(
         query = query.filter(OutreachLog.contact_id == contact_id)
     total = query.count()
     entries = query.order_by(OutreachLog.sent_at.desc().nullslast()).offset(skip).limit(limit).all()
-    return {"total": total, "entries": entries, "skip": skip, "limit": limit}
+    return {
+        "total": total,
+        "entries": [
+            {
+                "id": e.id,
+                "contact_id": e.contact_id,
+                "method": e.method,
+                "subject": e.subject,
+                "content": e.content,
+                "sent_at": e.sent_at.isoformat() if e.sent_at else None,
+                "response_status": e.response_status,
+                "created_at": e.created_at.isoformat() if e.created_at else None,
+            }
+            for e in entries
+        ],
+        "skip": skip,
+        "limit": limit,
+    }
 
 
 @router.post("")

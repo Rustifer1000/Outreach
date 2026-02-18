@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 interface Mention {
@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [mentions, setMentions] = useState<Mention[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const loadMentions = () => {
     fetch('/api/mentions?days=7&limit=20')
@@ -31,18 +32,28 @@ export default function Dashboard() {
     loadMentions()
   }, [])
 
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+    }
+  }, [])
+
   const handleRefresh = () => {
     setRefreshing(true)
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current)
+      pollIntervalRef.current = null
+    }
     fetch('/api/jobs/fetch-mentions', { method: 'POST' })
       .then((r) => r.json())
       .then(() => {
-        // Poll for updates every 10s, up to 60s
         let attempts = 0
-        const interval = setInterval(() => {
+        pollIntervalRef.current = setInterval(() => {
           attempts++
           loadMentions()
           if (attempts >= 6) {
-            clearInterval(interval)
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+            pollIntervalRef.current = null
             setRefreshing(false)
           }
         }, 10000)

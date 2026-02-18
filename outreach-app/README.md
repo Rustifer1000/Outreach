@@ -49,6 +49,16 @@ npm run dev
 
 Open http://localhost:5173
 
+## Testing (backend)
+
+From `outreach-app/backend` (with dependencies installed):
+
+```bash
+python -m pytest tests/ -v
+```
+
+Uses an in-memory SQLite DB; no real database is touched. Covers contacts list, `in_rotation` filter, rotation GET/PUT, and PATCH `in_mention_rotation`.
+
 ## Project Structure
 
 ```
@@ -69,7 +79,12 @@ outreach-app/
 ## API Endpoints
 
 - `GET /api/contacts` — List contacts (search, filter by category)
-- `GET /api/contacts/:id` — Contact detail
+- `GET /api/contacts/:id` — Contact detail (includes relationship_stage)
+- `PATCH /api/contacts/:id` — Update contact (e.g. relationship_stage)
+- `GET/POST /api/contacts/:id/notes` — Conversation notes
+- `GET/POST/DELETE /api/contacts/:id/connections` — Related contacts (first/second degree)
+- `POST /api/jobs/discover-connections-from-mentions` — Scan mention snippets for other names (no API)
+- `POST /api/jobs/discover-connections-for-contact` — Web search (NewsAPI) for one contact vs others
 - `GET /api/mentions` — Recent mentions (filter by days, contact)
 - `GET /api/outreach` — Outreach log (filter by contact)
 

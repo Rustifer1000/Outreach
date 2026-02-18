@@ -6,13 +6,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import contacts, mentions, outreach, jobs
+from app.api import contacts, mentions, outreach, jobs, names_file, relationship_map
 from app.scheduler import get_scheduler
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Start scheduler on startup, stop on shutdown."""
+    """Run Phase 2B migration (idempotent), start scheduler on startup, stop on shutdown."""
+    try:
+        from app.migrate_phase2b import run as run_migrate
+        run_migrate()
+    except Exception:
+        pass  # e.g. DB not yet created; seed_contacts --reset will create tables
     scheduler = get_scheduler()
     scheduler.start()
     yield
@@ -38,6 +43,8 @@ app.include_router(contacts.router, prefix="/api/contacts", tags=["contacts"])
 app.include_router(mentions.router, prefix="/api/mentions", tags=["mentions"])
 app.include_router(outreach.router, prefix="/api/outreach", tags=["outreach"])
 app.include_router(jobs.router, prefix="/api/jobs", tags=["jobs"])
+app.include_router(names_file.router, prefix="/api/names-file", tags=["names-file"])
+app.include_router(relationship_map.router, prefix="/api/relationship-map", tags=["relationship-map"])
 
 
 @app.get("/")
