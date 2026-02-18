@@ -10,7 +10,6 @@ Usage:
     python fetch_mentions.py [--limit 50] [--days 7]
 """
 import argparse
-import hashlib
 import os
 import sys
 import time
@@ -21,7 +20,19 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.models import Contact, Mention
+from app.models import Contact, Mention, OutreachLog
+
+
+def _normalize_url(url: str | None) -> str | None:
+    """Strip tracking params for dedupe; return None if invalid."""
+    if not url or not url.strip():
+        return None
+    try:
+        from urllib.parse import urlparse, urlunparse
+        p = urlparse(url.strip())
+        return urlunparse((p.scheme, p.netloc, p.path, "", "", ""))
+    except Exception:
+        return url
 
 
 def fetch_newsapi(api_key: str, name: str, days: int) -> list[dict]:
@@ -91,29 +102,31 @@ def main():
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    contacts = session.query(Contact).order_by(Contact.list_number).all()
+    # Exclude contacts we've already reached out to (one-time outreach + follow-up in 2 weeks)
+    contacted_ids = {r.contact_id for r in session.query(OutreachLog.contact_id).distinct().all()}
+    query = session.query(Contact).order_by(Contact.list_number)
+    if contacted_ids:
+        query = query.filter(Contact.id.notin_(contacted_ids))
+    contacts = query.all()
     if args.limit:
         contacts = contacts[: args.limit]
 
     max_per = max(1, min(args.max_per_contact, 2))  # Clamp to 1 or 2
     print(f"Fetching mentions for {len(contacts)} contacts (last {args.days} days, max {max_per} per contact)...")
+    if contacted_ids:
+        print(f"  (Skipping {len(contacted_ids)} contacts already contacted)")
 
     added = 0
     for i, contact in enumerate(contacts):
         articles = fetch_newsapi(api_key, contact.name, args.days)
         for a in articles[:max_per]:  # Only take first 1-2 (most recent)
-            if not a.get("source_url"):
+            raw_url = a.get("source_url")
+            norm_url = _normalize_url(raw_url)
+            if not norm_url:
                 continue
-            # Dedupe: check if we already have this URL for this contact
-            existing = (
-                session.query(Mention)
-                .filter(
-                    Mention.contact_id == contact.id,
-                    Mention.source_url == a["source_url"],
-                )
-                .first()
-            )
-            if existing:
+            # Dedupe: same URL for this contact (normalize to avoid ?utm_ param duplicates)
+            existing_rows = session.query(Mention).filter(Mention.contact_id == contact.id).all()
+            if any(_normalize_url(ex.source_url) == norm_url for ex in existing_rows):
                 continue
 
             pub = None
@@ -126,7 +139,7 @@ def main():
             mention = Mention(
                 contact_id=contact.id,
                 source_type="news",
-                source_url=a["source_url"],
+                source_url=raw_url,  # Keep original for working links
                 title=a["title"],
                 snippet=a["snippet"],
                 published_at=pub,
@@ -134,11 +147,11 @@ def main():
             session.add(mention)
             added += 1
 
-        session.commit()
         if articles:
             print(f"  [{i+1}/{len(contacts)}] {contact.name}: +{len(articles)} articles")
         time.sleep(args.delay)
 
+    session.commit()
     session.close()
     print(f"Done. Added {added} new mentions.")
     return 0

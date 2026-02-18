@@ -35,21 +35,6 @@ def parse_names_file(input_path: Path) -> list[Contact]:
     current_category = ""
     current_subcategory: Optional[str] = None
 
-    # Split into sections by category headers
-    # Match: ## Category N: Name (range) or ### Subcategory Name
-    category_pattern = re.compile(
-        r'^##\s+(.+?)(?:\s+\(\d+[–-]\d+\))?\s*$|^###\s+(.+?)\s*$',
-        re.MULTILINE
-    )
-
-    # Match contact entries: **N. Name** — Role or **Name** — Role or **N. Name** (no role)
-    # Also handles: **N. Name — Subname** — Role and **N. Name (parenthetical)**
-    entry_pattern = re.compile(
-        r'\*\*\s*(\d+)?\.?\s*(.+?)\s*\*\*\s*'
-        r'(?:—\s*(.+?))?(?:\s*\(([^)]+)\))?\s*$',
-        re.MULTILINE
-    )
-
     lines = text.split("\n")
     i = 0
 

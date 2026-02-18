@@ -20,10 +20,17 @@ async def list_mentions(
 ):
     """List recent mentions. Limits to max_per_contact per person on dashboard."""
     cutoff = datetime.now(UTC) - timedelta(days=days)
+    # Filter by published_at (news date) when available, else created_at (when we added it)
+    from sqlalchemy import or_, and_
     query = (
         db.query(Mention)
         .options(joinedload(Mention.contact))
-        .filter(Mention.created_at >= cutoff)
+        .filter(
+            or_(
+                Mention.published_at >= cutoff,
+                and_(Mention.published_at.is_(None), Mention.created_at >= cutoff),
+            )
+        )
     )
     if contact_id:
         query = query.filter(Mention.contact_id == contact_id)
@@ -67,7 +74,23 @@ async def list_mentions(
 @router.get("/{mention_id}")
 async def get_mention(mention_id: int, db: Session = Depends(get_db)):
     """Get a single mention by ID."""
-    mention = db.query(Mention).filter(Mention.id == mention_id).first()
+    mention = (
+        db.query(Mention)
+        .options(joinedload(Mention.contact))
+        .filter(Mention.id == mention_id)
+        .first()
+    )
     if not mention:
         raise HTTPException(status_code=404, detail="Mention not found")
-    return mention
+    return {
+        "id": mention.id,
+        "contact_id": mention.contact_id,
+        "contact_name": mention.contact.name if mention.contact else None,
+        "source_type": mention.source_type,
+        "source_url": mention.source_url,
+        "title": mention.title,
+        "snippet": mention.snippet,
+        "published_at": mention.published_at.isoformat() if mention.published_at else None,
+        "created_at": mention.created_at.isoformat() if mention.created_at else None,
+        "relevance_score": mention.relevance_score,
+    }

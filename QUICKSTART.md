@@ -18,21 +18,27 @@
 
 ---
 
-## Start Working (2 terminals)
+## Start Working
 
-**Terminal 1 — Backend**
+**Option A — One command (recommended)**
 ```bash
-cd outreach-app/backend
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+cd outreach-app
+npm install
+npm start
 ```
+Opens both backend and frontend. Then go to **http://localhost:5173**
 
-**Terminal 2 — Frontend**
+**Option B — From Cursor/VS Code UI**
+- `Terminal` → `Run Task` → `Start Solomon Outreach`
+
+**Option C — Two terminals**
 ```bash
-cd outreach-app/frontend
-npm run dev
-```
+# Terminal 1
+cd outreach-app/backend && uvicorn app.main:app --reload --port 8000
 
-Open **http://localhost:5173**
+# Terminal 2
+cd outreach-app/frontend && npm run dev
+```
 
 ---
 
@@ -54,11 +60,10 @@ Open **http://localhost:5173**
 
 ---
 
-## Next Up (Phase 1)
+## Scheduled Fetch
 
-1. **Outreach log form** — Add UI + POST endpoint to log outreach (method, content, date, response)
-2. **Scheduled fetch** — Cron or APScheduler to run `fetch_mentions.py` daily
-3. **Contact detail polish** — Outreach form on contact page
+- **Automatic:** When the backend runs, it fetches new mentions daily at **8:00 AM**
+- **Manual:** Click "Refresh mentions now" on the dashboard to fetch immediately
 
 ---
 

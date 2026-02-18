@@ -16,16 +16,42 @@ interface Mention {
 export default function Dashboard() {
   const [mentions, setMentions] = useState<Mention[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
-  useEffect(() => {
+  const loadMentions = () => {
     fetch('/api/mentions?days=7&limit=20')
       .then((res) => res.json())
-      .then((data) => {
-        setMentions(data.mentions || [])
-      })
+      .then((data) => setMentions(data.mentions || []))
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    setLoading(true)
+    loadMentions()
   }, [])
+
+  const handleRefresh = () => {
+    setRefreshing(true)
+    fetch('/api/jobs/fetch-mentions', { method: 'POST' })
+      .then((r) => r.json())
+      .then(() => {
+        // Poll for updates every 10s, up to 60s
+        let attempts = 0
+        const interval = setInterval(() => {
+          attempts++
+          loadMentions()
+          if (attempts >= 6) {
+            clearInterval(interval)
+            setRefreshing(false)
+          }
+        }, 10000)
+      })
+      .catch((err) => {
+        console.error(err)
+        setRefreshing(false)
+      })
+  }
 
   return (
     <div>
@@ -77,7 +103,14 @@ export default function Dashboard() {
 
       <section className="rounded-lg bg-white p-6 shadow">
         <h2 className="mb-4 text-lg font-semibold text-slate-700">Quick Actions</h2>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="rounded-md bg-slate-600 px-4 py-2 text-white hover:bg-slate-500 disabled:opacity-50"
+          >
+            {refreshing ? 'Fetching... (updates every 10s)' : 'Refresh mentions now'}
+          </button>
           <Link
             to="/contacts"
             className="rounded-md bg-slate-800 px-4 py-2 text-white hover:bg-slate-700"
