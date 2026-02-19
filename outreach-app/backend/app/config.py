@@ -15,13 +15,15 @@ class Settings(BaseSettings):
     mediacloud_api_key: str | None = None
     newsapi_key: str | None = None
     hunter_api_key: str | None = None
+    anthropic_api_key: str | None = None
 
     # App
     debug: bool = False
     environment: str = "development"
 
     class Config:
-        env_file = ".env"
+        # Look for .env in project root (outreach-app/) when running from backend/
+        env_file = Path(__file__).resolve().parent.parent.parent / ".env"
         env_file_encoding = "utf-8"
 
 

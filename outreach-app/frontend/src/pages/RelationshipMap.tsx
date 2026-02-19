@@ -43,6 +43,7 @@ export default function RelationshipMap() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [discoveringFromMentions, setDiscoveringFromMentions] = useState(false)
+  const [discoveringAll, setDiscoveringAll] = useState(false)
 
   const loadMap = useCallback(() => {
     setLoading(true)
@@ -114,6 +115,19 @@ export default function RelationshipMap() {
       .catch(() => setDiscoveringFromMentions(false))
   }
 
+  const handleDiscoverAll = () => {
+    setDiscoveringAll(true)
+    fetch('/api/jobs/discover-all-connections', { method: 'POST' })
+      .then((r) => r.json())
+      .then(() => {
+        setTimeout(() => {
+          loadMap()
+          setDiscoveringAll(false)
+        }, 5000)
+      })
+      .catch(() => setDiscoveringAll(false))
+  }
+
   if (loading) {
     return (
       <div className="py-8">
@@ -175,12 +189,21 @@ export default function RelationshipMap() {
           </button>
           <button
             type="button"
-            onClick={handleDiscoverFromMentions}
-            disabled={discoveringFromMentions}
-            className="rounded border border-slate-400 bg-slate-100 px-4 py-2 text-sm text-slate-800 hover:bg-slate-200 disabled:opacity-50"
-            title="Scan existing mention snippets for other contact names (same article, podcast, conference). No extra API calls."
+            onClick={handleDiscoverAll}
+            disabled={discoveringAll || discoveringFromMentions}
+            className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+            title="Agentic: scan mentions (LLM-enriched when Anthropic key set) + web search. ~2–3 min."
           >
-            {discoveringFromMentions ? 'Running…' : 'Discover from mentions'}
+            {discoveringAll ? 'Discovering all…' : 'Discover all connections'}
+          </button>
+          <button
+            type="button"
+            onClick={handleDiscoverFromMentions}
+            disabled={discoveringAll || discoveringFromMentions}
+            className="rounded border border-slate-400 bg-slate-100 px-4 py-2 text-sm text-slate-800 hover:bg-slate-200 disabled:opacity-50"
+            title="Scan existing mention snippets only. No extra API calls."
+          >
+            {discoveringFromMentions ? 'Running…' : 'From mentions only'}
           </button>
         </div>
       </div>

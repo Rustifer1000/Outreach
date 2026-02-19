@@ -95,6 +95,8 @@ export default function ContactDetail() {
   const [addingConnection, setAddingConnection] = useState(false)
   const [savingStage, setSavingStage] = useState(false)
   const [discovering, setDiscovering] = useState(false)
+  const [enriching, setEnriching] = useState(false)
+  const [enrichMessage, setEnrichMessage] = useState<string | null>(null)
 
   const refreshOutreach = () => {
     if (id) loadOutreach(id).then((d) => setOutreach(d.entries || []))
@@ -193,6 +195,28 @@ export default function ContactDetail() {
         }, 2000)
       })
       .catch(() => setDiscovering(false))
+  }
+
+  const hasEmail = contact?.contact_info?.some((ci) => ci.type === 'email') ?? false
+
+  const handleEnrich = () => {
+    if (!id) return
+    setEnriching(true)
+    setEnrichMessage(null)
+    fetch(`/api/contacts/${id}/enrich`, { method: 'POST' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.detail) {
+          setEnrichMessage(d.detail)
+        } else if (d.found) {
+          setEnrichMessage(`Found: ${d.email}`)
+          refreshContact()
+        } else {
+          setEnrichMessage(d.message ?? 'No email found')
+        }
+      })
+      .catch(() => setEnrichMessage('Enrichment failed'))
+      .finally(() => setEnriching(false))
   }
 
   const handleAddContactInfo = (e: React.FormEvent) => {
@@ -341,6 +365,22 @@ export default function ContactDetail() {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {!hasEmail && contact.role_org && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleEnrich}
+              disabled={enriching}
+              className="rounded border border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+            >
+              {enriching ? 'Looking up...' : 'Enrich (find email via Hunter)'}
+            </button>
+            {enrichMessage && (
+              <span className="text-sm text-slate-600">{enrichMessage}</span>
+            )}
           </div>
         )}
 

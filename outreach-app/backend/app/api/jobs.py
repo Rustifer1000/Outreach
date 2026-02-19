@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from app.scheduler import run_fetch_mentions
 from app.database import SessionLocal
-from app.discovery import discover_from_mentions, discover_via_search
+from app.discovery import discover_from_mentions, discover_via_search, discover_all
 from app.config import settings
 
 router = APIRouter()
@@ -41,6 +41,22 @@ async def trigger_discover_from_mentions(background_tasks: BackgroundTasks):
     """Scan existing mention snippets for other contact names; add connections when found (same article, podcast, etc.). No extra API calls."""
     background_tasks.add_task(_run_discover_from_mentions)
     return {"status": "started", "message": "Discovering connections from mention text in background. Refresh the map in a minute."}
+
+
+def _run_discover_all():
+    db = SessionLocal()
+    try:
+        api_key = settings.newsapi_key or __import__("os").environ.get("NEWSAPI_KEY")
+        return discover_all(db, api_key, max_contacts=15, max_pairs_per_contact=5)
+    finally:
+        db.close()
+
+
+@router.post("/discover-all-connections")
+async def trigger_discover_all(background_tasks: BackgroundTasks):
+    """Agentic: run from-mentions (all) + via-search for up to 15 contacts (rotation first). ~2–3 min."""
+    background_tasks.add_task(_run_discover_all)
+    return {"status": "started", "message": "Discovering all connections (mentions + web search). Refresh the map in 2–3 minutes."}
 
 
 class DiscoverForContactBody(BaseModel):

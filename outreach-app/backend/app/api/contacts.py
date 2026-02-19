@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 
+from app.config import settings
 from app.database import get_db
+from app.enrichment import enrich_contact_email
 from app.models import Contact, ContactInfo, Note, ContactConnection
 
 # Priority order for first-contact recommendations
@@ -326,3 +328,51 @@ async def add_contact_info(
     db.commit()
     db.refresh(info)
     return {"id": info.id, "type": info.type, "value": info.value, "is_primary": info.is_primary}
+
+
+@router.post("/{contact_id}/enrich")
+async def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
+    """Look up email via Hunter API and add to contact_info if found."""
+    if not settings.hunter_api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="HUNTER_API_KEY not configured. Add to .env for enrichment.",
+        )
+    contact = (
+        db.query(Contact)
+        .options(joinedload(Contact.contact_info))
+        .filter(Contact.id == contact_id)
+        .first()
+    )
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+
+    # Skip if already has email
+    existing_emails = {ci.value.lower() for ci in (contact.contact_info or []) if ci.type == "email"}
+    if existing_emails:
+        return {"found": False, "message": "Contact already has email(s).", "emails": list(existing_emails)}
+
+    result = enrich_contact_email(
+        api_key=settings.hunter_api_key,
+        full_name=contact.name,
+        role_org=contact.role_org,
+    )
+    if not result:
+        return {"found": False, "message": "No email found (check role_org has recognizable org)."}
+
+    # Add email to contact_info
+    info = ContactInfo(
+        contact_id=contact_id,
+        type="email",
+        value=result["email"],
+        is_primary=1,
+    )
+    db.add(info)
+    db.commit()
+    db.refresh(info)
+    return {
+        "found": True,
+        "email": result["email"],
+        "score": result.get("score"),
+        "position": result.get("position"),
+    }
