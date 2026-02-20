@@ -113,11 +113,20 @@ export default function Rotation() {
       </p>
 
       <div className="mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow">
-        <h2 className="mb-2 text-lg font-semibold text-slate-800">
-          In rotation ({rotation.length}) {rotation.length >= RECOMMENDED ? '' : `— recommend ${RECOMMENDED}+`}
-        </h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-800">
+            In rotation ({rotation.length}) {rotation.length >= RECOMMENDED ? '' : `— recommend ${RECOMMENDED}+`}
+          </h2>
+          <button
+            type="button"
+            onClick={() => { setLoading(true); loadRotation(); loadContacts(); setLoading(false) }}
+            className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            Refresh list
+          </button>
+        </div>
         <p className="mb-4 text-xs text-slate-500">
-          These contacts will be included in the next mention fetch (dashboard Refresh or scheduled job).
+          These contacts will be included in the next mention fetch. Use &quot;Refresh mentions&quot; in the nav to run the fetch.
         </p>
         {rotation.length === 0 ? (
           <p className="text-slate-500">No one in rotation. Add contacts below or set from the list.</p>
