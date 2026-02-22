@@ -1,6 +1,7 @@
 """Mentions API endpoints."""
 from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, Depends, Query, HTTPException
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
@@ -18,44 +19,46 @@ async def list_mentions(
     limit: int = Query(50, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
-    """List recent mentions. Limits to max_per_contact per person on dashboard."""
+    """List recent mentions. Limits to max_per_contact per person on dashboard (SQL)."""
     cutoff = datetime.now(UTC) - timedelta(days=days)
-    # Filter by published_at (news date) when available, else created_at (when we added it)
-    from sqlalchemy import or_, and_
-    query = (
-        db.query(Mention)
-        .options(joinedload(Mention.contact))
-        .filter(
-            or_(
-                Mention.published_at >= cutoff,
-                and_(Mention.published_at.is_(None), Mention.created_at >= cutoff),
-            )
-        )
+    date_filter = or_(
+        Mention.published_at >= cutoff,
+        and_(Mention.published_at.is_(None), Mention.created_at >= cutoff),
     )
-    if contact_id:
-        query = query.filter(Mention.contact_id == contact_id)
-    mentions = query.order_by(Mention.published_at.desc().nullslast()).all()
 
-    # Limit to max_per_contact per contact on dashboard; contact detail (filtered by contact_id) shows all
     if contact_id:
-        flattened = mentions
+        # Single contact: no per-contact limit, fetch all for that contact
+        query = (
+            db.query(Mention)
+            .options(joinedload(Mention.contact))
+            .filter(date_filter, Mention.contact_id == contact_id)
+            .order_by(Mention.published_at.desc().nullslast())
+        )
+        total = query.count()
+        mentions = query.offset(skip).limit(limit).all()
     else:
-        by_contact: dict[int, list] = {}
-        for m in mentions:
-            cid = m.contact_id
-            if cid not in by_contact:
-                by_contact[cid] = []
-            if len(by_contact[cid]) < max_per_contact:
-                by_contact[cid].append(m)
-        flattened = [m for ms in by_contact.values() for m in ms]
-        flattened.sort(key=lambda m: m.published_at or m.created_at, reverse=True)
-
-    # Apply skip/limit
-    total = len(flattened)
-    page = flattened[skip : skip + limit]
+        # Dashboard: limit per contact in SQL using ROW_NUMBER
+        rn = func.row_number().over(
+            partition_by=Mention.contact_id,
+            order_by=Mention.published_at.desc().nullslast(),
+        ).label("rn")
+        subq = db.query(Mention, rn).filter(date_filter).subquery()
+        mention_alias = db.query(Mention).join(
+            subq, Mention.id == subq.c.id
+        ).filter(subq.c.rn <= max_per_contact)
+        total = db.query(func.count()).select_from(subq).filter(
+            subq.c.rn <= max_per_contact
+        ).scalar() or 0
+        mentions = (
+            mention_alias.options(joinedload(Mention.contact))
+            .order_by(Mention.published_at.desc().nullslast())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     result = []
-    for m in page:
+    for m in mentions:
         result.append({
             "id": m.id,
             "contact_id": m.contact_id,

@@ -35,7 +35,7 @@ async def list_contacts(
     category: str | None = Query(None, description="Filter by category"),
     in_rotation: bool | None = Query(None, description="Filter to contacts in mention rotation"),
     skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
+    limit: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
     """List contacts with optional search and filter."""
@@ -79,8 +79,10 @@ class RotationSetBody(BaseModel):
 @router.put("/rotation")
 async def set_mention_rotation(body: RotationSetBody, db: Session = Depends(get_db)):
     """Set the daily mention rotation: only these contact IDs will be included in the next mention fetch. Clears others."""
-    db.query(Contact).update({Contact.in_mention_rotation: 0})
+    # Set all to 0 first
+    db.query(Contact).update({Contact.in_mention_rotation: 0}, synchronize_session=False)
     if body.contact_ids:
+        # Set only matching IDs to 1 (IDs that don't exist are ignored)
         db.query(Contact).filter(Contact.id.in_(body.contact_ids)).update(
             {Contact.in_mention_rotation: 1}, synchronize_session=False
         )

@@ -23,26 +23,23 @@ export default function Rotation() {
   const [adding, setAdding] = useState(false)
   const [addId, setAddId] = useState('')
   const [replacing, setReplacing] = useState(false)
+  const [replaceFeedback, setReplaceFeedback] = useState<string | null>(null)
 
-  const loadRotation = () => {
+  const loadRotation = () =>
     fetch('/api/contacts/rotation')
       .then((r) => r.json())
       .then((d) => setRotation(d.contacts || []))
       .catch(() => setRotation([]))
-  }
 
-  const loadContacts = () => {
-    fetch('/api/contacts?limit=400')
+  const loadContacts = () =>
+    fetch('/api/contacts?limit=500')
       .then((r) => r.json())
       .then((d) => setAllContacts(d.contacts || []))
       .catch(() => setAllContacts([]))
-  }
 
   useEffect(() => {
     setLoading(true)
-    loadRotation()
-    loadContacts()
-    setLoading(false)
+    Promise.all([loadRotation(), loadContacts()]).finally(() => setLoading(false))
   }, [])
 
   const rotationIds = new Set(rotation.map((c) => c.id))
@@ -75,25 +72,55 @@ export default function Rotation() {
       .finally(() => setAdding(false))
   }
 
+  const parseIdsFromInput = (raw: string): number[] => {
+    const seen = new Set<number>()
+    const parts = raw.split(/[\n,\s;]+/)
+    for (const s of parts) {
+      const trimmed = s.trim()
+      const dash = trimmed.indexOf('-')
+      if (dash >= 0) {
+        const a = parseInt(trimmed.slice(0, dash), 10)
+        const b = parseInt(trimmed.slice(dash + 1), 10)
+        if (!Number.isNaN(a) && !Number.isNaN(b) && a > 0 && b > 0) {
+          const [lo, hi] = a <= b ? [a, b] : [b, a]
+          for (let i = lo; i <= hi; i++) seen.add(i)
+        }
+      } else {
+        const n = parseInt(trimmed, 10)
+        if (!Number.isNaN(n) && n > 0) seen.add(n)
+      }
+    }
+    return [...seen].sort((a, b) => a - b)
+  }
+
   const handleReplaceRotation = (e: React.FormEvent) => {
     e.preventDefault()
-    const ids = (e.currentTarget.querySelector('textarea') as HTMLTextAreaElement)?.value
-      .split(/[\n,]+/)
-      .map((s) => parseInt(s.trim(), 10))
-      .filter((n) => !Number.isNaN(n) && n > 0)
-    if (ids.length === 0) return
+    setReplaceFeedback(null)
+    const raw = (e.currentTarget.querySelector('textarea') as HTMLTextAreaElement)?.value ?? ''
+    const ids = parseIdsFromInput(raw)
+    if (ids.length === 0) {
+      setReplaceFeedback('No valid IDs found. Use numbers separated by commas, spaces, or newlines.')
+      return
+    }
     setReplacing(true)
     fetch('/api/contacts/rotation', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contact_ids: ids }),
     })
-      .then((r) => r.json())
-      .then(() => {
+      .then((r) => {
+        if (!r.ok) throw new Error(r.statusText)
+        return r.json()
+      })
+      .then((data) => {
+        setReplaceFeedback(data.message ?? `${data.in_rotation} contacts in rotation.`)
         loadRotation()
         loadContacts()
       })
-      .catch((e) => console.error(e))
+      .catch((e) => {
+        setReplaceFeedback(`Error: ${e.message}`)
+        console.error(e)
+      })
       .finally(() => setReplacing(false))
   }
 
@@ -119,7 +146,7 @@ export default function Rotation() {
           </h2>
           <button
             type="button"
-            onClick={() => { setLoading(true); loadRotation(); loadContacts(); setLoading(false) }}
+            onClick={() => { setLoading(true); Promise.all([loadRotation(), loadContacts()]).finally(() => setLoading(false)) }}
             className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
           >
             Refresh list
@@ -188,9 +215,14 @@ export default function Rotation() {
           <textarea
             name="ids"
             rows={3}
-            placeholder="e.g. 1, 2, 3, 5, 8..."
+            placeholder="e.g. 1, 2, 3, 5, 8  or  1-30 (copy IDs from Contacts page)"
             className="rounded border border-slate-300 bg-white px-3 py-2 text-sm"
           />
+          {replaceFeedback && (
+            <p className={`text-sm ${replaceFeedback.startsWith('Error') ? 'text-red-600' : 'text-slate-600'}`}>
+              {replaceFeedback}
+            </p>
+          )}
           <button
             type="submit"
             disabled={replacing}
