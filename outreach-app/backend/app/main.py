@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 logger = logging.getLogger(__name__)
 
-from app.api import contacts, mentions, outreach, jobs, names_file, relationship_map
+from app.api import contacts, mentions, outreach, jobs, names_file, relationship_map, digest
 from app.scheduler import get_scheduler
 
 
@@ -51,6 +51,7 @@ app.include_router(outreach.router, prefix="/api/outreach", tags=["outreach"])
 app.include_router(jobs.router, prefix="/api/jobs", tags=["jobs"])
 app.include_router(names_file.router, prefix="/api/names-file", tags=["names-file"])
 app.include_router(relationship_map.router, prefix="/api/relationship-map", tags=["relationship-map"])
+app.include_router(digest.router, prefix="/api/digest", tags=["digest"])
 
 
 @app.get("/")
