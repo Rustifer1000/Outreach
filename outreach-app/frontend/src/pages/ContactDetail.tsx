@@ -97,19 +97,21 @@ export default function ContactDetail() {
   const [discovering, setDiscovering] = useState(false)
   const [enriching, setEnriching] = useState(false)
   const [enrichMessage, setEnrichMessage] = useState<string | null>(null)
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const refreshOutreach = () => {
-    if (id) loadOutreach(id).then((d) => setOutreach(d.entries || [])).catch((err) => console.error('Failed to refresh outreach:', err))
+    if (id) loadOutreach(id).then((d) => setOutreach(d.entries || [])).catch(() => setError('Failed to refresh outreach'))
   }
   const refreshNotes = () => {
-    if (id) loadNotes(id).then((d) => setNotes(d.notes || [])).catch((err) => console.error('Failed to refresh notes:', err))
+    if (id) loadNotes(id).then((d) => setNotes(d.notes || [])).catch(() => setError('Failed to refresh notes'))
   }
   const refreshConnections = () => {
-    if (id) loadConnections(id).then((d) => setConnections(d.connections || [])).catch((err) => console.error('Failed to refresh connections:', err))
+    if (id) loadConnections(id).then((d) => setConnections(d.connections || [])).catch(() => setError('Failed to refresh connections'))
   }
 
   const refreshContact = () => {
-    if (id) fetch(`/api/contacts/${id}`).then((r) => r.json()).then(setContact).catch((err) => console.error('Failed to refresh contact:', err))
+    if (id) fetch(`/api/contacts/${id}`).then((r) => r.json()).then(setContact).catch(() => setError('Failed to refresh contact'))
   }
 
   const handleStageChange = (stage: string) => {
@@ -124,7 +126,7 @@ export default function ContactDetail() {
       .then((d) => {
         setContact((c) => (c ? { ...c, relationship_stage: d.relationship_stage } : c))
       })
-      .catch((err) => console.error(err))
+      .catch(() => setError('Failed to save relationship stage'))
       .finally(() => setSavingStage(false))
   }
 
@@ -146,7 +148,7 @@ export default function ContactDetail() {
         setNoteForm({ note_text: '', note_date: new Date().toISOString().slice(0, 10), channel: '' })
         refreshNotes()
       })
-      .catch((err) => console.error(err))
+      .catch(() => setError('Failed to add note'))
       .finally(() => setAddingNote(false))
   }
 
@@ -168,7 +170,7 @@ export default function ContactDetail() {
         setConnectionForm({ other_contact_id: '', relationship_type: 'first_degree', notes: '' })
         refreshConnections()
       })
-      .catch((err) => console.error(err))
+      .catch(() => setError('Failed to add connection'))
       .finally(() => setAddingConnection(false))
   }
 
@@ -176,7 +178,7 @@ export default function ContactDetail() {
     if (!id || !window.confirm('Remove this connection?')) return
     fetch(`/api/contacts/${id}/connections/${connectionId}`, { method: 'DELETE' })
       .then(() => refreshConnections())
-      .catch((err) => console.error(err))
+      .catch(() => setError('Failed to remove connection'))
   }
 
   const handleDiscoverConnections = () => {
@@ -194,7 +196,10 @@ export default function ContactDetail() {
           setDiscovering(false)
         }, 2000)
       })
-      .catch(() => setDiscovering(false))
+      .catch(() => {
+        setDiscovering(false)
+        setError('Connection discovery failed')
+      })
   }
 
   const hasEmail = contact?.contact_info?.some((ci) => ci.type === 'email') ?? false
@@ -233,12 +238,17 @@ export default function ContactDetail() {
         setContactInfoForm({ type: 'email', value: '' })
         refreshContact()
       })
-      .catch((err) => console.error(err))
+      .catch(() => setError('Failed to add contact info'))
       .finally(() => setAddingInfo(false))
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
+  const copyToClipboard = (text: string, index: number) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedIndex(index)
+      setTimeout(() => setCopiedIndex(null), 1500)
+    }).catch(() => {
+      setError('Failed to copy to clipboard')
+    })
   }
 
   useEffect(() => {
@@ -260,7 +270,7 @@ export default function ContactDetail() {
           setForm((f) => ({ ...f, method: contactData.recommended_contact_method.method }))
         }
       })
-      .catch((err) => console.error(err))
+      .catch(() => setError('Failed to load contact data'))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -293,7 +303,7 @@ export default function ContactDetail() {
         setForm({ method: 'email', subject: '', content: '', response_status: 'sent' })
         refreshOutreach()
       })
-      .catch((err) => console.error(err))
+      .catch(() => setError('Failed to log outreach'))
       .finally(() => setSubmitting(false))
   }
 
@@ -310,6 +320,13 @@ export default function ContactDetail() {
       <Link to="/contacts" className="mb-4 inline-block text-sm text-slate-600 hover:text-slate-800">
         ← Back to Contacts
       </Link>
+
+      {error && (
+        <div className="mb-4 flex items-center justify-between rounded bg-red-50 px-4 py-3 text-sm text-red-800">
+          <span>{error}</span>
+          <button type="button" onClick={() => setError(null)} className="ml-4 font-medium text-red-600 hover:text-red-800">Dismiss</button>
+        </div>
+      )}
 
       <div className="mb-8 rounded-lg bg-white p-6 shadow">
         <h1 className="text-2xl font-bold text-slate-800">{contact.name}</h1>
@@ -357,10 +374,10 @@ export default function ContactDetail() {
                   <span className="text-slate-700">{ci.value}</span>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(ci.value)}
-                    className="text-xs text-blue-600 hover:underline"
+                    onClick={() => copyToClipboard(ci.value, i)}
+                    className={`text-xs ${copiedIndex === i ? 'text-green-600 font-medium' : 'text-blue-600 hover:underline'}`}
                   >
-                    Copy
+                    {copiedIndex === i ? 'Copied!' : 'Copy'}
                   </button>
                 </li>
               ))}
