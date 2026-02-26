@@ -32,7 +32,7 @@ def test_list_contacts_in_rotation_filter(client, db_session):
 def test_rotation_get_empty(client):
     r = client.get("/api/contacts/rotation")
     assert r.status_code == 200
-    assert r.json()["in_rotation"] == 0
+    assert r.json()["count"] == 0
     assert r.json()["contacts"] == []
 
 
