@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session, joinedload
 from app.config import settings
 from app.database import get_db
 from app.enrichment import enrich_contact_email
-from app.models import Contact, ContactInfo, Note, ContactConnection, OutreachLog
+from app.models import Contact, ContactInfo, ContactTag, Note, ContactConnection, OutreachLog
+from app.warm_intros import PRESET_TAGS, find_warm_intro_paths, compute_mission_alignment
 
 # Priority order for first-contact recommendations
 CONTACT_METHOD_PRIORITY = ["email", "linkedin", "twitter", "website", "other"]
@@ -143,7 +144,7 @@ async def list_contacts(
     db: Session = Depends(get_db),
 ):
     """List contacts with optional search and filter."""
-    query = db.query(Contact).options(joinedload(Contact.contact_info))
+    query = db.query(Contact).options(joinedload(Contact.contact_info), joinedload(Contact.tags))
     if q:
         query = query.filter(
             Contact.name.ilike(f"%{q}%") | Contact.category.ilike(f"%{q}%")
@@ -175,7 +176,9 @@ async def list_contacts(
                 "connection_to_solomon": c.connection_to_solomon,
                 "primary_interests": c.primary_interests,
                 "relationship_stage": c.relationship_stage,
+                "mission_alignment": c.mission_alignment,
                 "in_mention_rotation": bool(getattr(c, "in_mention_rotation", 0)),
+                "tags": [t.tag for t in (c.tags or [])],
                 "recommended_contact_method": get_recommended_method(
                     list(c.contact_info) if c.contact_info else [],
                     outreach_by_contact.get(c.id),
@@ -223,7 +226,7 @@ async def get_contact(contact_id: int, db: Session = Depends(get_db)):
     """Get a single contact by ID with contact info and first-contact recommendation."""
     contact = (
         db.query(Contact)
-        .options(joinedload(Contact.contact_info))
+        .options(joinedload(Contact.contact_info), joinedload(Contact.tags))
         .filter(Contact.id == contact_id)
         .first()
     )
@@ -244,7 +247,9 @@ async def get_contact(contact_id: int, db: Session = Depends(get_db)):
         "connection_to_solomon": contact.connection_to_solomon,
         "primary_interests": contact.primary_interests,
         "relationship_stage": contact.relationship_stage,
+        "mission_alignment": contact.mission_alignment,
         "in_mention_rotation": bool(getattr(contact, "in_mention_rotation", 0)),
+        "tags": [t.tag for t in (contact.tags or [])],
         "contact_info": [
             {"type": ci.type, "value": ci.value, "is_primary": bool(ci.is_primary)}
             for ci in contact_infos
@@ -256,11 +261,12 @@ async def get_contact(contact_id: int, db: Session = Depends(get_db)):
 class ContactPatch(BaseModel):
     relationship_stage: str | None = None
     in_mention_rotation: bool | None = None
+    mission_alignment: float | None = None
 
 
 @router.patch("/{contact_id}")
 async def patch_contact(contact_id: int, data: ContactPatch, db: Session = Depends(get_db)):
-    """Update contact (e.g. relationship stage, in_mention_rotation)."""
+    """Update contact (e.g. relationship stage, in_mention_rotation, mission_alignment)."""
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
@@ -268,11 +274,14 @@ async def patch_contact(contact_id: int, data: ContactPatch, db: Session = Depen
         contact.relationship_stage = data.relationship_stage.strip() or None
     if data.in_mention_rotation is not None:
         contact.in_mention_rotation = 1 if data.in_mention_rotation else 0
+    if data.mission_alignment is not None:
+        contact.mission_alignment = max(1.0, min(10.0, data.mission_alignment))
     db.commit()
     db.refresh(contact)
     return {
         "id": contact.id,
         "relationship_stage": contact.relationship_stage,
+        "mission_alignment": contact.mission_alignment,
         "in_mention_rotation": bool(contact.in_mention_rotation),
     }
 
@@ -553,3 +562,93 @@ async def enrich_bio(contact_id: int, db: Session = Depends(get_db)):
     contact.primary_interests = bio
     db.commit()
     return {"generated": True, "bio": bio}
+
+
+# --- Tags ---
+
+@router.get("/tags/preset")
+async def get_preset_tags():
+    """Return the list of preset tag options."""
+    return {"tags": PRESET_TAGS}
+
+
+@router.get("/{contact_id}/tags")
+async def list_tags(contact_id: int, db: Session = Depends(get_db)):
+    """List tags for a contact."""
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    tags = db.query(ContactTag).filter(ContactTag.contact_id == contact_id).all()
+    return {"tags": [{"id": t.id, "tag": t.tag} for t in tags]}
+
+
+class TagCreate(BaseModel):
+    tag: str
+
+
+@router.post("/{contact_id}/tags")
+async def add_tag(contact_id: int, data: TagCreate, db: Session = Depends(get_db)):
+    """Add a tag to a contact (preset or custom)."""
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    tag_name = data.tag.strip()
+    if not tag_name:
+        raise HTTPException(status_code=400, detail="Tag cannot be empty")
+    existing = (
+        db.query(ContactTag)
+        .filter(ContactTag.contact_id == contact_id, ContactTag.tag == tag_name)
+        .first()
+    )
+    if existing:
+        return {"id": existing.id, "tag": existing.tag, "message": "Tag already exists"}
+    tag = ContactTag(contact_id=contact_id, tag=tag_name)
+    db.add(tag)
+    db.commit()
+    db.refresh(tag)
+    return {"id": tag.id, "tag": tag.tag}
+
+
+@router.delete("/{contact_id}/tags/{tag_id}")
+async def remove_tag(contact_id: int, tag_id: int, db: Session = Depends(get_db)):
+    """Remove a tag from a contact."""
+    tag = (
+        db.query(ContactTag)
+        .filter(ContactTag.id == tag_id, ContactTag.contact_id == contact_id)
+        .first()
+    )
+    if not tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    db.delete(tag)
+    db.commit()
+    return {"ok": True}
+
+
+# --- Warm Intros ---
+
+@router.get("/{contact_id}/warm-intros")
+async def get_warm_intros(contact_id: int, db: Session = Depends(get_db)):
+    """Find warm intro paths to this contact.
+
+    Returns ranked list of people who could introduce you,
+    based on their connection to the target and your relationship with them.
+    """
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    paths = find_warm_intro_paths(db, contact_id)
+    return {"contact_name": contact.name, "intro_paths": paths, "count": len(paths)}
+
+
+# --- Mission Alignment ---
+
+@router.post("/{contact_id}/compute-alignment")
+async def compute_alignment(contact_id: int, db: Session = Depends(get_db)):
+    """Auto-compute mission alignment score from category/interests. User can override via PATCH."""
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    score = compute_mission_alignment(contact)
+    contact.mission_alignment = score
+    db.commit()
+    return {"contact_id": contact_id, "mission_alignment": score}

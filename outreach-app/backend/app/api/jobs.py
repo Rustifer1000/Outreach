@@ -7,6 +7,7 @@ from app.database import SessionLocal
 from app.discovery import discover_from_mentions, discover_via_search, discover_all
 from app.enrichment import enrich_bulk
 from app.media_sources import fetch_media_for_contacts
+from app.warm_intros import score_all_alignments, auto_tag_warm_intro
 from app.config import settings
 
 router = APIRouter()
@@ -190,3 +191,31 @@ async def get_available_media_sources():
         "video": bool(settings.youtube_api_key),
         "speech": bool(settings.serpapi_key),
     }
+
+
+# --- Mission alignment bulk scoring ---
+
+@router.post("/score-alignments")
+async def trigger_score_alignments(background_tasks: BackgroundTasks):
+    """Auto-compute mission alignment scores for all unscored contacts."""
+    def _run():
+        db = SessionLocal()
+        try:
+            return score_all_alignments(db)
+        finally:
+            db.close()
+    background_tasks.add_task(_run)
+    return {"status": "started", "message": "Computing mission alignment scores in background."}
+
+
+@router.post("/auto-tag-warm-intros")
+async def trigger_auto_tag_warm_intros(background_tasks: BackgroundTasks):
+    """Auto-tag contacts with 'Warm intro available' when they're connected to an Engaged/Partner contact."""
+    def _run():
+        db = SessionLocal()
+        try:
+            return auto_tag_warm_intro(db)
+        finally:
+            db.close()
+    background_tasks.add_task(_run)
+    return {"status": "started", "message": "Auto-tagging warm intro contacts in background."}

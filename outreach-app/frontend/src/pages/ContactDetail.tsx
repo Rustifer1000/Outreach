@@ -22,8 +22,19 @@ interface Contact {
   connection_to_solomon: string | null
   primary_interests: string | null
   relationship_stage?: string | null
+  mission_alignment?: number | null
+  tags?: string[]
   contact_info?: ContactInfo[]
   recommended_contact_method?: ContactRecommendation
+}
+
+interface WarmIntroPath {
+  connector_id: number
+  connector_name: string
+  connector_stage: string
+  relationship_to_target: string
+  has_replied: boolean
+  intro_strength: number
 }
 
 interface Mention {
@@ -103,6 +114,10 @@ export default function ContactDetail() {
   const [bioMessage, setBioMessage] = useState<string | null>(null)
   const [fetchingMedia, setFetchingMedia] = useState(false)
   const [mediaMessage, setMediaMessage] = useState<string | null>(null)
+  const [tags, setTags] = useState<{ id: number; tag: string }[]>([])
+  const [presetTags, setPresetTags] = useState<string[]>([])
+  const [customTag, setCustomTag] = useState('')
+  const [warmIntros, setWarmIntros] = useState<WarmIntroPath[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const refreshOutreach = () => {
@@ -111,12 +126,55 @@ export default function ContactDetail() {
   const refreshNotes = () => {
     if (id) loadNotes(id).then((d) => setNotes(d.notes || [])).catch(() => setError('Failed to refresh notes'))
   }
-  const refreshConnections = () => {
-    if (id) loadConnections(id).then((d) => setConnections(d.connections || [])).catch(() => setError('Failed to refresh connections'))
-  }
-
   const refreshContact = () => {
     if (id) fetch(`/api/contacts/${id}`).then((r) => r.json()).then(setContact).catch(() => setError('Failed to refresh contact'))
+  }
+  const refreshTags = () => {
+    if (id) fetch(`/api/contacts/${id}/tags`).then((r) => r.json()).then((d) => setTags(d.tags || [])).catch(() => {})
+  }
+  const refreshWarmIntros = () => {
+    if (id) fetch(`/api/contacts/${id}/warm-intros`).then((r) => r.json()).then((d) => setWarmIntros(d.intro_paths || [])).catch(() => {})
+  }
+  const refreshConnections = () => {
+    if (id) {
+      loadConnections(id).then((d) => setConnections(d.connections || [])).catch(() => setError('Failed to refresh connections'))
+      refreshWarmIntros()
+    }
+  }
+  const handleAddTag = (tagName: string) => {
+    if (!id || !tagName.trim()) return
+    fetch(`/api/contacts/${id}/tags`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tag: tagName.trim() }),
+    })
+      .then((r) => r.json())
+      .then(() => { refreshTags(); setCustomTag('') })
+      .catch(() => setError('Failed to add tag'))
+  }
+  const handleRemoveTag = (tagId: number) => {
+    if (!id) return
+    fetch(`/api/contacts/${id}/tags/${tagId}`, { method: 'DELETE' })
+      .then(() => refreshTags())
+      .catch(() => setError('Failed to remove tag'))
+  }
+  const handleAlignmentChange = (value: number) => {
+    if (!id) return
+    fetch(`/api/contacts/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mission_alignment: value }),
+    })
+      .then((r) => r.json())
+      .then((d) => setContact((c) => (c ? { ...c, mission_alignment: d.mission_alignment } : c)))
+      .catch(() => setError('Failed to save alignment'))
+  }
+  const handleAutoAlignment = () => {
+    if (!id) return
+    fetch(`/api/contacts/${id}/compute-alignment`, { method: 'POST' })
+      .then((r) => r.json())
+      .then((d) => setContact((c) => (c ? { ...c, mission_alignment: d.mission_alignment } : c)))
+      .catch(() => setError('Failed to compute alignment'))
   }
 
   const handleStageChange = (stage: string) => {
@@ -327,13 +385,17 @@ export default function ContactDetail() {
       loadOutreach(id),
       loadNotes(id),
       loadConnections(id),
+      fetch(`/api/contacts/${id}/tags`).then((r) => r.json()),
+      fetch(`/api/contacts/${id}/warm-intros`).then((r) => r.json()),
     ])
-      .then(([contactData, mentionsData, outreachData, notesData, connectionsData]) => {
+      .then(([contactData, mentionsData, outreachData, notesData, connectionsData, tagsData, warmData]) => {
         setContact(contactData)
         setMentions(mentionsData.mentions || [])
         setOutreach(outreachData.entries || [])
         setNotes(notesData.notes || [])
         setConnections(connectionsData.connections || [])
+        setTags(tagsData.tags || [])
+        setWarmIntros(warmData.intro_paths || [])
         if (outreachData.entries?.length === 0 && contactData.recommended_contact_method?.method) {
           setForm((f) => ({ ...f, method: contactData.recommended_contact_method.method }))
         }
@@ -346,6 +408,10 @@ export default function ContactDetail() {
     fetch('/api/contacts?limit=500')
       .then((r) => r.json())
       .then((d) => setContactList(d.contacts?.map((c: { id: number; name: string }) => ({ id: c.id, name: c.name })) || []))
+      .catch(() => {})
+    fetch('/api/contacts/tags/preset')
+      .then((r) => r.json())
+      .then((d) => setPresetTags(d.tags || []))
       .catch(() => {})
   }, [])
 
@@ -462,6 +528,89 @@ export default function ContactDetail() {
             ))}
           </select>
           {savingStage && <span className="ml-2 text-xs text-slate-500">Saving...</span>}
+        </div>
+
+        {/* Mission Alignment */}
+        <div className="mt-4 rounded bg-slate-50 p-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-slate-800">Mission Alignment</h3>
+            <button
+              type="button"
+              onClick={handleAutoAlignment}
+              className="text-xs text-blue-600 hover:underline"
+            >
+              Auto-compute
+            </button>
+          </div>
+          <div className="mt-2 flex items-center gap-3">
+            <input
+              type="range"
+              min={1}
+              max={10}
+              step={0.5}
+              value={contact.mission_alignment ?? 5}
+              onChange={(e) => handleAlignmentChange(parseFloat(e.target.value))}
+              className="w-48"
+            />
+            <span className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${
+              (contact.mission_alignment ?? 5) >= 8 ? 'bg-green-100 text-green-800' :
+              (contact.mission_alignment ?? 5) >= 5 ? 'bg-yellow-100 text-yellow-800' :
+              'bg-red-100 text-red-700'
+            }`}>
+              {contact.mission_alignment ?? '—'} / 10
+            </span>
+          </div>
+        </div>
+
+        {/* Tags */}
+        <div className="mt-4 rounded bg-slate-50 p-4">
+          <h3 className="text-sm font-medium text-slate-800">Tags</h3>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {tags.map((t) => (
+              <span key={t.id} className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
+                {t.tag}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveTag(t.id)}
+                  className="ml-1 text-slate-500 hover:text-red-600"
+                >
+                  x
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1">
+            {presetTags
+              .filter((pt) => !tags.some((t) => t.tag === pt))
+              .map((pt) => (
+                <button
+                  key={pt}
+                  type="button"
+                  onClick={() => handleAddTag(pt)}
+                  className="rounded-full border border-dashed border-slate-400 px-2.5 py-1 text-xs text-slate-600 hover:border-slate-600 hover:bg-slate-100"
+                >
+                  + {pt}
+                </button>
+              ))}
+          </div>
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              value={customTag}
+              onChange={(e) => setCustomTag(e.target.value)}
+              placeholder="Custom tag..."
+              className="rounded border border-slate-300 px-2 py-1 text-xs"
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(customTag) } }}
+            />
+            <button
+              type="button"
+              onClick={() => handleAddTag(customTag)}
+              disabled={!customTag.trim()}
+              className="rounded bg-slate-600 px-2 py-1 text-xs text-white hover:bg-slate-500 disabled:opacity-50"
+            >
+              Add
+            </button>
+          </div>
         </div>
 
         {contact.contact_info && contact.contact_info.length > 0 && (
@@ -681,6 +830,41 @@ export default function ContactDetail() {
           </ul>
         )}
       </div>
+
+      {warmIntros.length > 0 && (
+        <div className="mb-8 rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-lg font-semibold text-slate-800">Warm Intro Paths</h2>
+          <p className="mb-3 text-sm text-slate-500">
+            People who could introduce you to {contact.name}, ranked by intro strength.
+          </p>
+          <ul className="divide-y divide-slate-200">
+            {warmIntros.map((path) => (
+              <li key={path.connector_id} className="flex items-center justify-between py-3">
+                <div>
+                  <Link
+                    to={`/contacts/${path.connector_id}`}
+                    className="font-medium text-slate-800 hover:text-slate-600"
+                  >
+                    {path.connector_name}
+                  </Link>
+                  <p className="text-xs text-slate-500">
+                    {path.relationship_to_target} with {contact.name}
+                    {path.connector_stage && ` — Your stage: ${path.connector_stage}`}
+                    {path.has_replied && ' — Has replied to you'}
+                  </p>
+                </div>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  path.intro_strength >= 0.7 ? 'bg-green-100 text-green-800' :
+                  path.intro_strength >= 0.4 ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-slate-100 text-slate-600'
+                }`}>
+                  {Math.round(path.intro_strength * 100)}% strength
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mb-8 rounded-lg bg-white p-6 shadow">
         <div className="mb-4 flex items-center justify-between">

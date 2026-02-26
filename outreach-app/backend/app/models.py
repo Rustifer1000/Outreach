@@ -19,10 +19,12 @@ class Contact(Base):
     connection_to_solomon = Column(Text, nullable=True)
     primary_interests = Column(Text, nullable=True)  # For future enrichment
     relationship_stage = Column(String(50), nullable=True)  # Cold, Warm, Engaged, Partner-Advocate
+    mission_alignment = Column(Float, nullable=True)  # 1-10 score; auto-set from category, user-overridable
     in_mention_rotation = Column(Integer, default=0)  # 1 = include in daily mention fetch (tagged core group)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
+    tags = relationship("ContactTag", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     mentions = relationship("Mention", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     outreach_log = relationship("OutreachLog", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     contact_info = relationship("ContactInfo", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
@@ -110,3 +112,15 @@ class ContactConnection(Base):
 
     contact = relationship("Contact", back_populates="connections", foreign_keys=[contact_id])
     other_contact = relationship("Contact", foreign_keys=[other_contact_id])
+
+
+class ContactTag(Base):
+    """Tags for contacts (preset or custom)."""
+    __tablename__ = "contact_tags"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
+    tag = Column(String(100), nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+
+    contact = relationship("Contact", back_populates="tags")
