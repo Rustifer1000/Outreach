@@ -101,6 +101,8 @@ export default function ContactDetail() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const [enrichingBio, setEnrichingBio] = useState(false)
   const [bioMessage, setBioMessage] = useState<string | null>(null)
+  const [fetchingMedia, setFetchingMedia] = useState(false)
+  const [mediaMessage, setMediaMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const refreshOutreach = () => {
@@ -247,6 +249,47 @@ export default function ContactDetail() {
       })
       .catch(() => setBioMessage('Bio enrichment failed'))
       .finally(() => setEnrichingBio(false))
+  }
+
+  const handleFetchMedia = () => {
+    if (!id) return
+    setFetchingMedia(true)
+    setMediaMessage(null)
+    fetch('/api/jobs/fetch-media', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contact_ids: [parseInt(id)], days: 30, max_per_source: 3 }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.detail) {
+          setMediaMessage(d.detail)
+          setFetchingMedia(false)
+        } else {
+          setMediaMessage(`Searching ${d.sources?.join(', ') || 'media'}...`)
+          // Poll for completion
+          const poll = setInterval(() => {
+            fetch('/api/jobs/media-status')
+              .then((r) => r.json())
+              .then((s) => {
+                if (s.status === 'complete') {
+                  clearInterval(poll)
+                  setMediaMessage(`Done: ${s.added} new mentions found`)
+                  setFetchingMedia(false)
+                  // Refresh mentions
+                  fetch(`/api/mentions?contact_id=${id}`)
+                    .then((r) => r.json())
+                    .then((data) => setMentions(data.mentions || []))
+                }
+              })
+              .catch(() => {})
+          }, 3000)
+        }
+      })
+      .catch(() => {
+        setMediaMessage('Media fetch failed')
+        setFetchingMedia(false)
+      })
   }
 
   const handleAddContactInfo = (e: React.FormEvent) => {
@@ -640,16 +683,40 @@ export default function ContactDetail() {
       </div>
 
       <div className="mb-8 rounded-lg bg-white p-6 shadow">
-        <h2 className="mb-4 text-lg font-semibold text-slate-800">Mentions</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-800">Mentions</h2>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleFetchMedia}
+              disabled={fetchingMedia}
+              className="rounded border border-purple-400 bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 disabled:opacity-50"
+            >
+              {fetchingMedia ? 'Searching...' : 'Fetch podcasts, videos, speeches'}
+            </button>
+            {mediaMessage && <span className="text-xs text-slate-500">{mediaMessage}</span>}
+          </div>
+        </div>
         {mentions.length === 0 ? (
           <p className="text-slate-500">No mentions yet.</p>
         ) : (
           <ul className="divide-y divide-slate-200">
             {mentions.map((m) => (
               <li key={m.id} className="py-4">
-                <p className="font-medium text-slate-800">{m.title || m.snippet?.slice(0, 80)}</p>
-                <p className="text-sm text-slate-500">
-                  {m.source_type} • {m.published_at ? new Date(m.published_at).toLocaleDateString() : 'Unknown'}
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                    m.source_type === 'news' ? 'bg-blue-100 text-blue-800' :
+                    m.source_type === 'podcast' ? 'bg-purple-100 text-purple-800' :
+                    m.source_type === 'video' ? 'bg-red-100 text-red-800' :
+                    m.source_type === 'speech' ? 'bg-amber-100 text-amber-800' :
+                    'bg-slate-100 text-slate-700'
+                  }`}>
+                    {m.source_type}
+                  </span>
+                  <p className="font-medium text-slate-800">{m.title || m.snippet?.slice(0, 80)}</p>
+                </div>
+                <p className="mt-1 text-sm text-slate-500">
+                  {m.published_at ? new Date(m.published_at).toLocaleDateString() : 'Unknown date'}
                 </p>
                 {m.source_url && (
                   <a href={m.source_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">

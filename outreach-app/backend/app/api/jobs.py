@@ -6,12 +6,14 @@ from app.scheduler import run_fetch_mentions
 from app.database import SessionLocal
 from app.discovery import discover_from_mentions, discover_via_search, discover_all
 from app.enrichment import enrich_bulk
+from app.media_sources import fetch_media_for_contacts
 from app.config import settings
 
 router = APIRouter()
 
 # Store latest bulk enrichment results (simple in-memory; replaced each run)
 _bulk_enrich_result: dict | None = None
+_media_fetch_result: dict | None = None
 
 
 def _run_discover_from_mentions():
@@ -113,3 +115,78 @@ async def get_enrich_status():
     if _bulk_enrich_result is None:
         return {"status": "running", "message": "Enrichment in progress or not started yet."}
     return {"status": "complete", **_bulk_enrich_result}
+
+
+# --- Media source fetching (podcasts, YouTube, speeches) ---
+
+class MediaFetchBody(BaseModel):
+    days: int = 30
+    max_contacts: int = 25
+    max_per_source: int = 2
+    contact_ids: list[int] | None = None  # None = use rotation or all
+
+
+def _run_media_fetch(days: int, max_contacts: int, max_per_source: int, contact_ids: list[int] | None):
+    global _media_fetch_result
+    db = SessionLocal()
+    try:
+        _media_fetch_result = fetch_media_for_contacts(
+            db,
+            contact_ids=contact_ids,
+            days=days,
+            listennotes_key=settings.listennotes_api_key,
+            youtube_key=settings.youtube_api_key,
+            serpapi_key=settings.serpapi_key,
+            max_per_source=max_per_source,
+            max_contacts=max_contacts,
+        )
+    finally:
+        db.close()
+
+
+@router.post("/fetch-media")
+async def trigger_fetch_media(body: MediaFetchBody, background_tasks: BackgroundTasks):
+    """Fetch podcasts, YouTube videos, and speech/presentation mentions.
+
+    Requires at least one of: LISTENNOTES_API_KEY, YOUTUBE_API_KEY, SERPAPI_KEY in .env.
+    """
+    has_keys = any([settings.listennotes_api_key, settings.youtube_api_key, settings.serpapi_key])
+    if not has_keys:
+        raise HTTPException(
+            status_code=503,
+            detail="No media API keys configured. Add LISTENNOTES_API_KEY, YOUTUBE_API_KEY, or SERPAPI_KEY to .env.",
+        )
+    global _media_fetch_result
+    _media_fetch_result = None
+    background_tasks.add_task(_run_media_fetch, body.days, body.max_contacts, body.max_per_source, body.contact_ids)
+    sources = []
+    if settings.listennotes_api_key:
+        sources.append("podcasts")
+    if settings.youtube_api_key:
+        sources.append("YouTube")
+    if settings.serpapi_key:
+        sources.append("speeches")
+    return {
+        "status": "started",
+        "sources": sources,
+        "message": f"Fetching {', '.join(sources)} for up to {body.max_contacts} contacts. Check status with GET /api/jobs/media-status.",
+    }
+
+
+@router.get("/media-status")
+async def get_media_status():
+    """Check the result of the latest media fetch run."""
+    if _media_fetch_result is None:
+        return {"status": "running", "message": "Media fetch in progress or not started yet."}
+    return {"status": "complete", **_media_fetch_result}
+
+
+@router.get("/media-sources")
+async def get_available_media_sources():
+    """Return which media source API keys are configured."""
+    return {
+        "news": bool(settings.newsapi_key),
+        "podcast": bool(settings.listennotes_api_key),
+        "video": bool(settings.youtube_api_key),
+        "speech": bool(settings.serpapi_key),
+    }

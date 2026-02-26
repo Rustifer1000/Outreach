@@ -58,7 +58,10 @@ Edit `.env` and fill in (at minimum for full features):
 |----------|---------|
 | `NEWSAPI_KEY` | Mention fetch, connection discovery |
 | `HUNTER_API_KEY` | Email enrichment |
-| `ANTHROPIC_API_KEY` | LLM relationship inference |
+| `ANTHROPIC_API_KEY` | LLM relationship inference, bio generation |
+| `LISTENNOTES_API_KEY` | Podcast episode search (Listen Notes) |
+| `YOUTUBE_API_KEY` | YouTube video search (Google API) |
+| `SERPAPI_KEY` | Speech/presentation search (SerpApi) |
 
 ---
 
