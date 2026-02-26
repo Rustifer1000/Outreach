@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 
 interface Contact {
@@ -15,12 +15,22 @@ export default function Contacts() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [rotationOnly, setRotationOnly] = useState(false)
   const [togglingId, setTogglingId] = useState<number | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Debounce search input by 300ms
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [search])
 
   useEffect(() => {
+    setLoading(true)
     const params = new URLSearchParams({ limit: '100' })
-    if (search) params.set('q', search)
+    if (debouncedSearch) params.set('q', debouncedSearch)
     if (rotationOnly) params.set('in_rotation', '1')
     fetch(`/api/contacts?${params}`)
       .then((res) => res.json())
@@ -30,7 +40,7 @@ export default function Contacts() {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
-  }, [search, rotationOnly])
+  }, [debouncedSearch, rotationOnly])
 
   const toggleRotation = (c: Contact) => {
     setTogglingId(c.id)

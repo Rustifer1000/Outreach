@@ -1,4 +1,6 @@
 """Outreach log API endpoints."""
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Query, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -60,7 +62,6 @@ async def create_outreach(data: OutreachCreate, db: Session = Depends(get_db)):
 
     sent_at = None
     if data.sent_at:
-        from datetime import datetime, UTC
         try:
             sent_at = datetime.fromisoformat(data.sent_at.replace("Z", "+00:00"))
         except ValueError:

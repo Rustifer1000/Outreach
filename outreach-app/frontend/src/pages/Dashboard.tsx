@@ -44,18 +44,32 @@ export default function Dashboard() {
       clearInterval(pollIntervalRef.current)
       pollIntervalRef.current = null
     }
+    const beforeCount = mentions.length
     fetch('/api/jobs/fetch-mentions', { method: 'POST' })
       .then((r) => r.json())
       .then(() => {
         let attempts = 0
         pollIntervalRef.current = setInterval(() => {
           attempts++
-          loadMentions()
-          if (attempts >= 6) {
-            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
-            pollIntervalRef.current = null
-            setRefreshing(false)
-          }
+          fetch('/api/mentions?days=7&limit=20')
+            .then((res) => res.json())
+            .then((data) => {
+              const newMentions = data.mentions || []
+              setMentions(newMentions)
+              // Stop polling once new data arrives or max attempts reached
+              if (newMentions.length !== beforeCount || attempts >= 6) {
+                if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+                pollIntervalRef.current = null
+                setRefreshing(false)
+              }
+            })
+            .catch(() => {
+              if (attempts >= 6) {
+                if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+                pollIntervalRef.current = null
+                setRefreshing(false)
+              }
+            })
         }, 10000)
       })
       .catch((err) => {

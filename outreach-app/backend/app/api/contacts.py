@@ -200,7 +200,7 @@ async def create_note(contact_id: int, data: NoteCreate, db: Session = Depends(g
         contact_id=contact_id,
         note_text=data.note_text.strip(),
         note_date=note_dt,
-        channel=data.channel.strip() or None if data.channel else None,
+        channel=(data.channel.strip() or None) if data.channel else None,
     )
     db.add(note)
     db.commit()
@@ -272,7 +272,7 @@ async def create_connection(contact_id: int, data: ConnectionCreate, db: Session
         contact_id=contact_id,
         other_contact_id=data.other_contact_id,
         relationship_type=data.relationship_type.strip(),
-        notes=data.notes.strip() or None if data.notes else None,
+        notes=(data.notes.strip() or None) if data.notes else None,
     )
     db.add(conn)
     db.commit()

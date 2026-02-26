@@ -99,17 +99,17 @@ export default function ContactDetail() {
   const [enrichMessage, setEnrichMessage] = useState<string | null>(null)
 
   const refreshOutreach = () => {
-    if (id) loadOutreach(id).then((d) => setOutreach(d.entries || []))
+    if (id) loadOutreach(id).then((d) => setOutreach(d.entries || [])).catch((err) => console.error('Failed to refresh outreach:', err))
   }
   const refreshNotes = () => {
-    if (id) loadNotes(id).then((d) => setNotes(d.notes || []))
+    if (id) loadNotes(id).then((d) => setNotes(d.notes || [])).catch((err) => console.error('Failed to refresh notes:', err))
   }
   const refreshConnections = () => {
-    if (id) loadConnections(id).then((d) => setConnections(d.connections || []))
+    if (id) loadConnections(id).then((d) => setConnections(d.connections || [])).catch((err) => console.error('Failed to refresh connections:', err))
   }
 
   const refreshContact = () => {
-    if (id) fetch(`/api/contacts/${id}`).then((r) => r.json()).then(setContact)
+    if (id) fetch(`/api/contacts/${id}`).then((r) => r.json()).then(setContact).catch((err) => console.error('Failed to refresh contact:', err))
   }
 
   const handleStageChange = (stage: string) => {

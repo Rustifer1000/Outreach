@@ -23,15 +23,16 @@ class Contact(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
-<<<<<<< HEAD
     mentions = relationship("Mention", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     outreach_log = relationship("OutreachLog", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     contact_info = relationship("ContactInfo", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
-    notes = relationship("Note", back_populates="contact")
+    notes = relationship("Note", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     connections = relationship(
         "ContactConnection",
         back_populates="contact",
         foreign_keys="ContactConnection.contact_id",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
 
@@ -87,7 +88,7 @@ class Note(Base):
     __tablename__ = "notes"
 
     id = Column(Integer, primary_key=True, index=True)
-    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=False, index=True)
+    contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
     note_text = Column(Text, nullable=False)
     note_date = Column(DateTime, nullable=False)  # When the conversation/note occurred
     channel = Column(String(50), nullable=True)  # email, call, meeting, etc.
@@ -101,8 +102,8 @@ class ContactConnection(Base):
     __tablename__ = "contact_connections"
 
     id = Column(Integer, primary_key=True, index=True)
-    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=False, index=True)
-    other_contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=False, index=True)
+    contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
+    other_contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
     relationship_type = Column(String(100), nullable=False)  # first_degree, second_degree, same_org, co_author, etc.
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))

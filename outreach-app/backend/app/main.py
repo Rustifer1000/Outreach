@@ -1,10 +1,13 @@
 """
 Solomon Outreach API - FastAPI application entry point.
 """
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+logger = logging.getLogger(__name__)
 
 from app.api import contacts, mentions, outreach, jobs, names_file, relationship_map
 from app.scheduler import get_scheduler
@@ -20,7 +23,7 @@ async def lifespan(app: FastAPI):
         from app.migrate_phase2b import run as run_migrate
         run_migrate()
     except Exception:
-        pass  # e.g. DB not yet created; seed_contacts --reset will create tables
+        logger.warning("Startup DB init/migration failed (DB may not exist yet)", exc_info=True)
     scheduler = get_scheduler()
     scheduler.start()
     yield
