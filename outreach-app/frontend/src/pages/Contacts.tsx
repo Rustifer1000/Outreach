@@ -1,6 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 
+interface ContactRecommendation {
+  method: string
+  available: boolean
+  reason: string
+}
+
 interface Contact {
   id: number
   list_number: number | null
@@ -8,6 +14,7 @@ interface Contact {
   category: string | null
   role_org: string | null
   in_mention_rotation?: boolean
+  recommended_contact_method?: ContactRecommendation
 }
 
 export default function Contacts() {
@@ -105,6 +112,9 @@ export default function Contacts() {
                   Role/Org
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                  Recommended
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                   Rotation
                 </th>
               </tr>
@@ -128,6 +138,22 @@ export default function Contacts() {
                   </td>
                   <td className="max-w-xs truncate px-6 py-4 text-sm text-slate-500">
                     {c.role_org ?? '-'}
+                  </td>
+                  <td className="px-6 py-4">
+                    {c.recommended_contact_method ? (
+                      <span
+                        title={c.recommended_contact_method.reason}
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          c.recommended_contact_method.available
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {c.recommended_contact_method.method}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-400">-</span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <button

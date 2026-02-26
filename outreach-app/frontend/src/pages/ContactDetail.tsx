@@ -341,10 +341,22 @@ export default function ContactDetail() {
 
         {contact.recommended_contact_method && (
           <div className={`mt-4 rounded p-4 ${contact.recommended_contact_method.available ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
-            <h3 className="text-sm font-medium text-slate-800">First-contact recommendation</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-slate-800">First-contact recommendation</h3>
+              {contact.relationship_stage && (
+                <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-medium text-slate-700">
+                  {contact.relationship_stage}
+                </span>
+              )}
+            </div>
             <p className="mt-1 font-medium text-slate-700">
               {contact.recommended_contact_method.reason}
             </p>
+            {!contact.recommended_contact_method.available && (
+              <p className="mt-2 text-xs text-slate-500">
+                Try adding contact info below or use enrichment to find their email.
+              </p>
+            )}
           </div>
         )}
 

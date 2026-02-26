@@ -1,4 +1,5 @@
 """Contacts API endpoints."""
+from collections import Counter
 from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, Query, HTTPException
 from pydantic import BaseModel
@@ -7,23 +8,126 @@ from sqlalchemy.orm import Session, joinedload
 from app.config import settings
 from app.database import get_db
 from app.enrichment import enrich_contact_email
-from app.models import Contact, ContactInfo, Note, ContactConnection
+from app.models import Contact, ContactInfo, Note, ContactConnection, OutreachLog
 
 # Priority order for first-contact recommendations
 CONTACT_METHOD_PRIORITY = ["email", "linkedin", "twitter", "website", "other"]
 
+# Stage-specific priority adjustments
+STAGE_PRIORITY = {
+    "Cold": ["email", "linkedin", "twitter", "website", "other"],
+    "Warm": ["linkedin", "email", "twitter", "website", "other"],
+    "Engaged": None,  # Use outreach history to determine
+    "Partner-Advocate": ["email", "linkedin", "twitter", "website", "other"],
+}
 
-def get_recommended_method(contact_infos: list) -> dict:
-    """Return recommended contact method and availability. Priority: email > linkedin > twitter > website > other."""
+
+def get_recommended_method(
+    contact_infos: list,
+    outreach_logs: list | None = None,
+    relationship_stage: str | None = None,
+) -> dict:
+    """Return recommended contact method factoring in availability, outreach history, and relationship stage.
+
+    Priority logic:
+    - Cold contacts: email first (formal, low-pressure)
+    - Warm contacts: LinkedIn preferred (more personal)
+    - Engaged contacts: use whatever method got replies; fall back to most-used
+    - Partner-Advocate: email first (established relationship)
+    - If a method was tried and got a reply, boost it
+    - If a method was tried with no response, deprioritize it
+    """
     types_present = {ci.type.lower() for ci in contact_infos}
-    for method in CONTACT_METHOD_PRIORITY:
+    outreach_logs = outreach_logs or []
+
+    # Analyze outreach history
+    replied_methods: set[str] = set()
+    no_response_methods: set[str] = set()
+    method_counts: Counter[str] = Counter()
+    for log in outreach_logs:
+        m = (log.method or "").lower()
+        method_counts[m] += 1
+        if log.response_status == "replied":
+            replied_methods.add(m)
+        elif log.response_status in ("no_response", "bounced"):
+            no_response_methods.add(m)
+
+    # Determine base priority order from relationship stage
+    stage = (relationship_stage or "").strip()
+    if stage == "Engaged" and replied_methods:
+        # For engaged contacts, prefer whatever method got replies
+        priority = list(replied_methods) + [m for m in CONTACT_METHOD_PRIORITY if m not in replied_methods]
+    elif stage in STAGE_PRIORITY and STAGE_PRIORITY[stage] is not None:
+        priority = STAGE_PRIORITY[stage]
+    else:
+        priority = list(CONTACT_METHOD_PRIORITY)
+
+    # Boost methods that got replies to the front
+    if replied_methods:
+        boosted = [m for m in priority if m in replied_methods]
+        rest = [m for m in priority if m not in replied_methods]
+        priority = boosted + rest
+
+    # Deprioritize methods that got no response (push to end, but keep available)
+    if no_response_methods and not replied_methods:
+        good = [m for m in priority if m not in no_response_methods]
+        bad = [m for m in priority if m in no_response_methods]
+        priority = good + bad
+
+    # Find the best available method
+    for method in priority:
         if method in types_present:
-            return {"method": method, "available": True, "reason": f"{method.capitalize()} (available)"}
+            reason = _build_reason(method, stage, replied_methods, no_response_methods, method_counts)
+            return {"method": method, "available": True, "reason": reason}
+
+    # Nothing available — suggest based on stage
+    if stage in ("Warm", "Engaged"):
+        return {
+            "method": "linkedin",
+            "available": False,
+            "reason": "LinkedIn (not found — add LinkedIn URL to contact info)",
+        }
     return {
-        "method": CONTACT_METHOD_PRIORITY[0],
+        "method": "email",
         "available": False,
-        "reason": "Email (not found — add contact info or try LinkedIn)",
+        "reason": "Email (not found — add contact info or try enrichment)",
     }
+
+
+def _build_reason(
+    method: str,
+    stage: str,
+    replied_methods: set[str],
+    no_response_methods: set[str],
+    method_counts: Counter,
+) -> str:
+    """Build a human-readable reason string for the recommendation."""
+    label = method.capitalize()
+    parts: list[str] = []
+
+    if method in replied_methods:
+        parts.append("previously got a reply")
+    elif method_counts.get(method, 0) > 0 and method not in no_response_methods:
+        parts.append(f"used {method_counts[method]}x")
+
+    if stage == "Cold":
+        parts.append("good for cold outreach")
+    elif stage == "Warm" and method == "linkedin":
+        parts.append("personal touch for warm contacts")
+    elif stage == "Engaged" and method in replied_methods:
+        parts.append("proven channel")
+    elif stage == "Partner-Advocate":
+        parts.append("established relationship")
+
+    # Note if other methods were tried without success
+    tried_no_reply = no_response_methods - {method}
+    if tried_no_reply:
+        tried_label = ", ".join(m.capitalize() for m in sorted(tried_no_reply))
+        parts.append(f"{tried_label} tried without reply")
+
+    if parts:
+        return f"{label} ({'; '.join(parts)})"
+    return f"{label} (available)"
 
 
 router = APIRouter()
@@ -39,7 +143,7 @@ async def list_contacts(
     db: Session = Depends(get_db),
 ):
     """List contacts with optional search and filter."""
-    query = db.query(Contact)
+    query = db.query(Contact).options(joinedload(Contact.contact_info))
     if q:
         query = query.filter(
             Contact.name.ilike(f"%{q}%") | Contact.category.ilike(f"%{q}%")
@@ -50,6 +154,14 @@ async def list_contacts(
         query = query.filter(Contact.in_mention_rotation == 1)
     total = query.count()
     contacts = query.order_by(Contact.list_number).offset(skip).limit(limit).all()
+
+    # Batch-load outreach logs for all contacts in one query
+    contact_ids = [c.id for c in contacts]
+    all_outreach = db.query(OutreachLog).filter(OutreachLog.contact_id.in_(contact_ids)).all() if contact_ids else []
+    outreach_by_contact: dict[int, list] = {}
+    for log in all_outreach:
+        outreach_by_contact.setdefault(log.contact_id, []).append(log)
+
     return {
         "total": total,
         "contacts": [
@@ -64,6 +176,11 @@ async def list_contacts(
                 "primary_interests": c.primary_interests,
                 "relationship_stage": c.relationship_stage,
                 "in_mention_rotation": bool(getattr(c, "in_mention_rotation", 0)),
+                "recommended_contact_method": get_recommended_method(
+                    list(c.contact_info) if c.contact_info else [],
+                    outreach_by_contact.get(c.id),
+                    c.relationship_stage,
+                ),
             }
             for c in contacts
         ],
@@ -114,7 +231,8 @@ async def get_contact(contact_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Contact not found")
 
     contact_infos = list(contact.contact_info) if contact.contact_info else []
-    recommendation = get_recommended_method(contact_infos)
+    outreach_logs = db.query(OutreachLog).filter(OutreachLog.contact_id == contact_id).all()
+    recommendation = get_recommended_method(contact_infos, outreach_logs, contact.relationship_stage)
 
     return {
         "id": contact.id,
