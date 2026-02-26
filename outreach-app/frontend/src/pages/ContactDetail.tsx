@@ -20,6 +20,7 @@ interface Contact {
   category: string | null
   role_org: string | null
   connection_to_solomon: string | null
+  primary_interests: string | null
   relationship_stage?: string | null
   contact_info?: ContactInfo[]
   recommended_contact_method?: ContactRecommendation
@@ -98,6 +99,8 @@ export default function ContactDetail() {
   const [enriching, setEnriching] = useState(false)
   const [enrichMessage, setEnrichMessage] = useState<string | null>(null)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const [enrichingBio, setEnrichingBio] = useState(false)
+  const [bioMessage, setBioMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const refreshOutreach = () => {
@@ -214,7 +217,9 @@ export default function ContactDetail() {
         if (d.detail) {
           setEnrichMessage(d.detail)
         } else if (d.found) {
-          setEnrichMessage(`Found: ${d.email}`)
+          const parts = [`Found: ${d.email}`]
+          if (d.linkedin_url) parts.push(`+ LinkedIn`)
+          setEnrichMessage(parts.join(' '))
           refreshContact()
         } else {
           setEnrichMessage(d.message ?? 'No email found')
@@ -222,6 +227,26 @@ export default function ContactDetail() {
       })
       .catch(() => setEnrichMessage('Enrichment failed'))
       .finally(() => setEnriching(false))
+  }
+
+  const handleEnrichBio = () => {
+    if (!id) return
+    setEnrichingBio(true)
+    setBioMessage(null)
+    fetch(`/api/contacts/${id}/enrich-bio`, { method: 'POST' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.detail) {
+          setBioMessage(d.detail)
+        } else if (d.generated) {
+          setBioMessage('Bio generated')
+          refreshContact()
+        } else {
+          setBioMessage(d.message ?? 'Could not generate bio')
+        }
+      })
+      .catch(() => setBioMessage('Bio enrichment failed'))
+      .finally(() => setEnrichingBio(false))
   }
 
   const handleAddContactInfo = (e: React.FormEvent) => {
@@ -338,6 +363,26 @@ export default function ContactDetail() {
             <p className="mt-2 text-slate-600">{contact.connection_to_solomon}</p>
           </div>
         )}
+
+        <div className="mt-4 rounded bg-slate-50 p-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-slate-800">Bio / Interests</h3>
+            <button
+              type="button"
+              onClick={handleEnrichBio}
+              disabled={enrichingBio}
+              className="rounded border border-blue-400 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+            >
+              {enrichingBio ? 'Generating...' : contact.primary_interests ? 'Regenerate bio' : 'Generate bio (AI)'}
+            </button>
+          </div>
+          {contact.primary_interests ? (
+            <p className="mt-2 text-slate-600">{contact.primary_interests}</p>
+          ) : (
+            <p className="mt-2 text-sm text-slate-400">No bio yet. Click &quot;Generate bio&quot; to create one from mentions and role info.</p>
+          )}
+          {bioMessage && <p className="mt-2 text-xs text-slate-500">{bioMessage}</p>}
+        </div>
 
         {contact.recommended_contact_method && (
           <div className={`mt-4 rounded p-4 ${contact.recommended_contact_method.available ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>

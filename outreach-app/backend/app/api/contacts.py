@@ -452,7 +452,7 @@ async def add_contact_info(
 
 @router.post("/{contact_id}/enrich")
 async def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
-    """Look up email via Hunter API and add to contact_info if found."""
+    """Look up email (and LinkedIn if available) via Hunter API and add to contact_info."""
     if not settings.hunter_api_key:
         raise HTTPException(
             status_code=503,
@@ -488,6 +488,20 @@ async def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
         is_primary=1,
     )
     db.add(info)
+
+    # Also add LinkedIn if returned and not already present
+    linkedin_url = result.get("linkedin_url")
+    if linkedin_url:
+        existing_li = any(ci.type == "linkedin" for ci in (contact.contact_info or []))
+        if not existing_li:
+            li_info = ContactInfo(
+                contact_id=contact_id,
+                type="linkedin",
+                value=linkedin_url,
+                is_primary=0,
+            )
+            db.add(li_info)
+
     db.commit()
     db.refresh(info)
     return {
@@ -495,4 +509,47 @@ async def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
         "email": result["email"],
         "score": result.get("score"),
         "position": result.get("position"),
+        "linkedin_url": linkedin_url,
     }
+
+
+@router.post("/{contact_id}/enrich-bio")
+async def enrich_bio(contact_id: int, db: Session = Depends(get_db)):
+    """Generate a short bio summary from mention snippets using Claude."""
+    if not settings.anthropic_api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="ANTHROPIC_API_KEY not configured. Add to .env for bio enrichment.",
+        )
+
+    from app.enrichment import generate_bio_summary
+    from app.models import Mention
+
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+
+    mentions = (
+        db.query(Mention)
+        .filter(Mention.contact_id == contact_id)
+        .order_by(Mention.published_at.desc())
+        .limit(5)
+        .all()
+    )
+    snippets = [m.snippet for m in mentions if m.snippet]
+
+    bio = generate_bio_summary(
+        api_key=settings.anthropic_api_key,
+        contact_name=contact.name,
+        role_org=contact.role_org,
+        connection_to_solomon=contact.connection_to_solomon,
+        mention_snippets=snippets,
+    )
+
+    if not bio:
+        return {"generated": False, "message": "Could not generate bio (not enough data or API error)."}
+
+    # Store in primary_interests field (used for bio/interests)
+    contact.primary_interests = bio
+    db.commit()
+    return {"generated": True, "bio": bio}

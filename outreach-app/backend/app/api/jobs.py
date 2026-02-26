@@ -5,9 +5,13 @@ from pydantic import BaseModel
 from app.scheduler import run_fetch_mentions
 from app.database import SessionLocal
 from app.discovery import discover_from_mentions, discover_via_search, discover_all
+from app.enrichment import enrich_bulk
 from app.config import settings
 
 router = APIRouter()
+
+# Store latest bulk enrichment results (simple in-memory; replaced each run)
+_bulk_enrich_result: dict | None = None
 
 
 def _run_discover_from_mentions():
@@ -71,3 +75,41 @@ async def trigger_discover_for_contact(body: DiscoverForContactBody, background_
         raise HTTPException(status_code=400, detail="max_pairs must be 1–50")
     background_tasks.add_task(_run_discover_via_search, body.contact_id, body.max_pairs)
     return {"status": "started", "message": f"Discovering connections for contact {body.contact_id} via web search (up to {body.max_pairs} pairs). Check back in a few minutes."}
+
+
+class BulkEnrichBody(BaseModel):
+    max_contacts: int = 50
+
+
+def _run_bulk_enrich(max_contacts: int):
+    global _bulk_enrich_result
+    db = SessionLocal()
+    try:
+        api_key = settings.hunter_api_key
+        if not api_key:
+            _bulk_enrich_result = {"attempted": 0, "found": 0, "skipped": 0, "errors": 0, "message": "HUNTER_API_KEY not configured."}
+            return
+        _bulk_enrich_result = enrich_bulk(db, api_key, max_contacts=max_contacts)
+    finally:
+        db.close()
+
+
+@router.post("/enrich-all")
+async def trigger_bulk_enrich(body: BulkEnrichBody, background_tasks: BackgroundTasks):
+    """Enrich all contacts missing email via Hunter API. Rate-limited to 1 req/sec."""
+    if not settings.hunter_api_key:
+        raise HTTPException(status_code=503, detail="HUNTER_API_KEY not configured. Add to .env for enrichment.")
+    if body.max_contacts < 1 or body.max_contacts > 200:
+        raise HTTPException(status_code=400, detail="max_contacts must be 1–200")
+    global _bulk_enrich_result
+    _bulk_enrich_result = None
+    background_tasks.add_task(_run_bulk_enrich, body.max_contacts)
+    return {"status": "started", "message": f"Enriching up to {body.max_contacts} contacts in background (1/sec). Check status with GET /api/jobs/enrich-status."}
+
+
+@router.get("/enrich-status")
+async def get_enrich_status():
+    """Check the result of the latest bulk enrichment run."""
+    if _bulk_enrich_result is None:
+        return {"status": "running", "message": "Enrichment in progress or not started yet."}
+    return {"status": "complete", **_bulk_enrich_result}

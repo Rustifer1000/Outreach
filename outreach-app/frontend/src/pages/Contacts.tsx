@@ -25,6 +25,8 @@ export default function Contacts() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [rotationOnly, setRotationOnly] = useState(false)
   const [togglingId, setTogglingId] = useState<number | null>(null)
+  const [bulkEnriching, setBulkEnriching] = useState(false)
+  const [enrichStatus, setEnrichStatus] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Debounce search input by 300ms
@@ -66,6 +68,52 @@ export default function Contacts() {
       .finally(() => setTogglingId(null))
   }
 
+  const handleBulkEnrich = () => {
+    setBulkEnriching(true)
+    setEnrichStatus('Starting bulk enrichment...')
+    fetch('/api/jobs/enrich-all', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ max_contacts: 50 }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.detail) {
+          setEnrichStatus(d.detail)
+          setBulkEnriching(false)
+        } else {
+          setEnrichStatus(d.message || 'Running...')
+          // Poll for completion
+          const poll = setInterval(() => {
+            fetch('/api/jobs/enrich-status')
+              .then((r) => r.json())
+              .then((s) => {
+                if (s.status === 'complete') {
+                  clearInterval(poll)
+                  setEnrichStatus(`Done: ${s.found} emails found, ${s.attempted} attempted, ${s.skipped} skipped`)
+                  setBulkEnriching(false)
+                  // Refresh contact list to show updated recommendations
+                  const params = new URLSearchParams({ limit: '100' })
+                  if (debouncedSearch) params.set('q', debouncedSearch)
+                  if (rotationOnly) params.set('in_rotation', '1')
+                  fetch(`/api/contacts?${params}`)
+                    .then((res) => res.json())
+                    .then((data) => {
+                      setContacts(data.contacts || [])
+                      setTotal(data.total || 0)
+                    })
+                }
+              })
+              .catch(() => {})
+          }, 5000)
+        }
+      })
+      .catch(() => {
+        setEnrichStatus('Bulk enrichment failed')
+        setBulkEnriching(false)
+      })
+  }
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-slate-800">Contacts</h1>
@@ -90,6 +138,17 @@ export default function Contacts() {
         <Link to="/rotation" className="text-sm text-slate-600 hover:text-slate-800">
           Manage rotation →
         </Link>
+        <button
+          type="button"
+          onClick={handleBulkEnrich}
+          disabled={bulkEnriching}
+          className="rounded border border-emerald-500 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+        >
+          {bulkEnriching ? 'Enriching...' : 'Bulk enrich emails'}
+        </button>
+        {enrichStatus && (
+          <span className="text-sm text-slate-600">{enrichStatus}</span>
+        )}
       </div>
 
       {loading ? (
