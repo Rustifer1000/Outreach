@@ -12,8 +12,11 @@ from app.scheduler import get_scheduler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Run Phase 2B migration (idempotent), start scheduler on startup, stop on shutdown."""
+    """Create missing tables, run Phase 2B migration (idempotent), start scheduler on startup, stop on shutdown."""
     try:
+        from app.database import Base, engine
+        import app.models  # noqa: F401 - register all models
+        Base.metadata.create_all(engine)
         from app.migrate_phase2b import run as run_migrate
         run_migrate()
     except Exception:

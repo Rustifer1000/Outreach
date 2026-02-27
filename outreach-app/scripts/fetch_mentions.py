@@ -121,6 +121,14 @@ def main():
     if contacted_ids:
         print(f"  (Skipping {len(contacted_ids)} contacts already contacted)")
 
+    contact_ids = [c.id for c in contacts]
+    existing_mentions = session.query(Mention).filter(Mention.contact_id.in_(contact_ids)).all()
+    seen_urls: set[tuple[int, str]] = set()
+    for m in existing_mentions:
+        n = _normalize_url(m.source_url)
+        if n:
+            seen_urls.add((m.contact_id, n))
+
     added = 0
     for i, contact in enumerate(contacts):
         articles = fetch_newsapi(api_key, contact.name, args.days)
@@ -129,10 +137,9 @@ def main():
             norm_url = _normalize_url(raw_url)
             if not norm_url:
                 continue
-            # Dedupe: same URL for this contact (normalize to avoid ?utm_ param duplicates)
-            existing_rows = session.query(Mention).filter(Mention.contact_id == contact.id).all()
-            if any(_normalize_url(ex.source_url) == norm_url for ex in existing_rows):
+            if (contact.id, norm_url) in seen_urls:
                 continue
+            seen_urls.add((contact.id, norm_url))
 
             pub = None
             if a.get("published_at"):

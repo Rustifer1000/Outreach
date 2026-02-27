@@ -26,13 +26,13 @@
 
 ## Medium
 
-### 5. **Mentions API: load-then-filter in Python**
-- **Issue:** `list_mentions` loads all mentions in the date range, then limits to `max_per_contact` per contact in Python. For large datasets this is inefficient.
-- **Improvement:** Use a SQL subquery or window function (e.g. `ROW_NUMBER() OVER (PARTITION BY contact_id)`) to limit per contact in the DB.
+### 5. **Mentions API: load-then-filter in Python** — FIXED
+- **Issue:** `list_mentions` loaded all mentions in the date range, then limited to `max_per_contact` per contact in Python. Inefficient for large datasets.
+- **Fix:** Use `ROW_NUMBER() OVER (PARTITION BY contact_id ORDER BY published_at DESC NULLS LAST)` in a subquery; filter `rn <= max_per_contact` in SQL. Single contact filter unchanged (no limit).
 
-### 6. **fetch_mentions.py: N+1 dedupe query**
-- **Issue:** For each contact, we run `session.query(Mention).filter(Mention.contact_id == contact.id).all()` to check URL dedupe. One query per contact (~300).
-- **Improvement:** Load all mentions for the contact set once (e.g. by contact_id IN (...)) and build a set of (contact_id, normalized_url) for in-memory dedupe.
+### 6. **fetch_mentions.py: N+1 dedupe query** — FIXED
+- **Issue:** For each contact, we ran `session.query(Mention).filter(Mention.contact_id == contact.id).all()` to check URL dedupe. One query per contact (~300).
+- **Fix:** Load all mentions for the contact set once with `contact_id.in_(contact_ids)`, build a set of `(contact_id, normalized_url)`, and check dedupe in memory. Also add newly inserted URLs to the set within the same run.
 
 ### 7. **ContactDetail: no user feedback on copy**
 - **Issue:** `copyToClipboard()` is called with no toast or message; user doesn’t know the copy succeeded.
@@ -97,3 +97,15 @@
 - **Discovery: name matching** — Full-name substring can false-positive (e.g. "Bengio" in "Yoshua Bengio"). We skip names under 4 chars; could add word-boundary or prefer exact phrase.
 - **Discovery jobs: error feedback** — Background tasks don’t return result to client; user only sees "started". Could add a small "job status" endpoint or poll for last-run result.
 - **ContactDetail discover button** — On failure we set `discovering` false but don’t show an error message; could set error state.
+
+---
+
+## Recent session (Feb 2025)
+
+### Fixed
+- **GET /api/contacts limit** — Raised max from 100 to 500; Rotation page was requesting 400 and getting 422, causing empty dropdown.
+- **Rotation page loading** — `loadRotation` and `loadContacts` now awaited before clearing loading state; Refresh button fixed.
+- **Missing DB tables on startup** — Added `Base.metadata.create_all(engine)` in main.py lifespan so mentions/other tables are created if missing.
+
+### Known issue (low priority)
+- **Replace rotation (Set rotation from list)** — Sometimes does not update count; Add-to-rotation dropdown and one-by-one add work. Possible cause: API or frontend parsing; leave unfixed for now to avoid regressions.
