@@ -15,10 +15,11 @@ if str(backend) not in sys.path:
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
 from app.database import Base, get_db
-from app.main import app
+from app.main import app as fastapi_app
 
 # Ensure all models are registered on Base.metadata (app.main already loads them)
 import app.models  # noqa: F401
@@ -27,7 +28,11 @@ import app.models  # noqa: F401
 @pytest.fixture
 def test_engine():
     """Fresh in-memory engine with all tables, per test (no shared state)."""
-    engine = create_engine("sqlite:///:memory:")
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(engine)
     return engine
 
@@ -44,11 +49,11 @@ def client(test_engine):
         finally:
             db.close()
 
-    app.dependency_overrides[get_db] = override_get_db
+    fastapi_app.dependency_overrides[get_db] = override_get_db
     try:
-        yield TestClient(app)
+        yield TestClient(fastapi_app)
     finally:
-        app.dependency_overrides.pop(get_db, None)
+        fastapi_app.dependency_overrides.pop(get_db, None)
 
 
 @pytest.fixture

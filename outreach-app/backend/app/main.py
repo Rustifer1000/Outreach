@@ -1,12 +1,15 @@
 """
 Solomon Outreach API - FastAPI application entry point.
 """
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import contacts, mentions, outreach, jobs, names_file, relationship_map
+logger = logging.getLogger(__name__)
+
+from app.api import contacts, mentions, outreach, jobs, names_file, relationship_map, digest
 from app.scheduler import get_scheduler
 
 
@@ -20,7 +23,7 @@ async def lifespan(app: FastAPI):
         from app.migrate_phase2b import run as run_migrate
         run_migrate()
     except Exception:
-        pass  # e.g. DB not yet created; seed_contacts --reset will create tables
+        logger.warning("Startup DB init/migration failed (DB may not exist yet)", exc_info=True)
     scheduler = get_scheduler()
     scheduler.start()
     yield
@@ -48,6 +51,7 @@ app.include_router(outreach.router, prefix="/api/outreach", tags=["outreach"])
 app.include_router(jobs.router, prefix="/api/jobs", tags=["jobs"])
 app.include_router(names_file.router, prefix="/api/names-file", tags=["names-file"])
 app.include_router(relationship_map.router, prefix="/api/relationship-map", tags=["relationship-map"])
+app.include_router(digest.router, prefix="/api/digest", tags=["digest"])
 
 
 @app.get("/")

@@ -1,4 +1,5 @@
 """Contacts API endpoints."""
+from collections import Counter
 from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, Query, HTTPException
 from pydantic import BaseModel
@@ -7,23 +8,127 @@ from sqlalchemy.orm import Session, joinedload
 from app.config import settings
 from app.database import get_db
 from app.enrichment import enrich_contact_email
-from app.models import Contact, ContactInfo, Note, ContactConnection
+from app.models import Contact, ContactInfo, ContactTag, Note, ContactConnection, OutreachLog
+from app.warm_intros import PRESET_TAGS, find_warm_intro_paths, compute_mission_alignment
 
 # Priority order for first-contact recommendations
 CONTACT_METHOD_PRIORITY = ["email", "linkedin", "twitter", "website", "other"]
 
+# Stage-specific priority adjustments
+STAGE_PRIORITY = {
+    "Cold": ["email", "linkedin", "twitter", "website", "other"],
+    "Warm": ["linkedin", "email", "twitter", "website", "other"],
+    "Engaged": None,  # Use outreach history to determine
+    "Partner-Advocate": ["email", "linkedin", "twitter", "website", "other"],
+}
 
-def get_recommended_method(contact_infos: list) -> dict:
-    """Return recommended contact method and availability. Priority: email > linkedin > twitter > website > other."""
+
+def get_recommended_method(
+    contact_infos: list,
+    outreach_logs: list | None = None,
+    relationship_stage: str | None = None,
+) -> dict:
+    """Return recommended contact method factoring in availability, outreach history, and relationship stage.
+
+    Priority logic:
+    - Cold contacts: email first (formal, low-pressure)
+    - Warm contacts: LinkedIn preferred (more personal)
+    - Engaged contacts: use whatever method got replies; fall back to most-used
+    - Partner-Advocate: email first (established relationship)
+    - If a method was tried and got a reply, boost it
+    - If a method was tried with no response, deprioritize it
+    """
     types_present = {ci.type.lower() for ci in contact_infos}
-    for method in CONTACT_METHOD_PRIORITY:
+    outreach_logs = outreach_logs or []
+
+    # Analyze outreach history
+    replied_methods: set[str] = set()
+    no_response_methods: set[str] = set()
+    method_counts: Counter[str] = Counter()
+    for log in outreach_logs:
+        m = (log.method or "").lower()
+        method_counts[m] += 1
+        if log.response_status == "replied":
+            replied_methods.add(m)
+        elif log.response_status in ("no_response", "bounced"):
+            no_response_methods.add(m)
+
+    # Determine base priority order from relationship stage
+    stage = (relationship_stage or "").strip()
+    if stage == "Engaged" and replied_methods:
+        # For engaged contacts, prefer whatever method got replies
+        priority = list(replied_methods) + [m for m in CONTACT_METHOD_PRIORITY if m not in replied_methods]
+    elif stage in STAGE_PRIORITY and STAGE_PRIORITY[stage] is not None:
+        priority = STAGE_PRIORITY[stage]
+    else:
+        priority = list(CONTACT_METHOD_PRIORITY)
+
+    # Boost methods that got replies to the front
+    if replied_methods:
+        boosted = [m for m in priority if m in replied_methods]
+        rest = [m for m in priority if m not in replied_methods]
+        priority = boosted + rest
+
+    # Deprioritize methods that got no response (push to end, but keep available)
+    if no_response_methods and not replied_methods:
+        good = [m for m in priority if m not in no_response_methods]
+        bad = [m for m in priority if m in no_response_methods]
+        priority = good + bad
+
+    # Find the best available method
+    for method in priority:
         if method in types_present:
-            return {"method": method, "available": True, "reason": f"{method.capitalize()} (available)"}
+            reason = _build_reason(method, stage, replied_methods, no_response_methods, method_counts)
+            return {"method": method, "available": True, "reason": reason}
+
+    # Nothing available — suggest based on stage
+    if stage in ("Warm", "Engaged"):
+        return {
+            "method": "linkedin",
+            "available": False,
+            "reason": "LinkedIn (not found — add LinkedIn URL to contact info)",
+        }
     return {
-        "method": CONTACT_METHOD_PRIORITY[0],
+        "method": "email",
         "available": False,
-        "reason": "Email (not found — add contact info or try LinkedIn)",
+        "reason": "Email (not found — add contact info or try enrichment)",
     }
+
+
+def _build_reason(
+    method: str,
+    stage: str,
+    replied_methods: set[str],
+    no_response_methods: set[str],
+    method_counts: Counter,
+) -> str:
+    """Build a human-readable reason string for the recommendation."""
+    label = method.capitalize()
+    parts: list[str] = []
+
+    if method in replied_methods:
+        parts.append("previously got a reply")
+    elif method_counts.get(method, 0) > 0 and method not in no_response_methods:
+        parts.append(f"used {method_counts[method]}x")
+
+    if stage == "Cold":
+        parts.append("good for cold outreach")
+    elif stage == "Warm" and method == "linkedin":
+        parts.append("personal touch for warm contacts")
+    elif stage == "Engaged" and method in replied_methods:
+        parts.append("proven channel")
+    elif stage == "Partner-Advocate":
+        parts.append("established relationship")
+
+    # Note if other methods were tried without success
+    tried_no_reply = no_response_methods - {method}
+    if tried_no_reply:
+        tried_label = ", ".join(m.capitalize() for m in sorted(tried_no_reply))
+        parts.append(f"{tried_label} tried without reply")
+
+    if parts:
+        return f"{label} ({'; '.join(parts)})"
+    return f"{label} (available)"
 
 
 router = APIRouter()
@@ -39,7 +144,7 @@ async def list_contacts(
     db: Session = Depends(get_db),
 ):
     """List contacts with optional search and filter."""
-    query = db.query(Contact)
+    query = db.query(Contact).options(joinedload(Contact.contact_info), joinedload(Contact.tags))
     if q:
         query = query.filter(
             Contact.name.ilike(f"%{q}%") | Contact.category.ilike(f"%{q}%")
@@ -50,6 +155,14 @@ async def list_contacts(
         query = query.filter(Contact.in_mention_rotation == 1)
     total = query.count()
     contacts = query.order_by(Contact.list_number).offset(skip).limit(limit).all()
+
+    # Batch-load outreach logs for all contacts in one query
+    contact_ids = [c.id for c in contacts]
+    all_outreach = db.query(OutreachLog).filter(OutreachLog.contact_id.in_(contact_ids)).all() if contact_ids else []
+    outreach_by_contact: dict[int, list] = {}
+    for log in all_outreach:
+        outreach_by_contact.setdefault(log.contact_id, []).append(log)
+
     return {
         "total": total,
         "contacts": [
@@ -63,7 +176,14 @@ async def list_contacts(
                 "connection_to_solomon": c.connection_to_solomon,
                 "primary_interests": c.primary_interests,
                 "relationship_stage": c.relationship_stage,
+                "mission_alignment": c.mission_alignment,
                 "in_mention_rotation": bool(getattr(c, "in_mention_rotation", 0)),
+                "tags": [t.tag for t in (c.tags or [])],
+                "recommended_contact_method": get_recommended_method(
+                    list(c.contact_info) if c.contact_info else [],
+                    outreach_by_contact.get(c.id),
+                    c.relationship_stage,
+                ),
             }
             for c in contacts
         ],
@@ -106,7 +226,7 @@ async def get_contact(contact_id: int, db: Session = Depends(get_db)):
     """Get a single contact by ID with contact info and first-contact recommendation."""
     contact = (
         db.query(Contact)
-        .options(joinedload(Contact.contact_info))
+        .options(joinedload(Contact.contact_info), joinedload(Contact.tags))
         .filter(Contact.id == contact_id)
         .first()
     )
@@ -114,7 +234,8 @@ async def get_contact(contact_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Contact not found")
 
     contact_infos = list(contact.contact_info) if contact.contact_info else []
-    recommendation = get_recommended_method(contact_infos)
+    outreach_logs = db.query(OutreachLog).filter(OutreachLog.contact_id == contact_id).all()
+    recommendation = get_recommended_method(contact_infos, outreach_logs, contact.relationship_stage)
 
     return {
         "id": contact.id,
@@ -126,7 +247,9 @@ async def get_contact(contact_id: int, db: Session = Depends(get_db)):
         "connection_to_solomon": contact.connection_to_solomon,
         "primary_interests": contact.primary_interests,
         "relationship_stage": contact.relationship_stage,
+        "mission_alignment": contact.mission_alignment,
         "in_mention_rotation": bool(getattr(contact, "in_mention_rotation", 0)),
+        "tags": [t.tag for t in (contact.tags or [])],
         "contact_info": [
             {"type": ci.type, "value": ci.value, "is_primary": bool(ci.is_primary)}
             for ci in contact_infos
@@ -138,11 +261,12 @@ async def get_contact(contact_id: int, db: Session = Depends(get_db)):
 class ContactPatch(BaseModel):
     relationship_stage: str | None = None
     in_mention_rotation: bool | None = None
+    mission_alignment: float | None = None
 
 
 @router.patch("/{contact_id}")
 async def patch_contact(contact_id: int, data: ContactPatch, db: Session = Depends(get_db)):
-    """Update contact (e.g. relationship stage, in_mention_rotation)."""
+    """Update contact (e.g. relationship stage, in_mention_rotation, mission_alignment)."""
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
@@ -150,11 +274,14 @@ async def patch_contact(contact_id: int, data: ContactPatch, db: Session = Depen
         contact.relationship_stage = data.relationship_stage.strip() or None
     if data.in_mention_rotation is not None:
         contact.in_mention_rotation = 1 if data.in_mention_rotation else 0
+    if data.mission_alignment is not None:
+        contact.mission_alignment = max(1.0, min(10.0, data.mission_alignment))
     db.commit()
     db.refresh(contact)
     return {
         "id": contact.id,
         "relationship_stage": contact.relationship_stage,
+        "mission_alignment": contact.mission_alignment,
         "in_mention_rotation": bool(contact.in_mention_rotation),
     }
 
@@ -200,7 +327,7 @@ async def create_note(contact_id: int, data: NoteCreate, db: Session = Depends(g
         contact_id=contact_id,
         note_text=data.note_text.strip(),
         note_date=note_dt,
-        channel=data.channel.strip() or None if data.channel else None,
+        channel=(data.channel.strip() or None) if data.channel else None,
     )
     db.add(note)
     db.commit()
@@ -272,7 +399,7 @@ async def create_connection(contact_id: int, data: ConnectionCreate, db: Session
         contact_id=contact_id,
         other_contact_id=data.other_contact_id,
         relationship_type=data.relationship_type.strip(),
-        notes=data.notes.strip() or None if data.notes else None,
+        notes=(data.notes.strip() or None) if data.notes else None,
     )
     db.add(conn)
     db.commit()
@@ -334,7 +461,7 @@ async def add_contact_info(
 
 @router.post("/{contact_id}/enrich")
 async def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
-    """Look up email via Hunter API and add to contact_info if found."""
+    """Look up email (and LinkedIn if available) via Hunter API and add to contact_info."""
     if not settings.hunter_api_key:
         raise HTTPException(
             status_code=503,
@@ -370,6 +497,20 @@ async def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
         is_primary=1,
     )
     db.add(info)
+
+    # Also add LinkedIn if returned and not already present
+    linkedin_url = result.get("linkedin_url")
+    if linkedin_url:
+        existing_li = any(ci.type == "linkedin" for ci in (contact.contact_info or []))
+        if not existing_li:
+            li_info = ContactInfo(
+                contact_id=contact_id,
+                type="linkedin",
+                value=linkedin_url,
+                is_primary=0,
+            )
+            db.add(li_info)
+
     db.commit()
     db.refresh(info)
     return {
@@ -377,4 +518,137 @@ async def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
         "email": result["email"],
         "score": result.get("score"),
         "position": result.get("position"),
+        "linkedin_url": linkedin_url,
     }
+
+
+@router.post("/{contact_id}/enrich-bio")
+async def enrich_bio(contact_id: int, db: Session = Depends(get_db)):
+    """Generate a short bio summary from mention snippets using Claude."""
+    if not settings.anthropic_api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="ANTHROPIC_API_KEY not configured. Add to .env for bio enrichment.",
+        )
+
+    from app.enrichment import generate_bio_summary
+    from app.models import Mention
+
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+
+    mentions = (
+        db.query(Mention)
+        .filter(Mention.contact_id == contact_id)
+        .order_by(Mention.published_at.desc())
+        .limit(5)
+        .all()
+    )
+    snippets = [m.snippet for m in mentions if m.snippet]
+
+    bio = generate_bio_summary(
+        api_key=settings.anthropic_api_key,
+        contact_name=contact.name,
+        role_org=contact.role_org,
+        connection_to_solomon=contact.connection_to_solomon,
+        mention_snippets=snippets,
+    )
+
+    if not bio:
+        return {"generated": False, "message": "Could not generate bio (not enough data or API error)."}
+
+    # Store in primary_interests field (used for bio/interests)
+    contact.primary_interests = bio
+    db.commit()
+    return {"generated": True, "bio": bio}
+
+
+# --- Tags ---
+
+@router.get("/tags/preset")
+async def get_preset_tags():
+    """Return the list of preset tag options."""
+    return {"tags": PRESET_TAGS}
+
+
+@router.get("/{contact_id}/tags")
+async def list_tags(contact_id: int, db: Session = Depends(get_db)):
+    """List tags for a contact."""
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    tags = db.query(ContactTag).filter(ContactTag.contact_id == contact_id).all()
+    return {"tags": [{"id": t.id, "tag": t.tag} for t in tags]}
+
+
+class TagCreate(BaseModel):
+    tag: str
+
+
+@router.post("/{contact_id}/tags")
+async def add_tag(contact_id: int, data: TagCreate, db: Session = Depends(get_db)):
+    """Add a tag to a contact (preset or custom)."""
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    tag_name = data.tag.strip()
+    if not tag_name:
+        raise HTTPException(status_code=400, detail="Tag cannot be empty")
+    existing = (
+        db.query(ContactTag)
+        .filter(ContactTag.contact_id == contact_id, ContactTag.tag == tag_name)
+        .first()
+    )
+    if existing:
+        return {"id": existing.id, "tag": existing.tag, "message": "Tag already exists"}
+    tag = ContactTag(contact_id=contact_id, tag=tag_name)
+    db.add(tag)
+    db.commit()
+    db.refresh(tag)
+    return {"id": tag.id, "tag": tag.tag}
+
+
+@router.delete("/{contact_id}/tags/{tag_id}")
+async def remove_tag(contact_id: int, tag_id: int, db: Session = Depends(get_db)):
+    """Remove a tag from a contact."""
+    tag = (
+        db.query(ContactTag)
+        .filter(ContactTag.id == tag_id, ContactTag.contact_id == contact_id)
+        .first()
+    )
+    if not tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    db.delete(tag)
+    db.commit()
+    return {"ok": True}
+
+
+# --- Warm Intros ---
+
+@router.get("/{contact_id}/warm-intros")
+async def get_warm_intros(contact_id: int, db: Session = Depends(get_db)):
+    """Find warm intro paths to this contact.
+
+    Returns ranked list of people who could introduce you,
+    based on their connection to the target and your relationship with them.
+    """
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    paths = find_warm_intro_paths(db, contact_id)
+    return {"contact_name": contact.name, "intro_paths": paths, "count": len(paths)}
+
+
+# --- Mission Alignment ---
+
+@router.post("/{contact_id}/compute-alignment")
+async def compute_alignment(contact_id: int, db: Session = Depends(get_db)):
+    """Auto-compute mission alignment score from category/interests. User can override via PATCH."""
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    score = compute_mission_alignment(contact)
+    contact.mission_alignment = score
+    db.commit()
+    return {"contact_id": contact_id, "mission_alignment": score}

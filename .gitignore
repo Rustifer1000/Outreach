@@ -22,6 +22,17 @@ dist/
 *.swp
 *.swo
 
+# Data files
+*.csv
+*.xlsx
+*.json
+!package.json
+!package-lock.json
+!tsconfig*.json
+
+# Working docs / scratch
+Full_Copy*.md
+
 # OS
 .DS_Store
 Thumbs.db

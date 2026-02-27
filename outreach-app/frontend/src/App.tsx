@@ -6,6 +6,7 @@ import ContactDetail from './pages/ContactDetail'
 import NamesFile from './pages/NamesFile'
 import RelationshipMap from './pages/RelationshipMap'
 import Rotation from './pages/Rotation'
+import Digest from './pages/Digest'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/contacts/:id" element={<ContactDetail />} />
           <Route path="/rotation" element={<Rotation />} />
           <Route path="/map" element={<RelationshipMap />} />
+          <Route path="/digest" element={<Digest />} />
           <Route path="/names-file" element={<NamesFile />} />
         </Routes>
       </Layout>

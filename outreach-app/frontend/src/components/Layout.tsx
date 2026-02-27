@@ -36,6 +36,9 @@ export default function Layout({ children }: LayoutProps) {
               <Link to="/map" className="text-slate-300 hover:text-white">
                 Map
               </Link>
+              <Link to="/digest" className="text-slate-300 hover:text-white">
+                Digest
+              </Link>
               <Link to="/names-file" className="text-slate-300 hover:text-white">
                 Names file
               </Link>

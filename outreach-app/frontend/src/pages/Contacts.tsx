@@ -1,5 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
+
+interface ContactRecommendation {
+  method: string
+  available: boolean
+  reason: string
+}
 
 interface Contact {
   id: number
@@ -8,6 +14,7 @@ interface Contact {
   category: string | null
   role_org: string | null
   in_mention_rotation?: boolean
+  recommended_contact_method?: ContactRecommendation
 }
 
 export default function Contacts() {
@@ -15,12 +22,24 @@ export default function Contacts() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [rotationOnly, setRotationOnly] = useState(false)
   const [togglingId, setTogglingId] = useState<number | null>(null)
+  const [bulkEnriching, setBulkEnriching] = useState(false)
+  const [enrichStatus, setEnrichStatus] = useState<string | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Debounce search input by 300ms
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [search])
 
   useEffect(() => {
+    setLoading(true)
     const params = new URLSearchParams({ limit: '100' })
-    if (search) params.set('q', search)
+    if (debouncedSearch) params.set('q', debouncedSearch)
     if (rotationOnly) params.set('in_rotation', '1')
     fetch(`/api/contacts?${params}`)
       .then((res) => res.json())
@@ -30,7 +49,7 @@ export default function Contacts() {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
-  }, [search, rotationOnly])
+  }, [debouncedSearch, rotationOnly])
 
   const toggleRotation = (c: Contact) => {
     setTogglingId(c.id)
@@ -47,6 +66,52 @@ export default function Contacts() {
       })
       .catch((err) => console.error(err))
       .finally(() => setTogglingId(null))
+  }
+
+  const handleBulkEnrich = () => {
+    setBulkEnriching(true)
+    setEnrichStatus('Starting bulk enrichment...')
+    fetch('/api/jobs/enrich-all', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ max_contacts: 50 }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.detail) {
+          setEnrichStatus(d.detail)
+          setBulkEnriching(false)
+        } else {
+          setEnrichStatus(d.message || 'Running...')
+          // Poll for completion
+          const poll = setInterval(() => {
+            fetch('/api/jobs/enrich-status')
+              .then((r) => r.json())
+              .then((s) => {
+                if (s.status === 'complete') {
+                  clearInterval(poll)
+                  setEnrichStatus(`Done: ${s.found} emails found, ${s.attempted} attempted, ${s.skipped} skipped`)
+                  setBulkEnriching(false)
+                  // Refresh contact list to show updated recommendations
+                  const params = new URLSearchParams({ limit: '100' })
+                  if (debouncedSearch) params.set('q', debouncedSearch)
+                  if (rotationOnly) params.set('in_rotation', '1')
+                  fetch(`/api/contacts?${params}`)
+                    .then((res) => res.json())
+                    .then((data) => {
+                      setContacts(data.contacts || [])
+                      setTotal(data.total || 0)
+                    })
+                }
+              })
+              .catch(() => {})
+          }, 5000)
+        }
+      })
+      .catch(() => {
+        setEnrichStatus('Bulk enrichment failed')
+        setBulkEnriching(false)
+      })
   }
 
   return (
@@ -73,6 +138,17 @@ export default function Contacts() {
         <Link to="/rotation" className="text-sm text-slate-600 hover:text-slate-800">
           Manage rotation →
         </Link>
+        <button
+          type="button"
+          onClick={handleBulkEnrich}
+          disabled={bulkEnriching}
+          className="rounded border border-emerald-500 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+        >
+          {bulkEnriching ? 'Enriching...' : 'Bulk enrich emails'}
+        </button>
+        {enrichStatus && (
+          <span className="text-sm text-slate-600">{enrichStatus}</span>
+        )}
       </div>
 
       {loading ? (
@@ -93,6 +169,9 @@ export default function Contacts() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                   Role/Org
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                  Recommended
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                   Rotation
@@ -118,6 +197,22 @@ export default function Contacts() {
                   </td>
                   <td className="max-w-xs truncate px-6 py-4 text-sm text-slate-500">
                     {c.role_org ?? '-'}
+                  </td>
+                  <td className="px-6 py-4">
+                    {c.recommended_contact_method ? (
+                      <span
+                        title={c.recommended_contact_method.reason}
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          c.recommended_contact_method.available
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {c.recommended_contact_method.method}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-400">-</span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <button

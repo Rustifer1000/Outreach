@@ -8,6 +8,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from app.database import SessionLocal
 from app.discovery import discover_from_mentions
+from app.scoring import score_all_mentions
 
 
 def run_fetch_mentions():
@@ -29,6 +30,8 @@ def run_fetch_mentions():
         result = discover_from_mentions(db)
         if result.get("added", 0) > 0:
             pass  # Logged via discovery
+        # Auto-score any unscored mentions
+        score_all_mentions(db)
     finally:
         db.close()
 
