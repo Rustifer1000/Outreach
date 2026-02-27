@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 const RECOMMENDED = 30
 
@@ -24,18 +25,23 @@ export default function Rotation() {
   const [addId, setAddId] = useState('')
   const [replacing, setReplacing] = useState(false)
   const [replaceFeedback, setReplaceFeedback] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const loadRotation = () =>
-    fetch('/api/contacts/rotation')
-      .then((r) => r.json())
-      .then((d) => setRotation(d.contacts || []))
-      .catch(() => setRotation([]))
+    apiFetch<{ contacts: RotationContact[] }>('/api/contacts/rotation')
+      .then((d) => { setRotation(d.contacts || []); setError(null) })
+      .catch((err) => {
+        setError(`Failed to load rotation: ${err.message}`)
+        setRotation([])
+      })
 
   const loadContacts = () =>
-    fetch('/api/contacts?limit=500')
-      .then((r) => r.json())
-      .then((d) => setAllContacts(d.contacts || []))
-      .catch(() => setAllContacts([]))
+    apiFetch<{ contacts: ContactOption[] }>('/api/contacts?limit=500')
+      .then((d) => { setAllContacts(d.contacts || []); setError(null) })
+      .catch((err) => {
+        setError(`Could not load contacts: ${err.message}`)
+        setAllContacts([])
+      })
 
   useEffect(() => {
     setLoading(true)
@@ -46,20 +52,20 @@ export default function Rotation() {
   const notInRotation = allContacts.filter((c) => !rotationIds.has(c.id))
 
   const handleRemove = (contactId: number) => {
-    fetch(`/api/contacts/${contactId}`, {
+    apiFetch(`/api/contacts/${contactId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ in_mention_rotation: false }),
     })
       .then(() => loadRotation())
-      .catch((e) => console.error(e))
+      .catch((err) => setError(`Remove failed: ${err.message}`))
   }
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault()
     if (!addId) return
     setAdding(true)
-    fetch(`/api/contacts/${addId}`, {
+    apiFetch(`/api/contacts/${addId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ in_mention_rotation: true }),
@@ -68,7 +74,7 @@ export default function Rotation() {
         setAddId('')
         loadRotation()
       })
-      .catch((e) => console.error(e))
+      .catch((err) => setError(`Add failed: ${err.message}`))
       .finally(() => setAdding(false))
   }
 
@@ -103,24 +109,17 @@ export default function Rotation() {
       return
     }
     setReplacing(true)
-    fetch('/api/contacts/rotation', {
+    apiFetch<{ in_rotation: number; message?: string }>('/api/contacts/rotation', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contact_ids: ids }),
     })
-      .then((r) => {
-        if (!r.ok) throw new Error(r.statusText)
-        return r.json()
-      })
       .then((data) => {
         setReplaceFeedback(data.message ?? `${data.in_rotation} contacts in rotation.`)
         loadRotation()
         loadContacts()
       })
-      .catch((e) => {
-        setReplaceFeedback(`Error: ${e.message}`)
-        console.error(e)
-      })
+      .catch((err) => setReplaceFeedback(`Error: ${err.message}`))
       .finally(() => setReplacing(false))
   }
 
@@ -138,6 +137,12 @@ export default function Rotation() {
       <p className="mb-6 text-sm text-slate-600">
         Tag a core group (e.g. {RECOMMENDED}+) to focus the daily NewsAPI mention fetch. Only these contacts are searched when the job runs. Change the group each day to maximize coverage across the full list.
       </p>
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       <div className="mb-8 rounded-lg border border-slate-200 bg-white p-6 shadow">
         <div className="mb-2 flex items-center justify-between">
@@ -167,11 +172,7 @@ export default function Rotation() {
                   </Link>
                   {c.category && <span className="ml-2 text-sm text-slate-500">{c.category}</span>}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemove(c.id)}
-                  className="text-sm text-red-600 hover:text-red-800"
-                >
+                <button type="button" onClick={() => handleRemove(c.id)} className="text-sm text-red-600 hover:text-red-800">
                   Remove
                 </button>
               </li>
@@ -185,22 +186,14 @@ export default function Rotation() {
         <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-2">
           <div>
             <label className="mb-1 block text-sm text-slate-700">Contact</label>
-            <select
-              value={addId}
-              onChange={(e) => setAddId(e.target.value)}
-              className="min-w-[220px] rounded border border-slate-300 bg-white px-3 py-2 text-sm"
-            >
+            <select value={addId} onChange={(e) => setAddId(e.target.value)} className="min-w-[220px] rounded border border-slate-300 bg-white px-3 py-2 text-sm">
               <option value="">Select...</option>
               {notInRotation.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
           </div>
-          <button
-            type="submit"
-            disabled={adding || !addId}
-            className="rounded bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 disabled:opacity-50"
-          >
+          <button type="submit" disabled={adding || !addId} className="rounded bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 disabled:opacity-50">
             {adding ? 'Adding...' : 'Add'}
           </button>
         </form>
@@ -212,22 +205,13 @@ export default function Rotation() {
           Paste contact IDs (one per line or comma-separated) to replace the entire rotation. Use the Contacts page to copy IDs if needed.
         </p>
         <form onSubmit={handleReplaceRotation} className="flex flex-col gap-2">
-          <textarea
-            name="ids"
-            rows={3}
-            placeholder="e.g. 1, 2, 3, 5, 8  or  1-30 (copy IDs from Contacts page)"
-            className="rounded border border-slate-300 bg-white px-3 py-2 text-sm"
-          />
+          <textarea name="ids" rows={3} placeholder="e.g. 1, 2, 3, 5, 8  or  1-30 (copy IDs from Contacts page)" className="rounded border border-slate-300 bg-white px-3 py-2 text-sm" />
           {replaceFeedback && (
             <p className={`text-sm ${replaceFeedback.startsWith('Error') ? 'text-red-600' : 'text-slate-600'}`}>
               {replaceFeedback}
             </p>
           )}
-          <button
-            type="submit"
-            disabled={replacing}
-            className="w-fit rounded bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 disabled:opacity-50"
-          >
+          <button type="submit" disabled={replacing} className="w-fit rounded bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 disabled:opacity-50">
             {replacing ? 'Setting...' : 'Replace rotation with these IDs'}
           </button>
         </form>

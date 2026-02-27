@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 interface Mention {
   id: number
@@ -33,23 +34,20 @@ export default function Dashboard() {
   const [mentions, setMentions] = useState<Mention[]>([])
   const [hotLeads, setHotLeads] = useState<HotLead[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const loadMentions = () => {
-    fetch('/api/mentions?days=7&limit=20')
-      .then((res) => res.json())
-      .then((data) => setMentions(data.mentions || []))
-      .catch((err) => console.error(err))
+  const loadMentions = () =>
+    apiFetch<{ mentions: Mention[] }>('/api/mentions?days=7&limit=20')
+      .then((data) => { setMentions(data.mentions || []); setError(null) })
+      .catch((err) => setError(`Mentions: ${err.message}`))
       .finally(() => setLoading(false))
-  }
 
-  const loadHotLeads = () => {
-    fetch('/api/digest/hot-leads?days=7&limit=5')
-      .then((res) => res.json())
+  const loadHotLeads = () =>
+    apiFetch<{ hot_leads: HotLead[] }>('/api/digest/hot-leads?days=7&limit=5')
       .then((data) => setHotLeads(data.hot_leads || []))
-      .catch(() => {})
-  }
+      .catch((err) => console.warn('Hot leads unavailable:', err.message))
 
   useEffect(() => {
     setLoading(true)
@@ -70,18 +68,15 @@ export default function Dashboard() {
       pollIntervalRef.current = null
     }
     const beforeCount = mentions.length
-    fetch('/api/jobs/fetch-mentions', { method: 'POST' })
-      .then((r) => r.json())
+    apiFetch('/api/jobs/fetch-mentions', { method: 'POST' })
       .then(() => {
         let attempts = 0
         pollIntervalRef.current = setInterval(() => {
           attempts++
-          fetch('/api/mentions?days=7&limit=20')
-            .then((res) => res.json())
+          apiFetch<{ mentions: Mention[] }>('/api/mentions?days=7&limit=20')
             .then((data) => {
               const newMentions = data.mentions || []
               setMentions(newMentions)
-              // Stop polling once new data arrives or max attempts reached
               if (newMentions.length !== beforeCount || attempts >= 6) {
                 if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
                 pollIntervalRef.current = null
@@ -98,7 +93,7 @@ export default function Dashboard() {
         }, 10000)
       })
       .catch((err) => {
-        console.error(err)
+        setError(`Refresh failed: ${err.message}`)
         setRefreshing(false)
       })
   }
@@ -106,6 +101,12 @@ export default function Dashboard() {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-slate-800">Dashboard</h1>
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       <section className="mb-8 rounded-lg bg-white p-6 shadow">
         <h2 className="mb-4 text-lg font-semibold text-slate-700">

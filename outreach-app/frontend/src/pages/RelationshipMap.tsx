@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ForceGraph2D from 'react-force-graph-2d'
+import { apiFetch } from '../api'
 
 interface MapNode {
   id: number
@@ -48,8 +49,7 @@ export default function RelationshipMap() {
   const loadMap = useCallback(() => {
     setLoading(true)
     setError(null)
-    fetch('/api/relationship-map')
-      .then((r) => r.json())
+    apiFetch<{ nodes: MapNode[]; links: MapLink[] }>('/api/relationship-map')
       .then((data) => {
         setNodes(data.nodes || [])
         setLinks(data.links || [])
@@ -75,7 +75,6 @@ export default function RelationshipMap() {
         isFiltered: false,
       }
     }
-    const q = search.trim().toLowerCase()
     const matchingIds = new Set(nodes.filter((n) => matchesSearch(n, search)).map((n) => n.id))
     const neighborIds = new Set<number>(matchingIds)
     links.forEach((l) => {
@@ -104,28 +103,32 @@ export default function RelationshipMap() {
 
   const handleDiscoverFromMentions = () => {
     setDiscoveringFromMentions(true)
-    fetch('/api/jobs/discover-connections-from-mentions', { method: 'POST' })
-      .then((r) => r.json())
+    apiFetch('/api/jobs/discover-connections-from-mentions', { method: 'POST' })
       .then(() => {
         setTimeout(() => {
           loadMap()
           setDiscoveringFromMentions(false)
         }, 3000)
       })
-      .catch(() => setDiscoveringFromMentions(false))
+      .catch((err) => {
+        setError(`Discovery from mentions failed: ${err.message}`)
+        setDiscoveringFromMentions(false)
+      })
   }
 
   const handleDiscoverAll = () => {
     setDiscoveringAll(true)
-    fetch('/api/jobs/discover-all-connections', { method: 'POST' })
-      .then((r) => r.json())
+    apiFetch('/api/jobs/discover-all-connections', { method: 'POST' })
       .then(() => {
         setTimeout(() => {
           loadMap()
           setDiscoveringAll(false)
         }, 5000)
       })
-      .catch(() => setDiscoveringAll(false))
+      .catch((err) => {
+        setError(`Discovery failed: ${err.message}`)
+        setDiscoveringAll(false)
+      })
   }
 
   if (loading) {

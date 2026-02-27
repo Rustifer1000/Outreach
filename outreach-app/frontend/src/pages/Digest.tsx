@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 interface HotLead {
   contact_id: number
@@ -70,16 +71,28 @@ function SourceBadge({ type }: { type: string }) {
 export default function Digest() {
   const [digest, setDigest] = useState<DigestData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [scoring, setScoring] = useState(false)
   const [scoreMsg, setScoreMsg] = useState<string | null>(null)
   const [hours, setHours] = useState(24)
+  const scorePollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (scorePollRef.current) clearInterval(scorePollRef.current)
+    }
+  }, [])
 
   const loadDigest = (h: number) => {
     setLoading(true)
-    fetch(`/api/digest/daily?hours=${h}`)
-      .then((r) => r.json())
+    setError(null)
+    apiFetch<DigestData>(`/api/digest/daily?hours=${h}`)
       .then((d) => setDigest(d))
-      .catch(() => setDigest(null))
+      .catch((err) => {
+        setDigest(null)
+        setError(`Failed to load digest: ${err.message}`)
+      })
       .finally(() => setLoading(false))
   }
 
@@ -90,26 +103,34 @@ export default function Digest() {
   const handleScoreMentions = () => {
     setScoring(true)
     setScoreMsg(null)
-    fetch('/api/digest/score-mentions', { method: 'POST' })
-      .then((r) => r.json())
+    if (scorePollRef.current) {
+      clearInterval(scorePollRef.current)
+      scorePollRef.current = null
+    }
+    apiFetch('/api/digest/score-mentions', { method: 'POST' })
       .then(() => {
         setScoreMsg('Scoring...')
-        const poll = setInterval(() => {
-          fetch('/api/digest/score-status')
-            .then((r) => r.json())
+        scorePollRef.current = setInterval(() => {
+          apiFetch<{ status: string; scored?: number }>('/api/digest/score-status')
             .then((s) => {
               if (s.status === 'complete') {
-                clearInterval(poll)
+                if (scorePollRef.current) clearInterval(scorePollRef.current)
+                scorePollRef.current = null
                 setScoreMsg(`Done: ${s.scored} mentions scored`)
                 setScoring(false)
                 loadDigest(hours)
               }
             })
-            .catch(() => {})
+            .catch((err) => {
+              if (scorePollRef.current) clearInterval(scorePollRef.current)
+              scorePollRef.current = null
+              setScoreMsg(`Score status check failed: ${err.message}`)
+              setScoring(false)
+            })
         }, 2000)
       })
-      .catch(() => {
-        setScoreMsg('Scoring failed')
+      .catch((err) => {
+        setScoreMsg(`Scoring failed: ${err.message}`)
         setScoring(false)
       })
   }
@@ -140,10 +161,16 @@ export default function Digest() {
         </div>
       </div>
 
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       {loading ? (
         <p className="text-slate-500">Loading digest...</p>
       ) : !digest ? (
-        <p className="text-slate-500">Could not load digest.</p>
+        <p className="text-slate-500">{error ? 'Could not load digest — see error above.' : 'No digest data available.'}</p>
       ) : (
         <div className="space-y-6">
           {/* Summary */}

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 interface ContactInfo {
   type: string
@@ -78,16 +79,6 @@ const RELATIONSHIP_STAGES = ['Cold', 'Warm', 'Engaged', 'Partner-Advocate']
 const NOTE_CHANNELS = ['', 'email', 'call', 'meeting', 'linkedin', 'other']
 const CONNECTION_TYPES = ['first_degree', 'second_degree', 'same_org', 'co_author', 'other']
 
-function loadOutreach(contactId: string) {
-  return fetch(`/api/outreach?contact_id=${contactId}`).then((r) => r.json())
-}
-function loadNotes(contactId: string) {
-  return fetch(`/api/contacts/${contactId}/notes`).then((r) => r.json())
-}
-function loadConnections(contactId: string) {
-  return fetch(`/api/contacts/${contactId}/connections`).then((r) => r.json())
-}
-
 export default function ContactDetail() {
   const { id } = useParams()
   const [contact, setContact] = useState<Contact | null>(null)
@@ -119,77 +110,93 @@ export default function ContactDetail() {
   const [customTag, setCustomTag] = useState('')
   const [warmIntros, setWarmIntros] = useState<WarmIntroPath[]>([])
   const [error, setError] = useState<string | null>(null)
+  const mediaPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaPollRef.current) clearInterval(mediaPollRef.current)
+    }
+  }, [])
 
   const refreshOutreach = () => {
-    if (id) loadOutreach(id).then((d) => setOutreach(d.entries || [])).catch(() => setError('Failed to refresh outreach'))
+    if (id) apiFetch<{ entries: OutreachEntry[] }>(`/api/outreach?contact_id=${id}`)
+      .then((d) => setOutreach(d.entries || []))
+      .catch((err) => setError(`Failed to refresh outreach: ${err.message}`))
   }
   const refreshNotes = () => {
-    if (id) loadNotes(id).then((d) => setNotes(d.notes || [])).catch(() => setError('Failed to refresh notes'))
+    if (id) apiFetch<{ notes: NoteEntry[] }>(`/api/contacts/${id}/notes`)
+      .then((d) => setNotes(d.notes || []))
+      .catch((err) => setError(`Failed to refresh notes: ${err.message}`))
   }
   const refreshContact = () => {
-    if (id) fetch(`/api/contacts/${id}`).then((r) => r.json()).then(setContact).catch(() => setError('Failed to refresh contact'))
+    if (id) apiFetch<Contact>(`/api/contacts/${id}`)
+      .then(setContact)
+      .catch((err) => setError(`Failed to refresh contact: ${err.message}`))
   }
   const refreshTags = () => {
-    if (id) fetch(`/api/contacts/${id}/tags`).then((r) => r.json()).then((d) => setTags(d.tags || [])).catch(() => {})
+    if (id) apiFetch<{ tags: { id: number; tag: string }[] }>(`/api/contacts/${id}/tags`)
+      .then((d) => setTags(d.tags || []))
+      .catch((err) => console.warn('Tags refresh failed:', err.message))
   }
   const refreshWarmIntros = () => {
-    if (id) fetch(`/api/contacts/${id}/warm-intros`).then((r) => r.json()).then((d) => setWarmIntros(d.intro_paths || [])).catch(() => {})
+    if (id) apiFetch<{ intro_paths: WarmIntroPath[] }>(`/api/contacts/${id}/warm-intros`)
+      .then((d) => setWarmIntros(d.intro_paths || []))
+      .catch((err) => console.warn('Warm intros refresh failed:', err.message))
   }
   const refreshConnections = () => {
     if (id) {
-      loadConnections(id).then((d) => setConnections(d.connections || [])).catch(() => setError('Failed to refresh connections'))
+      apiFetch<{ connections: ConnectionEntry[] }>(`/api/contacts/${id}/connections`)
+        .then((d) => setConnections(d.connections || []))
+        .catch((err) => setError(`Failed to refresh connections: ${err.message}`))
       refreshWarmIntros()
     }
   }
   const handleAddTag = (tagName: string) => {
     if (!id || !tagName.trim()) return
-    fetch(`/api/contacts/${id}/tags`, {
+    apiFetch(`/api/contacts/${id}/tags`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tag: tagName.trim() }),
     })
-      .then((r) => r.json())
       .then(() => { refreshTags(); setCustomTag('') })
-      .catch(() => setError('Failed to add tag'))
+      .catch((err) => setError(`Failed to add tag: ${err.message}`))
   }
   const handleRemoveTag = (tagId: number) => {
     if (!id) return
-    fetch(`/api/contacts/${id}/tags/${tagId}`, { method: 'DELETE' })
+    apiFetch(`/api/contacts/${id}/tags/${tagId}`, { method: 'DELETE' })
       .then(() => refreshTags())
-      .catch(() => setError('Failed to remove tag'))
+      .catch((err) => setError(`Failed to remove tag: ${err.message}`))
   }
   const handleAlignmentChange = (value: number) => {
     if (!id) return
-    fetch(`/api/contacts/${id}`, {
+    apiFetch<{ mission_alignment: number }>(`/api/contacts/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mission_alignment: value }),
     })
-      .then((r) => r.json())
       .then((d) => setContact((c) => (c ? { ...c, mission_alignment: d.mission_alignment } : c)))
-      .catch(() => setError('Failed to save alignment'))
+      .catch((err) => setError(`Failed to save alignment: ${err.message}`))
   }
   const handleAutoAlignment = () => {
     if (!id) return
-    fetch(`/api/contacts/${id}/compute-alignment`, { method: 'POST' })
-      .then((r) => r.json())
+    apiFetch<{ mission_alignment: number }>(`/api/contacts/${id}/compute-alignment`, { method: 'POST' })
       .then((d) => setContact((c) => (c ? { ...c, mission_alignment: d.mission_alignment } : c)))
-      .catch(() => setError('Failed to compute alignment'))
+      .catch((err) => setError(`Failed to compute alignment: ${err.message}`))
   }
 
   const handleStageChange = (stage: string) => {
     if (!id) return
     setSavingStage(true)
-    fetch(`/api/contacts/${id}`, {
+    apiFetch<{ relationship_stage: string | null }>(`/api/contacts/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ relationship_stage: stage || null }),
     })
-      .then((r) => r.json())
       .then((d) => {
         setContact((c) => (c ? { ...c, relationship_stage: d.relationship_stage } : c))
       })
-      .catch(() => setError('Failed to save relationship stage'))
+      .catch((err) => setError(`Failed to save relationship stage: ${err.message}`))
       .finally(() => setSavingStage(false))
   }
 
@@ -197,7 +204,7 @@ export default function ContactDetail() {
     e.preventDefault()
     if (!id || !noteForm.note_text.trim()) return
     setAddingNote(true)
-    fetch(`/api/contacts/${id}/notes`, {
+    apiFetch(`/api/contacts/${id}/notes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -206,12 +213,11 @@ export default function ContactDetail() {
         channel: noteForm.channel.trim() || null,
       }),
     })
-      .then((r) => r.json())
       .then(() => {
         setNoteForm({ note_text: '', note_date: new Date().toISOString().slice(0, 10), channel: '' })
         refreshNotes()
       })
-      .catch(() => setError('Failed to add note'))
+      .catch((err) => setError(`Failed to add note: ${err.message}`))
       .finally(() => setAddingNote(false))
   }
 
@@ -219,7 +225,7 @@ export default function ContactDetail() {
     e.preventDefault()
     if (!id || !connectionForm.other_contact_id) return
     setAddingConnection(true)
-    fetch(`/api/contacts/${id}/connections`, {
+    apiFetch(`/api/contacts/${id}/connections`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -228,40 +234,38 @@ export default function ContactDetail() {
         notes: connectionForm.notes.trim() || null,
       }),
     })
-      .then((r) => r.json())
       .then(() => {
         setConnectionForm({ other_contact_id: '', relationship_type: 'first_degree', notes: '' })
         refreshConnections()
       })
-      .catch(() => setError('Failed to add connection'))
+      .catch((err) => setError(`Failed to add connection: ${err.message}`))
       .finally(() => setAddingConnection(false))
   }
 
   const handleDeleteConnection = (connectionId: number) => {
     if (!id || !window.confirm('Remove this connection?')) return
-    fetch(`/api/contacts/${id}/connections/${connectionId}`, { method: 'DELETE' })
+    apiFetch(`/api/contacts/${id}/connections/${connectionId}`, { method: 'DELETE' })
       .then(() => refreshConnections())
-      .catch(() => setError('Failed to remove connection'))
+      .catch((err) => setError(`Failed to remove connection: ${err.message}`))
   }
 
   const handleDiscoverConnections = () => {
     if (!id) return
     setDiscovering(true)
-    fetch('/api/jobs/discover-connections-for-contact', {
+    apiFetch('/api/jobs/discover-connections-for-contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contact_id: parseInt(id), max_pairs: 20 }),
     })
-      .then((r) => r.json())
       .then(() => {
         setTimeout(() => {
           refreshConnections()
           setDiscovering(false)
         }, 2000)
       })
-      .catch(() => {
+      .catch((err) => {
         setDiscovering(false)
-        setError('Connection discovery failed')
+        setError(`Connection discovery failed: ${err.message}`)
       })
   }
 
@@ -271,8 +275,7 @@ export default function ContactDetail() {
     if (!id) return
     setEnriching(true)
     setEnrichMessage(null)
-    fetch(`/api/contacts/${id}/enrich`, { method: 'POST' })
-      .then((r) => r.json())
+    apiFetch<{ detail?: string; found?: boolean; email?: string; linkedin_url?: string; message?: string }>(`/api/contacts/${id}/enrich`, { method: 'POST' })
       .then((d) => {
         if (d.detail) {
           setEnrichMessage(d.detail)
@@ -285,7 +288,7 @@ export default function ContactDetail() {
           setEnrichMessage(d.message ?? 'No email found')
         }
       })
-      .catch(() => setEnrichMessage('Enrichment failed'))
+      .catch((err) => setEnrichMessage(`Enrichment failed: ${err.message}`))
       .finally(() => setEnriching(false))
   }
 
@@ -293,8 +296,7 @@ export default function ContactDetail() {
     if (!id) return
     setEnrichingBio(true)
     setBioMessage(null)
-    fetch(`/api/contacts/${id}/enrich-bio`, { method: 'POST' })
-      .then((r) => r.json())
+    apiFetch<{ detail?: string; generated?: boolean; message?: string }>(`/api/contacts/${id}/enrich-bio`, { method: 'POST' })
       .then((d) => {
         if (d.detail) {
           setBioMessage(d.detail)
@@ -305,7 +307,7 @@ export default function ContactDetail() {
           setBioMessage(d.message ?? 'Could not generate bio')
         }
       })
-      .catch(() => setBioMessage('Bio enrichment failed'))
+      .catch((err) => setBioMessage(`Bio enrichment failed: ${err.message}`))
       .finally(() => setEnrichingBio(false))
   }
 
@@ -313,39 +315,45 @@ export default function ContactDetail() {
     if (!id) return
     setFetchingMedia(true)
     setMediaMessage(null)
-    fetch('/api/jobs/fetch-media', {
+    if (mediaPollRef.current) {
+      clearInterval(mediaPollRef.current)
+      mediaPollRef.current = null
+    }
+    apiFetch<{ detail?: string; sources?: string[] }>('/api/jobs/fetch-media', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contact_ids: [parseInt(id)], days: 30, max_per_source: 3 }),
     })
-      .then((r) => r.json())
       .then((d) => {
         if (d.detail) {
           setMediaMessage(d.detail)
           setFetchingMedia(false)
         } else {
           setMediaMessage(`Searching ${d.sources?.join(', ') || 'media'}...`)
-          // Poll for completion
-          const poll = setInterval(() => {
-            fetch('/api/jobs/media-status')
-              .then((r) => r.json())
+          mediaPollRef.current = setInterval(() => {
+            apiFetch<{ status: string; added?: number }>('/api/jobs/media-status')
               .then((s) => {
                 if (s.status === 'complete') {
-                  clearInterval(poll)
+                  if (mediaPollRef.current) clearInterval(mediaPollRef.current)
+                  mediaPollRef.current = null
                   setMediaMessage(`Done: ${s.added} new mentions found`)
                   setFetchingMedia(false)
-                  // Refresh mentions
-                  fetch(`/api/mentions?contact_id=${id}`)
-                    .then((r) => r.json())
+                  apiFetch<{ mentions: Mention[] }>(`/api/mentions?contact_id=${id}`)
                     .then((data) => setMentions(data.mentions || []))
+                    .catch(() => {})
                 }
               })
-              .catch(() => {})
+              .catch((err) => {
+                if (mediaPollRef.current) clearInterval(mediaPollRef.current)
+                mediaPollRef.current = null
+                setMediaMessage(`Media status check failed: ${err.message}`)
+                setFetchingMedia(false)
+              })
           }, 3000)
         }
       })
-      .catch(() => {
-        setMediaMessage('Media fetch failed')
+      .catch((err) => {
+        setMediaMessage(`Media fetch failed: ${err.message}`)
         setFetchingMedia(false)
       })
   }
@@ -354,17 +362,16 @@ export default function ContactDetail() {
     e.preventDefault()
     if (!id || !contactInfoForm.value.trim()) return
     setAddingInfo(true)
-    fetch(`/api/contacts/${id}/info`, {
+    apiFetch(`/api/contacts/${id}/info`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: contactInfoForm.type, value: contactInfoForm.value.trim() }),
     })
-      .then((r) => r.json())
       .then(() => {
         setContactInfoForm({ type: 'email', value: '' })
         refreshContact()
       })
-      .catch(() => setError('Failed to add contact info'))
+      .catch((err) => setError(`Failed to add contact info: ${err.message}`))
       .finally(() => setAddingInfo(false))
   }
 
@@ -379,14 +386,15 @@ export default function ContactDetail() {
 
   useEffect(() => {
     if (!id) return
+    setLoading(true)
     Promise.all([
-      fetch(`/api/contacts/${id}`).then((r) => r.json()),
-      fetch(`/api/mentions?contact_id=${id}`).then((r) => r.json()),
-      loadOutreach(id),
-      loadNotes(id),
-      loadConnections(id),
-      fetch(`/api/contacts/${id}/tags`).then((r) => r.json()),
-      fetch(`/api/contacts/${id}/warm-intros`).then((r) => r.json()),
+      apiFetch<Contact>(`/api/contacts/${id}`),
+      apiFetch<{ mentions: Mention[] }>(`/api/mentions?contact_id=${id}`),
+      apiFetch<{ entries: OutreachEntry[] }>(`/api/outreach?contact_id=${id}`),
+      apiFetch<{ notes: NoteEntry[] }>(`/api/contacts/${id}/notes`),
+      apiFetch<{ connections: ConnectionEntry[] }>(`/api/contacts/${id}/connections`),
+      apiFetch<{ tags: { id: number; tag: string }[] }>(`/api/contacts/${id}/tags`),
+      apiFetch<{ intro_paths: WarmIntroPath[] }>(`/api/contacts/${id}/warm-intros`),
     ])
       .then(([contactData, mentionsData, outreachData, notesData, connectionsData, tagsData, warmData]) => {
         setContact(contactData)
@@ -396,21 +404,20 @@ export default function ContactDetail() {
         setConnections(connectionsData.connections || [])
         setTags(tagsData.tags || [])
         setWarmIntros(warmData.intro_paths || [])
+        setError(null)
         if (outreachData.entries?.length === 0 && contactData.recommended_contact_method?.method) {
-          setForm((f) => ({ ...f, method: contactData.recommended_contact_method.method }))
+          setForm((f) => ({ ...f, method: contactData.recommended_contact_method!.method }))
         }
       })
-      .catch(() => setError('Failed to load contact data'))
+      .catch((err) => setError(`Failed to load contact data: ${err.message}`))
       .finally(() => setLoading(false))
   }, [id])
 
   useEffect(() => {
-    fetch('/api/contacts?limit=500')
-      .then((r) => r.json())
-      .then((d) => setContactList(d.contacts?.map((c: { id: number; name: string }) => ({ id: c.id, name: c.name })) || []))
+    apiFetch<{ contacts: { id: number; name: string }[] }>('/api/contacts?limit=500')
+      .then((d) => setContactList(d.contacts?.map((c) => ({ id: c.id, name: c.name })) || []))
       .catch(() => {})
-    fetch('/api/contacts/tags/preset')
-      .then((r) => r.json())
+    apiFetch<{ tags: string[] }>('/api/contacts/tags/preset')
       .then((d) => setPresetTags(d.tags || []))
       .catch(() => {})
   }, [])
@@ -420,7 +427,7 @@ export default function ContactDetail() {
     if (!id) return
     setSubmitting(true)
     const sentAt = new Date().toISOString().slice(0, 19)
-    fetch('/api/outreach', {
+    apiFetch('/api/outreach', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -432,19 +439,24 @@ export default function ContactDetail() {
         response_status: form.response_status,
       }),
     })
-      .then((r) => r.json())
       .then(() => {
         setForm({ method: 'email', subject: '', content: '', response_status: 'sent' })
         refreshOutreach()
       })
-      .catch(() => setError('Failed to log outreach'))
+      .catch((err) => setError(`Failed to log outreach: ${err.message}`))
       .finally(() => setSubmitting(false))
   }
 
   if (loading || !contact) {
     return (
       <div className="py-8">
-        <p className="text-slate-500">Loading...</p>
+        {error ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        ) : (
+          <p className="text-slate-500">Loading...</p>
+        )}
       </div>
     )
   }
@@ -476,12 +488,7 @@ export default function ContactDetail() {
         <div className="mt-4 rounded bg-slate-50 p-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-slate-800">Bio / Interests</h3>
-            <button
-              type="button"
-              onClick={handleEnrichBio}
-              disabled={enrichingBio}
-              className="rounded border border-blue-400 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
-            >
+            <button type="button" onClick={handleEnrichBio} disabled={enrichingBio} className="rounded border border-blue-400 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50">
               {enrichingBio ? 'Generating...' : contact.primary_interests ? 'Regenerate bio' : 'Generate bio (AI)'}
             </button>
           </div>
@@ -503,55 +510,29 @@ export default function ContactDetail() {
                 </span>
               )}
             </div>
-            <p className="mt-1 font-medium text-slate-700">
-              {contact.recommended_contact_method.reason}
-            </p>
+            <p className="mt-1 font-medium text-slate-700">{contact.recommended_contact_method.reason}</p>
             {!contact.recommended_contact_method.available && (
-              <p className="mt-2 text-xs text-slate-500">
-                Try adding contact info below or use enrichment to find their email.
-              </p>
+              <p className="mt-2 text-xs text-slate-500">Try adding contact info below or use enrichment to find their email.</p>
             )}
           </div>
         )}
 
         <div className="mt-4 rounded bg-slate-50 p-4">
           <h3 className="text-sm font-medium text-slate-800">Relationship stage</h3>
-          <select
-            value={contact.relationship_stage ?? ''}
-            onChange={(e) => handleStageChange(e.target.value)}
-            disabled={savingStage}
-            className="mt-2 rounded border border-slate-300 bg-white px-3 py-2 text-sm"
-          >
+          <select value={contact.relationship_stage ?? ''} onChange={(e) => handleStageChange(e.target.value)} disabled={savingStage} className="mt-2 rounded border border-slate-300 bg-white px-3 py-2 text-sm">
             <option value="">—</option>
-            {RELATIONSHIP_STAGES.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
+            {RELATIONSHIP_STAGES.map((s) => (<option key={s} value={s}>{s}</option>))}
           </select>
           {savingStage && <span className="ml-2 text-xs text-slate-500">Saving...</span>}
         </div>
 
-        {/* Mission Alignment */}
         <div className="mt-4 rounded bg-slate-50 p-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-slate-800">Mission Alignment</h3>
-            <button
-              type="button"
-              onClick={handleAutoAlignment}
-              className="text-xs text-blue-600 hover:underline"
-            >
-              Auto-compute
-            </button>
+            <button type="button" onClick={handleAutoAlignment} className="text-xs text-blue-600 hover:underline">Auto-compute</button>
           </div>
           <div className="mt-2 flex items-center gap-3">
-            <input
-              type="range"
-              min={1}
-              max={10}
-              step={0.5}
-              value={contact.mission_alignment ?? 5}
-              onChange={(e) => handleAlignmentChange(parseFloat(e.target.value))}
-              className="w-48"
-            />
+            <input type="range" min={1} max={10} step={0.5} value={contact.mission_alignment ?? 5} onChange={(e) => handleAlignmentChange(parseFloat(e.target.value))} className="w-48" />
             <span className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${
               (contact.mission_alignment ?? 5) >= 8 ? 'bg-green-100 text-green-800' :
               (contact.mission_alignment ?? 5) >= 5 ? 'bg-yellow-100 text-yellow-800' :
@@ -562,54 +543,26 @@ export default function ContactDetail() {
           </div>
         </div>
 
-        {/* Tags */}
         <div className="mt-4 rounded bg-slate-50 p-4">
           <h3 className="text-sm font-medium text-slate-800">Tags</h3>
           <div className="mt-2 flex flex-wrap gap-2">
             {tags.map((t) => (
               <span key={t.id} className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
                 {t.tag}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveTag(t.id)}
-                  className="ml-1 text-slate-500 hover:text-red-600"
-                >
-                  x
-                </button>
+                <button type="button" onClick={() => handleRemoveTag(t.id)} className="ml-1 text-slate-500 hover:text-red-600">x</button>
               </span>
             ))}
           </div>
           <div className="mt-3 flex flex-wrap gap-1">
-            {presetTags
-              .filter((pt) => !tags.some((t) => t.tag === pt))
-              .map((pt) => (
-                <button
-                  key={pt}
-                  type="button"
-                  onClick={() => handleAddTag(pt)}
-                  className="rounded-full border border-dashed border-slate-400 px-2.5 py-1 text-xs text-slate-600 hover:border-slate-600 hover:bg-slate-100"
-                >
-                  + {pt}
-                </button>
-              ))}
+            {presetTags.filter((pt) => !tags.some((t) => t.tag === pt)).map((pt) => (
+              <button key={pt} type="button" onClick={() => handleAddTag(pt)} className="rounded-full border border-dashed border-slate-400 px-2.5 py-1 text-xs text-slate-600 hover:border-slate-600 hover:bg-slate-100">
+                + {pt}
+              </button>
+            ))}
           </div>
           <div className="mt-2 flex gap-2">
-            <input
-              type="text"
-              value={customTag}
-              onChange={(e) => setCustomTag(e.target.value)}
-              placeholder="Custom tag..."
-              className="rounded border border-slate-300 px-2 py-1 text-xs"
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(customTag) } }}
-            />
-            <button
-              type="button"
-              onClick={() => handleAddTag(customTag)}
-              disabled={!customTag.trim()}
-              className="rounded bg-slate-600 px-2 py-1 text-xs text-white hover:bg-slate-500 disabled:opacity-50"
-            >
-              Add
-            </button>
+            <input type="text" value={customTag} onChange={(e) => setCustomTag(e.target.value)} placeholder="Custom tag..." className="rounded border border-slate-300 px-2 py-1 text-xs" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(customTag) } }} />
+            <button type="button" onClick={() => handleAddTag(customTag)} disabled={!customTag.trim()} className="rounded bg-slate-600 px-2 py-1 text-xs text-white hover:bg-slate-500 disabled:opacity-50">Add</button>
           </div>
         </div>
 
@@ -621,11 +574,7 @@ export default function ContactDetail() {
                 <li key={i} className="flex items-center gap-2 text-sm">
                   <span className="font-medium text-slate-600">{ci.type}:</span>
                   <span className="text-slate-700">{ci.value}</span>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(ci.value, i)}
-                    className={`text-xs ${copiedIndex === i ? 'text-green-600 font-medium' : 'text-blue-600 hover:underline'}`}
-                  >
+                  <button type="button" onClick={() => copyToClipboard(ci.value, i)} className={`text-xs ${copiedIndex === i ? 'text-green-600 font-medium' : 'text-blue-600 hover:underline'}`}>
                     {copiedIndex === i ? 'Copied!' : 'Copy'}
                   </button>
                 </li>
@@ -636,28 +585,17 @@ export default function ContactDetail() {
 
         {!hasEmail && contact.role_org && (
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={handleEnrich}
-              disabled={enriching}
-              className="rounded border border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
-            >
+            <button type="button" onClick={handleEnrich} disabled={enriching} className="rounded border border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50">
               {enriching ? 'Looking up...' : 'Enrich (find email via Hunter)'}
             </button>
-            {enrichMessage && (
-              <span className="text-sm text-slate-600">{enrichMessage}</span>
-            )}
+            {enrichMessage && <span className="text-sm text-slate-600">{enrichMessage}</span>}
           </div>
         )}
 
         <form onSubmit={handleAddContactInfo} className="mt-4 rounded border border-slate-200 bg-white p-4">
           <h3 className="text-sm font-medium text-slate-800">Add contact info</h3>
           <div className="mt-2 flex flex-wrap gap-2">
-            <select
-              value={contactInfoForm.type}
-              onChange={(e) => setContactInfoForm((f) => ({ ...f, type: e.target.value }))}
-              className="rounded border border-slate-300 px-3 py-2 text-sm"
-            >
+            <select value={contactInfoForm.type} onChange={(e) => setContactInfoForm((f) => ({ ...f, type: e.target.value }))} className="rounded border border-slate-300 px-3 py-2 text-sm">
               <option value="email">Email</option>
               <option value="linkedin">LinkedIn</option>
               <option value="twitter">Twitter</option>
@@ -665,18 +603,8 @@ export default function ContactDetail() {
               <option value="phone">Phone</option>
               <option value="other">Other</option>
             </select>
-            <input
-              type="text"
-              value={contactInfoForm.value}
-              onChange={(e) => setContactInfoForm((f) => ({ ...f, value: e.target.value }))}
-              placeholder="e.g. name@example.com or LinkedIn URL"
-              className="min-w-[200px] rounded border border-slate-300 px-3 py-2 text-sm"
-            />
-            <button
-              type="submit"
-              disabled={addingInfo || !contactInfoForm.value.trim()}
-              className="rounded bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 disabled:opacity-50"
-            >
+            <input type="text" value={contactInfoForm.value} onChange={(e) => setContactInfoForm((f) => ({ ...f, value: e.target.value }))} placeholder="e.g. name@example.com or LinkedIn URL" className="min-w-[200px] rounded border border-slate-300 px-3 py-2 text-sm" />
+            <button type="submit" disabled={addingInfo || !contactInfoForm.value.trim()} className="rounded bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 disabled:opacity-50">
               {addingInfo ? 'Adding...' : 'Add'}
             </button>
           </div>
@@ -689,42 +617,20 @@ export default function ContactDetail() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className="mb-1 block text-sm font-medium text-slate-700">Note</label>
-              <textarea
-                value={noteForm.note_text}
-                onChange={(e) => setNoteForm((f) => ({ ...f, note_text: e.target.value }))}
-                placeholder="Call summary, follow-up, key points..."
-                rows={2}
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
-                required
-              />
+              <textarea value={noteForm.note_text} onChange={(e) => setNoteForm((f) => ({ ...f, note_text: e.target.value }))} placeholder="Call summary, follow-up, key points..." rows={2} className="w-full rounded border border-slate-300 px-3 py-2 text-sm" required />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Date</label>
-              <input
-                type="date"
-                value={noteForm.note_date}
-                onChange={(e) => setNoteForm((f) => ({ ...f, note_date: e.target.value }))}
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
-              />
+              <input type="date" value={noteForm.note_date} onChange={(e) => setNoteForm((f) => ({ ...f, note_date: e.target.value }))} className="w-full rounded border border-slate-300 px-3 py-2 text-sm" />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Channel (optional)</label>
-              <select
-                value={noteForm.channel}
-                onChange={(e) => setNoteForm((f) => ({ ...f, channel: e.target.value }))}
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
-              >
-                {NOTE_CHANNELS.map((ch) => (
-                  <option key={ch || 'none'} value={ch}>{ch || '—'}</option>
-                ))}
+              <select value={noteForm.channel} onChange={(e) => setNoteForm((f) => ({ ...f, channel: e.target.value }))} className="w-full rounded border border-slate-300 px-3 py-2 text-sm">
+                {NOTE_CHANNELS.map((ch) => (<option key={ch || 'none'} value={ch}>{ch || '—'}</option>))}
               </select>
             </div>
           </div>
-          <button
-            type="submit"
-            disabled={addingNote || !noteForm.note_text.trim()}
-            className="mt-4 rounded bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 disabled:opacity-50"
-          >
+          <button type="submit" disabled={addingNote || !noteForm.note_text.trim()} className="mt-4 rounded bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 disabled:opacity-50">
             {addingNote ? 'Adding...' : 'Add note'}
           </button>
         </form>
@@ -749,12 +655,7 @@ export default function ContactDetail() {
         <h2 className="mb-4 text-lg font-semibold text-slate-800">Related to others on the list</h2>
         <p className="mb-4 text-sm text-slate-600">First/second degree: how this contact is connected to others on the list. Add manually below, or run discovery to find co-mentions in news (same conference, article, podcast).</p>
         <div className="mb-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleDiscoverConnections}
-            disabled={discovering}
-            className="rounded border border-slate-400 bg-slate-100 px-4 py-2 text-sm text-slate-800 hover:bg-slate-200 disabled:opacity-50"
-          >
+          <button type="button" onClick={handleDiscoverConnections} disabled={discovering} className="rounded border border-slate-400 bg-slate-100 px-4 py-2 text-sm text-slate-800 hover:bg-slate-200 disabled:opacity-50">
             {discovering ? 'Discovering… (check back in a minute)' : 'Discover connections (web search)'}
           </button>
         </div>
@@ -762,12 +663,7 @@ export default function ContactDetail() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Other contact</label>
-              <select
-                value={connectionForm.other_contact_id}
-                onChange={(e) => setConnectionForm((f) => ({ ...f, other_contact_id: e.target.value }))}
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
-                required
-              >
+              <select value={connectionForm.other_contact_id} onChange={(e) => setConnectionForm((f) => ({ ...f, other_contact_id: e.target.value }))} className="w-full rounded border border-slate-300 px-3 py-2 text-sm" required>
                 <option value="">Select...</option>
                 {contactList.filter((c) => c.id !== contact?.id).map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
@@ -776,32 +672,16 @@ export default function ContactDetail() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Relationship type</label>
-              <select
-                value={connectionForm.relationship_type}
-                onChange={(e) => setConnectionForm((f) => ({ ...f, relationship_type: e.target.value }))}
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
-              >
-                {CONNECTION_TYPES.map((t) => (
-                  <option key={t} value={t}>{t.replace('_', ' ')}</option>
-                ))}
+              <select value={connectionForm.relationship_type} onChange={(e) => setConnectionForm((f) => ({ ...f, relationship_type: e.target.value }))} className="w-full rounded border border-slate-300 px-3 py-2 text-sm">
+                {CONNECTION_TYPES.map((t) => (<option key={t} value={t}>{t.replace('_', ' ')}</option>))}
               </select>
             </div>
             <div className="sm:col-span-2">
               <label className="mb-1 block text-sm font-medium text-slate-700">Notes (optional)</label>
-              <input
-                type="text"
-                value={connectionForm.notes}
-                onChange={(e) => setConnectionForm((f) => ({ ...f, notes: e.target.value }))}
-                placeholder="e.g. co-author on X paper, same lab 2020"
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
-              />
+              <input type="text" value={connectionForm.notes} onChange={(e) => setConnectionForm((f) => ({ ...f, notes: e.target.value }))} placeholder="e.g. co-author on X paper, same lab 2020" className="w-full rounded border border-slate-300 px-3 py-2 text-sm" />
             </div>
           </div>
-          <button
-            type="submit"
-            disabled={addingConnection || !connectionForm.other_contact_id}
-            className="mt-4 rounded bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 disabled:opacity-50"
-          >
+          <button type="submit" disabled={addingConnection || !connectionForm.other_contact_id} className="mt-4 rounded bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 disabled:opacity-50">
             {addingConnection ? 'Adding...' : 'Add connection'}
           </button>
         </form>
@@ -818,13 +698,7 @@ export default function ContactDetail() {
                   <p className="text-sm text-slate-600">{conn.relationship_type.replace('_', ' ')}</p>
                   {conn.notes && <p className="mt-1 text-xs text-slate-500">{conn.notes}</p>}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteConnection(conn.id)}
-                  className="text-sm text-red-600 hover:text-red-800"
-                >
-                  Remove
-                </button>
+                <button type="button" onClick={() => handleDeleteConnection(conn.id)} className="text-sm text-red-600 hover:text-red-800">Remove</button>
               </li>
             ))}
           </ul>
@@ -834,19 +708,12 @@ export default function ContactDetail() {
       {warmIntros.length > 0 && (
         <div className="mb-8 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-lg font-semibold text-slate-800">Warm Intro Paths</h2>
-          <p className="mb-3 text-sm text-slate-500">
-            People who could introduce you to {contact.name}, ranked by intro strength.
-          </p>
+          <p className="mb-3 text-sm text-slate-500">People who could introduce you to {contact.name}, ranked by intro strength.</p>
           <ul className="divide-y divide-slate-200">
             {warmIntros.map((path) => (
               <li key={path.connector_id} className="flex items-center justify-between py-3">
                 <div>
-                  <Link
-                    to={`/contacts/${path.connector_id}`}
-                    className="font-medium text-slate-800 hover:text-slate-600"
-                  >
-                    {path.connector_name}
-                  </Link>
+                  <Link to={`/contacts/${path.connector_id}`} className="font-medium text-slate-800 hover:text-slate-600">{path.connector_name}</Link>
                   <p className="text-xs text-slate-500">
                     {path.relationship_to_target} with {contact.name}
                     {path.connector_stage && ` — Your stage: ${path.connector_stage}`}
@@ -870,12 +737,7 @@ export default function ContactDetail() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-800">Mentions</h2>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleFetchMedia}
-              disabled={fetchingMedia}
-              className="rounded border border-purple-400 bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 disabled:opacity-50"
-            >
+            <button type="button" onClick={handleFetchMedia} disabled={fetchingMedia} className="rounded border border-purple-400 bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 disabled:opacity-50">
               {fetchingMedia ? 'Searching...' : 'Fetch podcasts, videos, speeches'}
             </button>
             {mediaMessage && <span className="text-xs text-slate-500">{mediaMessage}</span>}
@@ -899,13 +761,9 @@ export default function ContactDetail() {
                   </span>
                   <p className="font-medium text-slate-800">{m.title || m.snippet?.slice(0, 80)}</p>
                 </div>
-                <p className="mt-1 text-sm text-slate-500">
-                  {m.published_at ? new Date(m.published_at).toLocaleDateString() : 'Unknown date'}
-                </p>
+                <p className="mt-1 text-sm text-slate-500">{m.published_at ? new Date(m.published_at).toLocaleDateString() : 'Unknown date'}</p>
                 {m.source_url && (
-                  <a href={m.source_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
-                    View source
-                  </a>
+                  <a href={m.source_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">View source</a>
                 )}
               </li>
             ))}
@@ -915,63 +773,33 @@ export default function ContactDetail() {
 
       <div className="rounded-lg bg-white p-6 shadow">
         <h2 className="mb-4 text-lg font-semibold text-slate-800">Outreach Log</h2>
-
         <form onSubmit={handleSubmit} className="mb-6 rounded border border-slate-200 bg-slate-50 p-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Method</label>
-              <select
-                value={form.method}
-                onChange={(e) => setForm((f) => ({ ...f, method: e.target.value }))}
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
-              >
-                {METHODS.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
+              <select value={form.method} onChange={(e) => setForm((f) => ({ ...f, method: e.target.value }))} className="w-full rounded border border-slate-300 px-3 py-2 text-sm">
+                {METHODS.map((m) => (<option key={m} value={m}>{m}</option>))}
               </select>
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Response status</label>
-              <select
-                value={form.response_status}
-                onChange={(e) => setForm((f) => ({ ...f, response_status: e.target.value }))}
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
-              >
-                {RESPONSE_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                ))}
+              <select value={form.response_status} onChange={(e) => setForm((f) => ({ ...f, response_status: e.target.value }))} className="w-full rounded border border-slate-300 px-3 py-2 text-sm">
+                {RESPONSE_STATUSES.map((s) => (<option key={s} value={s}>{s.replace('_', ' ')}</option>))}
               </select>
             </div>
           </div>
           <div className="mt-4">
             <label className="mb-1 block text-sm font-medium text-slate-700">Subject (optional)</label>
-            <input
-              type="text"
-              value={form.subject}
-              onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
-              placeholder="Email subject line"
-              className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
-            />
+            <input type="text" value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} placeholder="Email subject line" className="w-full rounded border border-slate-300 px-3 py-2 text-sm" />
           </div>
           <div className="mt-4">
             <label className="mb-1 block text-sm font-medium text-slate-700">Content / notes (optional)</label>
-            <textarea
-              value={form.content}
-              onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-              placeholder="Brief summary or copy of message"
-              rows={3}
-              className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
-            />
+            <textarea value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} placeholder="Brief summary or copy of message" rows={3} className="w-full rounded border border-slate-300 px-3 py-2 text-sm" />
           </div>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="mt-4 rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
-          >
+          <button type="submit" disabled={submitting} className="mt-4 rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50">
             {submitting ? 'Adding...' : 'Log outreach'}
           </button>
         </form>
-
         {outreach.length === 0 ? (
           <p className="text-slate-500">No outreach logged yet.</p>
         ) : (

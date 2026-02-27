@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { apiFetch } from '../api'
 
 interface ContactRecommendation {
   method: string
@@ -21,6 +22,7 @@ export default function Contacts() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [rotationOnly, setRotationOnly] = useState(false)
@@ -28,6 +30,14 @@ export default function Contacts() {
   const [bulkEnriching, setBulkEnriching] = useState(false)
   const [enrichStatus, setEnrichStatus] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const enrichPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (enrichPollRef.current) clearInterval(enrichPollRef.current)
+    }
+  }, [])
 
   // Debounce search input by 300ms
   useEffect(() => {
@@ -36,80 +46,80 @@ export default function Contacts() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [search])
 
-  useEffect(() => {
-    setLoading(true)
+  const loadContacts = () => {
     const params = new URLSearchParams({ limit: '100' })
     if (debouncedSearch) params.set('q', debouncedSearch)
     if (rotationOnly) params.set('in_rotation', '1')
-    fetch(`/api/contacts?${params}`)
-      .then((res) => res.json())
+    return apiFetch<{ contacts: Contact[]; total: number }>(`/api/contacts?${params}`)
       .then((data) => {
         setContacts(data.contacts || [])
         setTotal(data.total || 0)
+        setError(null)
       })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false))
+      .catch((err) => setError(`Failed to load contacts: ${err.message}`))
+  }
+
+  useEffect(() => {
+    setLoading(true)
+    loadContacts().finally(() => setLoading(false))
   }, [debouncedSearch, rotationOnly])
 
   const toggleRotation = (c: Contact) => {
     setTogglingId(c.id)
-    fetch(`/api/contacts/${c.id}`, {
+    apiFetch(`/api/contacts/${c.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ in_mention_rotation: !c.in_mention_rotation }),
     })
-      .then((r) => r.json())
       .then(() => {
         setContacts((prev) =>
           prev.map((x) => (x.id === c.id ? { ...x, in_mention_rotation: !x.in_mention_rotation } : x)),
         )
       })
-      .catch((err) => console.error(err))
+      .catch((err) => setError(`Toggle failed: ${err.message}`))
       .finally(() => setTogglingId(null))
   }
 
   const handleBulkEnrich = () => {
     setBulkEnriching(true)
     setEnrichStatus('Starting bulk enrichment...')
-    fetch('/api/jobs/enrich-all', {
+    if (enrichPollRef.current) {
+      clearInterval(enrichPollRef.current)
+      enrichPollRef.current = null
+    }
+    apiFetch<{ detail?: string; message?: string }>('/api/jobs/enrich-all', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ max_contacts: 50 }),
     })
-      .then((r) => r.json())
       .then((d) => {
         if (d.detail) {
           setEnrichStatus(d.detail)
           setBulkEnriching(false)
         } else {
           setEnrichStatus(d.message || 'Running...')
-          // Poll for completion
-          const poll = setInterval(() => {
-            fetch('/api/jobs/enrich-status')
-              .then((r) => r.json())
+          enrichPollRef.current = setInterval(() => {
+            apiFetch<{ status: string; found?: number; attempted?: number; skipped?: number }>('/api/jobs/enrich-status')
               .then((s) => {
                 if (s.status === 'complete') {
-                  clearInterval(poll)
+                  if (enrichPollRef.current) clearInterval(enrichPollRef.current)
+                  enrichPollRef.current = null
                   setEnrichStatus(`Done: ${s.found} emails found, ${s.attempted} attempted, ${s.skipped} skipped`)
                   setBulkEnriching(false)
-                  // Refresh contact list to show updated recommendations
-                  const params = new URLSearchParams({ limit: '100' })
-                  if (debouncedSearch) params.set('q', debouncedSearch)
-                  if (rotationOnly) params.set('in_rotation', '1')
-                  fetch(`/api/contacts?${params}`)
-                    .then((res) => res.json())
-                    .then((data) => {
-                      setContacts(data.contacts || [])
-                      setTotal(data.total || 0)
-                    })
+                  loadContacts()
                 }
               })
-              .catch(() => {})
+              .catch((err) => {
+                if (enrichPollRef.current) clearInterval(enrichPollRef.current)
+                enrichPollRef.current = null
+                setEnrichStatus(`Enrichment status check failed: ${err.message}`)
+                setBulkEnriching(false)
+              })
           }, 5000)
         }
       })
-      .catch(() => {
-        setEnrichStatus('Bulk enrichment failed')
+      .catch((err) => {
+        setEnrichStatus(`Bulk enrichment failed: ${err.message}`)
         setBulkEnriching(false)
       })
   }
@@ -117,6 +127,12 @@ export default function Contacts() {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-slate-800">Contacts</h1>
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <input

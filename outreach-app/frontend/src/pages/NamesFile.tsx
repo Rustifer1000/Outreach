@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from '../api'
 
 interface NamesEntry {
   name: string
@@ -28,24 +29,24 @@ export default function NamesFile() {
   })
 
   const loadEntries = () => {
-    fetch('/api/names-file/entries')
-      .then((r) => r.json())
+    apiFetch<{ entries: NamesEntry[]; path?: string }>('/api/names-file/entries')
       .then((data) => {
         setEntries(data.entries || [])
         setPath(data.path || null)
       })
       .catch((err) => {
-        console.error(err)
-        setMessage({ type: 'err', text: 'Failed to load Names file entries' })
+        setMessage({ type: 'err', text: `Failed to load Names file entries: ${err.message}` })
       })
       .finally(() => setLoading(false))
   }
 
   const loadCategories = () => {
-    fetch('/api/names-file/categories')
-      .then((r) => r.json())
+    apiFetch<{ categories: string[] }>('/api/names-file/categories')
       .then((data) => setCategories(data.categories || []))
-      .catch(() => setCategories([]))
+      .catch((err) => {
+        setMessage({ type: 'err', text: `Failed to load categories: ${err.message}` })
+        setCategories([])
+      })
   }
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function NamesFile() {
     const category = form.category.trim() || (categories[0] ?? 'Uncategorized')
     setAdding(true)
     setMessage(null)
-    fetch('/api/names-file/entries', {
+    apiFetch('/api/names-file/entries', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -71,10 +72,6 @@ export default function NamesFile() {
         list_number: form.list_number.trim() ? parseInt(form.list_number, 10) : null,
       }),
     })
-      .then((r) => {
-        if (!r.ok) return r.json().then((d) => Promise.reject(new Error(d.detail || 'Add failed')))
-        return r.json()
-      })
       .then(() => {
         setMessage({ type: 'ok', text: `Added ${form.name} to Names file` })
         setForm({ ...form, name: '', role_org: '', connection: '', subcategory: '', list_number: '' })
@@ -90,11 +87,7 @@ export default function NamesFile() {
     setDeleting(entry.name)
     const params = new URLSearchParams({ name: entry.name })
     if (entry.list_number != null) params.set('list_number', String(entry.list_number))
-    fetch(`/api/names-file/entries?${params}`, { method: 'DELETE' })
-      .then((r) => {
-        if (!r.ok) return r.json().then((d) => Promise.reject(new Error(d.detail || 'Delete failed')))
-        return r.json()
-      })
+    apiFetch(`/api/names-file/entries?${params}`, { method: 'DELETE' })
       .then(() => {
         setMessage({ type: 'ok', text: `Removed ${entry.name}` })
         loadEntries()
