@@ -139,6 +139,124 @@ def get_categories(path: Optional[Path] = None) -> list[str]:
     return categories
 
 
+def add_category(category: str, path: Optional[Path] = None) -> bool:
+    """
+    Add a new ## category section at the end of the Names file.
+    Returns False if the category already exists.
+    """
+    path = path or get_names_file_path()
+    category = _sanitize_line(category)
+    if not category:
+        return False
+
+    existing = get_categories(path)
+    if category in existing:
+        return False
+
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "# Solomon Influencer Flywheel List\n\n"
+            "---\n\n"
+            f"## {category}\n",
+            encoding="utf-8",
+        )
+        return True
+
+    text = path.read_text(encoding="utf-8")
+    new_block = f"\n\n---\n\n## {category}\n"
+    path.write_text(text.rstrip() + new_block, encoding="utf-8")
+    return True
+
+
+def rename_category(old_name: str, new_name: str, path: Optional[Path] = None) -> bool:
+    """
+    Rename a ## category header in the Names file.
+    Returns False if old_name not found or new_name already exists.
+    """
+    path = path or get_names_file_path()
+    old_name = _sanitize_line(old_name)
+    new_name = _sanitize_line(new_name)
+    if not old_name or not new_name or old_name == new_name:
+        return False
+    if not path.exists():
+        return False
+
+    existing = get_categories(path)
+    if old_name not in existing:
+        return False
+    if new_name in existing:
+        return False
+
+    text = path.read_text(encoding="utf-8")
+    lines = text.split("\n")
+    cat_pattern = re.compile(r"^##\s+(.+?)(?:\s+\(\d+[–-]\d+\))?\s*$")
+    found = False
+    for idx, line in enumerate(lines):
+        m = cat_pattern.match(line)
+        if m and m.group(1).strip() == old_name:
+            # Preserve any trailing range notation like (1-10)
+            suffix = line[m.end(1):]  # everything after the category name
+            lines[idx] = f"## {new_name}{suffix}"
+            found = True
+            break
+
+    if not found:
+        return False
+
+    path.write_text("\n".join(lines) + ("\n" if lines and not lines[-1].endswith("\n") else ""), encoding="utf-8")
+    return True
+
+
+def delete_category(category: str, path: Optional[Path] = None) -> dict:
+    """
+    Remove a ## category section from the Names file.
+    Only succeeds if the category has no entries.
+    Returns {"ok": True} on success, or {"ok": False, "reason": "..."} on failure.
+    """
+    path = path or get_names_file_path()
+    category = _sanitize_line(category)
+    if not path.exists():
+        return {"ok": False, "reason": "Names file not found"}
+
+    # Check if any entries belong to this category
+    entries = parse_entries(path)
+    entries_in_cat = [e for e in entries if e["category"] == category]
+    if entries_in_cat:
+        return {"ok": False, "reason": f"Category still has {len(entries_in_cat)} entries. Move or remove them first."}
+
+    text = path.read_text(encoding="utf-8")
+    lines = text.split("\n")
+    cat_pattern = re.compile(r"^##\s+(.+?)(?:\s+\(\d+[–-]\d+\))?\s*$")
+
+    # Find the category header line
+    cat_line = None
+    for idx, line in enumerate(lines):
+        m = cat_pattern.match(line)
+        if m and m.group(1).strip() == category:
+            cat_line = idx
+            break
+
+    if cat_line is None:
+        return {"ok": False, "reason": f"Category not found: {category}"}
+
+    # Remove from cat_line up to (but not including) the next ## header or end of file
+    end_line = cat_line + 1
+    while end_line < len(lines):
+        if lines[end_line].strip().startswith("## "):
+            break
+        end_line += 1
+
+    # Also remove any preceding separator (---) and blank lines
+    start_line = cat_line
+    while start_line > 0 and lines[start_line - 1].strip() in ("", "---"):
+        start_line -= 1
+
+    new_lines = lines[:start_line] + lines[end_line:]
+    path.write_text("\n".join(new_lines) + ("\n" if new_lines and not new_lines[-1].endswith("\n") else ""), encoding="utf-8")
+    return {"ok": True}
+
+
 def delete_entry(name: str, list_number: Optional[int] = None, path: Optional[Path] = None) -> bool:
     """
     Remove one entry from the Names file by name (and optional list_number).
@@ -167,6 +285,58 @@ def delete_entry(name: str, list_number: Optional[int] = None, path: Optional[Pa
     new_lines = lines[:start] + lines[end:]
     if start < len(new_lines) and new_lines[start].strip() == "":
         new_lines.pop(start)
+    path.write_text("\n".join(new_lines) + ("\n" if new_lines and not new_lines[-1].endswith("\n") else ""), encoding="utf-8")
+    return True
+
+
+def edit_entry(
+    original_name: str,
+    name: str,
+    role_org: str,
+    connection: str,
+    category: str,
+    subcategory: Optional[str] = None,
+    list_number: Optional[int] = None,
+    original_list_number: Optional[int] = None,
+    path: Optional[Path] = None,
+) -> bool:
+    """
+    Edit an existing entry in the Names file.
+    Finds the entry by original_name (and optional original_list_number),
+    then replaces its lines with the updated content.
+    Returns True if the entry was found and updated.
+    """
+    path = path or get_names_file_path()
+    if not path.exists():
+        return False
+
+    name = _sanitize_line(name)
+    role_org = _sanitize_line(role_org)
+    connection = _sanitize_line(connection)
+
+    entries = parse_entries(path)
+    target = None
+    for e in entries:
+        if e["name"] != original_name:
+            continue
+        if original_list_number is not None and e["list_number"] != original_list_number:
+            continue
+        target = e
+        break
+
+    if not target:
+        return False
+
+    lines = path.read_text(encoding="utf-8").split("\n")
+    start, end = target["line_start"], target["line_end"]
+
+    # Build replacement lines (same format as add_entry)
+    new_entry_lines = [
+        _format_entry_line(list_number, name, role_org),
+        "Connection: " + connection,
+    ]
+
+    new_lines = lines[:start] + new_entry_lines + lines[end:]
     path.write_text("\n".join(new_lines) + ("\n" if new_lines and not new_lines[-1].endswith("\n") else ""), encoding="utf-8")
     return True
 

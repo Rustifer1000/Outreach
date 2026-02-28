@@ -1,9 +1,12 @@
 """Contact enrichment via Hunter API (email finder) and LLM bio summary."""
+import logging
 import re
 import time
 from typing import Optional
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 # Common org/company names -> domain for Hunter Email Finder
 ORG_TO_DOMAIN = {
@@ -245,20 +248,30 @@ def enrich_bulk(db, api_key: str, max_contacts: int = 50) -> dict:
     return stats
 
 
+class BioGenerationError(Exception):
+    """Raised when bio generation fails with a specific reason."""
+
+    pass
+
+
 def generate_bio_summary(
     api_key: str,
     contact_name: str,
     role_org: Optional[str],
     connection_to_solomon: Optional[str],
     mention_snippets: list[str],
-    model: str = "claude-3-5-haiku-20241022",
-) -> Optional[str]:
+    model: str = "claude-haiku-4-5-20251001",
+) -> str:
     """Generate a short bio summary using Claude from mention snippets and existing info.
 
-    Returns a 2-3 sentence bio or None on error.
+    Returns a 2-3 sentence bio string.
+    Raises BioGenerationError with a descriptive message on failure.
     """
-    if not mention_snippets and not role_org:
-        return None
+    if not mention_snippets and not role_org and not connection_to_solomon:
+        raise BioGenerationError(
+            f"Not enough data to generate a bio for {contact_name}. "
+            "Add a role/org, connection info, or mention snippets first."
+        )
 
     context_parts = []
     if role_org:
@@ -287,6 +300,17 @@ Bio:"""
             messages=[{"role": "user", "content": prompt}],
         )
         bio = (msg.content[0].text if msg.content else "").strip()
-        return bio if bio else None
-    except Exception:
-        return None
+        if not bio:
+            raise BioGenerationError("LLM returned an empty response.")
+        return bio
+    except BioGenerationError:
+        raise
+    except ImportError:
+        logger.error("anthropic package is not installed")
+        raise BioGenerationError(
+            "The 'anthropic' Python package is not installed. "
+            "Run: pip install anthropic"
+        )
+    except Exception as exc:
+        logger.exception("Bio generation failed for %s", contact_name)
+        raise BioGenerationError(f"API call failed: {exc}") from exc

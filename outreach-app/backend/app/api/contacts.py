@@ -531,7 +531,7 @@ async def enrich_bio(contact_id: int, db: Session = Depends(get_db)):
             detail="ANTHROPIC_API_KEY not configured. Add to .env for bio enrichment.",
         )
 
-    from app.enrichment import generate_bio_summary
+    from app.enrichment import BioGenerationError, generate_bio_summary
     from app.models import Mention
 
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
@@ -547,16 +547,17 @@ async def enrich_bio(contact_id: int, db: Session = Depends(get_db)):
     )
     snippets = [m.snippet for m in mentions if m.snippet]
 
-    bio = generate_bio_summary(
-        api_key=settings.anthropic_api_key,
-        contact_name=contact.name,
-        role_org=contact.role_org,
-        connection_to_solomon=contact.connection_to_solomon,
-        mention_snippets=snippets,
-    )
-
-    if not bio:
-        return {"generated": False, "message": "Could not generate bio (not enough data or API error)."}
+    try:
+        bio = generate_bio_summary(
+            api_key=settings.anthropic_api_key,
+            contact_name=contact.name,
+            role_org=contact.role_org,
+            connection_to_solomon=contact.connection_to_solomon,
+            mention_snippets=snippets,
+            model=settings.anthropic_model,
+        )
+    except BioGenerationError as exc:
+        return {"generated": False, "message": str(exc)}
 
     # Store in primary_interests field (used for bio/interests)
     contact.primary_interests = bio

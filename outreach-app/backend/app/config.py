@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     youtube_api_key: str | None = None  # YouTube Data API v3
     serpapi_key: str | None = None  # SerpApi (speech/presentation search)
 
+    # LLM
+    anthropic_model: str = "claude-haiku-4-5-20251001"
+
     # App
     debug: bool = False
     environment: str = "development"
