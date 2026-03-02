@@ -100,7 +100,7 @@ export default function ContactDetail() {
   const [discovering, setDiscovering] = useState(false)
   const [enriching, setEnriching] = useState(false)
   const [enrichMessage, setEnrichMessage] = useState<string | null>(null)
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const [copiedIndex, setCopiedIndex] = useState<string | null>(null)
   const [enrichingBio, setEnrichingBio] = useState(false)
   const [bioMessage, setBioMessage] = useState<string | null>(null)
   const [fetchingMedia, setFetchingMedia] = useState(false)
@@ -249,6 +249,14 @@ export default function ContactDetail() {
       .catch((err) => setError(`Failed to remove connection: ${err.message}`))
   }
 
+  const discoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (discoverTimeoutRef.current) clearTimeout(discoverTimeoutRef.current)
+    }
+  }, [])
+
   const handleDiscoverConnections = () => {
     if (!id) return
     setDiscovering(true)
@@ -258,7 +266,8 @@ export default function ContactDetail() {
       body: JSON.stringify({ contact_id: parseInt(id), max_pairs: 20 }),
     })
       .then(() => {
-        setTimeout(() => {
+        discoverTimeoutRef.current = setTimeout(() => {
+          discoverTimeoutRef.current = null
           refreshConnections()
           setDiscovering(false)
         }, 2000)
@@ -340,7 +349,7 @@ export default function ContactDetail() {
                   setFetchingMedia(false)
                   apiFetch<{ mentions: Mention[] }>(`/api/mentions?contact_id=${id}`)
                     .then((data) => setMentions(data.mentions || []))
-                    .catch(() => {})
+                    .catch((err) => setError(`Failed to refresh mentions: ${err.message}`))
                 }
               })
               .catch((err) => {
@@ -375,9 +384,9 @@ export default function ContactDetail() {
       .finally(() => setAddingInfo(false))
   }
 
-  const copyToClipboard = (text: string, index: number) => {
+  const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text).then(() => {
-      setCopiedIndex(index)
+      setCopiedIndex(key)
       setTimeout(() => setCopiedIndex(null), 1500)
     }).catch(() => {
       setError('Failed to copy to clipboard')
@@ -416,10 +425,10 @@ export default function ContactDetail() {
   useEffect(() => {
     apiFetch<{ contacts: { id: number; name: string }[] }>('/api/contacts?limit=500')
       .then((d) => setContactList(d.contacts?.map((c) => ({ id: c.id, name: c.name })) || []))
-      .catch(() => {})
+      .catch((err) => console.warn('Failed to load contact list:', err.message))
     apiFetch<{ tags: string[] }>('/api/contacts/tags/preset')
       .then((d) => setPresetTags(d.tags || []))
-      .catch(() => {})
+      .catch((err) => console.warn('Failed to load preset tags:', err.message))
   }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -570,15 +579,18 @@ export default function ContactDetail() {
           <div className="mt-4 rounded bg-slate-50 p-4">
             <h3 className="text-sm font-medium text-slate-800">Contact info</h3>
             <ul className="mt-2 space-y-1">
-              {contact.contact_info.map((ci, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm">
+              {contact.contact_info.map((ci) => {
+                const ciKey = `${ci.type}-${ci.value}`
+                return (
+                <li key={ciKey} className="flex items-center gap-2 text-sm">
                   <span className="font-medium text-slate-600">{ci.type}:</span>
                   <span className="text-slate-700">{ci.value}</span>
-                  <button type="button" onClick={() => copyToClipboard(ci.value, i)} className={`text-xs ${copiedIndex === i ? 'text-green-600 font-medium' : 'text-blue-600 hover:underline'}`}>
-                    {copiedIndex === i ? 'Copied!' : 'Copy'}
+                  <button type="button" onClick={() => copyToClipboard(ci.value, ciKey)} className={`text-xs ${copiedIndex === ciKey ? 'text-green-600 font-medium' : 'text-blue-600 hover:underline'}`}>
+                    {copiedIndex === ciKey ? 'Copied!' : 'Copy'}
                   </button>
                 </li>
-              ))}
+                )
+              })}
             </ul>
           </div>
         )}

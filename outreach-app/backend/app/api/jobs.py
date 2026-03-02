@@ -1,4 +1,6 @@
 """Background job endpoints."""
+import threading
+
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 
@@ -12,9 +14,12 @@ from app.config import settings
 
 router = APIRouter()
 
-# Store latest bulk enrichment results (simple in-memory; replaced each run)
-_bulk_enrich_result: dict | None = None
-_media_fetch_result: dict | None = None
+# Thread-safe storage for background job results
+_job_results_lock = threading.Lock()
+_job_results: dict[str, dict | None] = {
+    "enrich": None,
+    "media": None,
+}
 
 
 def _run_discover_from_mentions():
@@ -28,7 +33,7 @@ def _run_discover_from_mentions():
 def _run_discover_via_search(contact_id: int, max_pairs: int = 20):
     db = SessionLocal()
     try:
-        api_key = settings.newsapi_key or __import__("os").environ.get("NEWSAPI_KEY")
+        api_key = settings.newsapi_key
         if not api_key:
             return {"added": 0, "searched_pairs": 0, "message": "NewsAPI key not configured."}
         return discover_via_search(db, contact_id, api_key, max_pairs=max_pairs)
@@ -53,7 +58,7 @@ async def trigger_discover_from_mentions(background_tasks: BackgroundTasks):
 def _run_discover_all():
     db = SessionLocal()
     try:
-        api_key = settings.newsapi_key or __import__("os").environ.get("NEWSAPI_KEY")
+        api_key = settings.newsapi_key
         return discover_all(db, api_key, max_contacts=15, max_pairs_per_contact=5)
     finally:
         db.close()
@@ -85,14 +90,15 @@ class BulkEnrichBody(BaseModel):
 
 
 def _run_bulk_enrich(max_contacts: int):
-    global _bulk_enrich_result
     db = SessionLocal()
     try:
         api_key = settings.hunter_api_key
         if not api_key:
-            _bulk_enrich_result = {"attempted": 0, "found": 0, "skipped": 0, "errors": 0, "message": "HUNTER_API_KEY not configured."}
-            return
-        _bulk_enrich_result = enrich_bulk(db, api_key, max_contacts=max_contacts)
+            result = {"attempted": 0, "found": 0, "skipped": 0, "errors": 0, "message": "HUNTER_API_KEY not configured."}
+        else:
+            result = enrich_bulk(db, api_key, max_contacts=max_contacts)
+        with _job_results_lock:
+            _job_results["enrich"] = result
     finally:
         db.close()
 
@@ -104,8 +110,8 @@ async def trigger_bulk_enrich(body: BulkEnrichBody, background_tasks: Background
         raise HTTPException(status_code=503, detail="HUNTER_API_KEY not configured. Add to .env for enrichment.")
     if body.max_contacts < 1 or body.max_contacts > 200:
         raise HTTPException(status_code=400, detail="max_contacts must be 1–200")
-    global _bulk_enrich_result
-    _bulk_enrich_result = None
+    with _job_results_lock:
+        _job_results["enrich"] = None
     background_tasks.add_task(_run_bulk_enrich, body.max_contacts)
     return {"status": "started", "message": f"Enriching up to {body.max_contacts} contacts in background (1/sec). Check status with GET /api/jobs/enrich-status."}
 
@@ -113,9 +119,11 @@ async def trigger_bulk_enrich(body: BulkEnrichBody, background_tasks: Background
 @router.get("/enrich-status")
 async def get_enrich_status():
     """Check the result of the latest bulk enrichment run."""
-    if _bulk_enrich_result is None:
+    with _job_results_lock:
+        result = _job_results["enrich"]
+    if result is None:
         return {"status": "running", "message": "Enrichment in progress or not started yet."}
-    return {"status": "complete", **_bulk_enrich_result}
+    return {"status": "complete", **result}
 
 
 # --- Media source fetching (podcasts, YouTube, speeches) ---
@@ -128,10 +136,9 @@ class MediaFetchBody(BaseModel):
 
 
 def _run_media_fetch(days: int, max_contacts: int, max_per_source: int, contact_ids: list[int] | None):
-    global _media_fetch_result
     db = SessionLocal()
     try:
-        _media_fetch_result = fetch_media_for_contacts(
+        result = fetch_media_for_contacts(
             db,
             contact_ids=contact_ids,
             days=days,
@@ -141,6 +148,8 @@ def _run_media_fetch(days: int, max_contacts: int, max_per_source: int, contact_
             max_per_source=max_per_source,
             max_contacts=max_contacts,
         )
+        with _job_results_lock:
+            _job_results["media"] = result
     finally:
         db.close()
 
@@ -157,8 +166,8 @@ async def trigger_fetch_media(body: MediaFetchBody, background_tasks: Background
             status_code=503,
             detail="No media API keys configured. Add LISTENNOTES_API_KEY, YOUTUBE_API_KEY, or SERPAPI_KEY to .env.",
         )
-    global _media_fetch_result
-    _media_fetch_result = None
+    with _job_results_lock:
+        _job_results["media"] = None
     background_tasks.add_task(_run_media_fetch, body.days, body.max_contacts, body.max_per_source, body.contact_ids)
     sources = []
     if settings.listennotes_api_key:
@@ -177,9 +186,11 @@ async def trigger_fetch_media(body: MediaFetchBody, background_tasks: Background
 @router.get("/media-status")
 async def get_media_status():
     """Check the result of the latest media fetch run."""
-    if _media_fetch_result is None:
+    with _job_results_lock:
+        result = _job_results["media"]
+    if result is None:
         return {"status": "running", "message": "Media fetch in progress or not started yet."}
-    return {"status": "complete", **_media_fetch_result}
+    return {"status": "complete", **result}
 
 
 @router.get("/media-sources")

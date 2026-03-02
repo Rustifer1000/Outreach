@@ -32,10 +32,24 @@ def run():
             pass
         else:
             raise
+    # Add mission_alignment for Phase 4 scoring
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE contacts ADD COLUMN mission_alignment FLOAT"))
+    except Exception as e:
+        err = str(e).lower()
+        if "duplicate column" in err or "already exists" in err or "no such table" in err:
+            pass
+        else:
+            raise
     # Create new tables if they don't exist
     Base.metadata.tables["notes"].create(engine, checkfirst=True)
     Base.metadata.tables["contact_connections"].create(engine, checkfirst=True)
-    print("Phase 2B migration done.")
+    # Phase 3/4 tables
+    for table_name in ("contact_info", "contact_tags"):
+        if table_name in Base.metadata.tables:
+            Base.metadata.tables[table_name].create(engine, checkfirst=True)
+    print("Phase 2B+ migration done.")
 
 
 if __name__ == "__main__":

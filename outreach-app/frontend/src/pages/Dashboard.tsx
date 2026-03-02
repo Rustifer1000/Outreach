@@ -47,7 +47,7 @@ export default function Dashboard() {
   const loadHotLeads = () =>
     apiFetch<{ hot_leads: HotLead[] }>('/api/digest/hot-leads?days=7&limit=5')
       .then((data) => setHotLeads(data.hot_leads || []))
-      .catch((err) => console.warn('Hot leads unavailable:', err.message))
+      .catch(() => setHotLeads([]))
 
   useEffect(() => {
     setLoading(true)
@@ -83,11 +83,12 @@ export default function Dashboard() {
                 setRefreshing(false)
               }
             })
-            .catch(() => {
+            .catch((err) => {
               if (attempts >= 6) {
                 if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
                 pollIntervalRef.current = null
                 setRefreshing(false)
+                setError(`Polling failed: ${err.message}`)
               }
             })
         }, 10000)

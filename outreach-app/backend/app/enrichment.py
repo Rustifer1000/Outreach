@@ -121,7 +121,8 @@ def enrich_contact_email(
             r = client.get(url, params=params)
             r.raise_for_status()
             data = r.json()
-    except Exception:
+    except (httpx.HTTPError, ValueError, KeyError) as exc:
+        logger.debug("Hunter email lookup failed for %s: %s", full_name, exc)
         return None
 
     d = data.get("data", {})
@@ -169,7 +170,8 @@ def enrich_linkedin_url(
             r = client.get(url, params=params)
             r.raise_for_status()
             data = r.json()
-    except Exception:
+    except (httpx.HTTPError, ValueError, KeyError) as exc:
+        logger.debug("Hunter LinkedIn lookup failed for %s: %s", full_name, exc)
         return None
 
     d = data.get("data", {})

@@ -22,8 +22,8 @@ async def lifespan(app: FastAPI):
         Base.metadata.create_all(engine)
         from app.migrate_phase2b import run as run_migrate
         run_migrate()
-    except Exception:
-        logger.warning("Startup DB init/migration failed (DB may not exist yet)", exc_info=True)
+    except (ImportError, OSError, RuntimeError) as exc:
+        logger.warning("Startup DB init/migration failed: %s", exc, exc_info=True)
     scheduler = get_scheduler()
     scheduler.start()
     yield

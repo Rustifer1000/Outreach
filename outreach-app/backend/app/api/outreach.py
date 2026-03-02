@@ -65,7 +65,7 @@ async def create_outreach(data: OutreachCreate, db: Session = Depends(get_db)):
         try:
             sent_at = datetime.fromisoformat(data.sent_at.replace("Z", "+00:00"))
         except ValueError:
-            pass
+            raise HTTPException(status_code=400, detail=f"Invalid sent_at date format: {data.sent_at}. Use ISO format.")
 
     entry = OutreachLog(
         contact_id=data.contact_id,

@@ -177,7 +177,7 @@ async def list_contacts(
                 "primary_interests": c.primary_interests,
                 "relationship_stage": c.relationship_stage,
                 "mission_alignment": c.mission_alignment,
-                "in_mention_rotation": bool(getattr(c, "in_mention_rotation", 0)),
+                "in_mention_rotation": bool(c.in_mention_rotation),
                 "tags": [t.tag for t in (c.tags or [])],
                 "recommended_contact_method": get_recommended_method(
                     list(c.contact_info) if c.contact_info else [],
@@ -248,7 +248,7 @@ async def get_contact(contact_id: int, db: Session = Depends(get_db)):
         "primary_interests": contact.primary_interests,
         "relationship_stage": contact.relationship_stage,
         "mission_alignment": contact.mission_alignment,
-        "in_mention_rotation": bool(getattr(contact, "in_mention_rotation", 0)),
+        "in_mention_rotation": bool(contact.in_mention_rotation),
         "tags": [t.tag for t in (contact.tags or [])],
         "contact_info": [
             {"type": ci.type, "value": ci.value, "is_primary": bool(ci.is_primary)}
@@ -256,6 +256,9 @@ async def get_contact(contact_id: int, db: Session = Depends(get_db)):
         ],
         "recommended_contact_method": recommendation,
     }
+
+
+VALID_RELATIONSHIP_STAGES = {"Cold", "Warm", "Engaged", "Partner-Advocate"}
 
 
 class ContactPatch(BaseModel):
@@ -271,7 +274,10 @@ async def patch_contact(contact_id: int, data: ContactPatch, db: Session = Depen
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
     if data.relationship_stage is not None:
-        contact.relationship_stage = data.relationship_stage.strip() or None
+        stage = data.relationship_stage.strip()
+        if stage and stage not in VALID_RELATIONSHIP_STAGES:
+            raise HTTPException(status_code=400, detail=f"Invalid relationship_stage. Must be one of: {', '.join(sorted(VALID_RELATIONSHIP_STAGES))}")
+        contact.relationship_stage = stage or None
     if data.in_mention_rotation is not None:
         contact.in_mention_rotation = 1 if data.in_mention_rotation else 0
     if data.mission_alignment is not None:
@@ -322,7 +328,7 @@ async def create_note(contact_id: int, data: NoteCreate, db: Session = Depends(g
     try:
         note_dt = datetime.fromisoformat(data.note_date.replace("Z", "+00:00"))
     except ValueError:
-        note_dt = datetime.now(UTC)
+        raise HTTPException(status_code=400, detail=f"Invalid date format: {data.note_date}. Use ISO format (e.g. 2024-01-15 or 2024-01-15T12:00:00).")
     note = Note(
         contact_id=contact_id,
         note_text=data.note_text.strip(),

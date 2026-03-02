@@ -32,6 +32,10 @@ SOURCE_TYPE_WEIGHTS = {
 }
 DEFAULT_SOURCE_WEIGHT = 0.4
 
+# Hot lead detection thresholds
+HOT_LEAD_VOLUME_CAP = 5.0      # 5+ mentions = max volume score
+HOT_LEAD_DIVERSITY_CAP = 3.0   # 3+ source types = max diversity score
+
 
 def _name_in_text(name: str, text: str) -> tuple[bool, float]:
     """Check if a name appears in text. Returns (found, score_boost).
@@ -199,9 +203,9 @@ def get_hot_leads(
         avg_sc = avg_sc or 0.0
 
         # Heat score: weighted combination
-        volume_score = min(1.0, count / 5.0)  # 5+ mentions = max
+        volume_score = min(1.0, count / HOT_LEAD_VOLUME_CAP)
         quality_score = avg_sc
-        diversity_score = min(1.0, src_types / 3.0)  # 3+ types = max
+        diversity_score = min(1.0, src_types / HOT_LEAD_DIVERSITY_CAP)
 
         heat = round(
             0.40 * volume_score + 0.35 * quality_score + 0.25 * diversity_score,
@@ -296,7 +300,12 @@ def generate_daily_digest(db: Session, hours: int = 24) -> dict:
             if cid in replied_ids:
                 continue
             c = contacts.get(cid)
-            days_since = (datetime.now(UTC) - (outreach.sent_at.replace(tzinfo=UTC) if outreach.sent_at and outreach.sent_at.tzinfo is None else (outreach.sent_at or datetime.now(UTC)))).days
+            sent = outreach.sent_at
+            if sent is None:
+                sent = datetime.now(UTC)
+            elif sent.tzinfo is None:
+                sent = sent.replace(tzinfo=UTC)
+            days_since = (datetime.now(UTC) - sent).days
             follow_ups.append({
                 "contact_id": cid,
                 "contact_name": c.name if c else f"Contact #{cid}",

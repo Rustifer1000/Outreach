@@ -3,11 +3,14 @@
 Each fetcher returns a list of dicts with keys:
   source_type, source_url, title, snippet, published_at (ISO string or None)
 """
+import logging
 import time
 from datetime import UTC, datetime, timedelta
 from typing import Optional
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 
 def fetch_podcasts(
@@ -39,7 +42,8 @@ def fetch_podcasts(
             r = client.get(url, params=params, headers=headers)
             r.raise_for_status()
             data = r.json()
-    except Exception:
+    except (httpx.HTTPError, ValueError) as exc:
+        logger.debug("ListenNotes search failed for %s: %s", name, exc)
         return []
 
     results = []
@@ -87,7 +91,8 @@ def fetch_youtube(
             r = client.get(url, params=params)
             r.raise_for_status()
             data = r.json()
-    except Exception:
+    except (httpx.HTTPError, ValueError) as exc:
+        logger.debug("YouTube search failed for %s: %s", name, exc)
         return []
 
     results = []
@@ -136,7 +141,8 @@ def fetch_web_speeches(
             r = client.get(url, params=params)
             r.raise_for_status()
             data = r.json()
-    except Exception:
+    except (httpx.HTTPError, ValueError) as exc:
+        logger.debug("SerpApi search failed for %s: %s", name, exc)
         return []
 
     results = []
@@ -171,24 +177,24 @@ def fetch_all_media(
             all_results.extend(
                 fetch_podcasts(listennotes_key, contact_name, days=days, max_results=max_per_source)
             )
-        except Exception:
-            pass
+        except (httpx.HTTPError, ValueError) as exc:
+            logger.warning("Podcast fetch failed for %s: %s", contact_name, exc)
 
     if youtube_key:
         try:
             all_results.extend(
                 fetch_youtube(youtube_key, contact_name, days=days, max_results=max_per_source)
             )
-        except Exception:
-            pass
+        except (httpx.HTTPError, ValueError) as exc:
+            logger.warning("YouTube fetch failed for %s: %s", contact_name, exc)
 
     if serpapi_key:
         try:
             all_results.extend(
                 fetch_web_speeches(serpapi_key, contact_name, days=days, max_results=max_per_source)
             )
-        except Exception:
-            pass
+        except (httpx.HTTPError, ValueError) as exc:
+            logger.warning("Speech fetch failed for %s: %s", contact_name, exc)
 
     return all_results
 
@@ -243,10 +249,10 @@ def fetch_media_for_contacts(
                 p = urlparse(m.source_url.strip())
                 norm = urlunparse((p.scheme, p.netloc, p.path, "", "", ""))
                 seen_urls.add((m.contact_id, norm))
-            except Exception:
+            except ValueError:
                 pass
 
-    stats = {"attempted": 0, "added": 0, "skipped": len(contacts) - len(contacts), "sources_used": sources_used}
+    stats = {"attempted": 0, "added": 0, "skipped": 0, "sources_used": sources_used}
 
     for contact in contacts:
         stats["attempted"] += 1
@@ -266,7 +272,7 @@ def fetch_media_for_contacts(
             try:
                 p = urlparse(raw_url.strip())
                 norm = urlunparse((p.scheme, p.netloc, p.path, "", "", ""))
-            except Exception:
+            except ValueError:
                 continue
             if (contact.id, norm) in seen_urls:
                 continue
@@ -276,7 +282,7 @@ def fetch_media_for_contacts(
             if item.get("published_at"):
                 try:
                     pub = datetime.fromisoformat(item["published_at"].replace("Z", "+00:00"))
-                except Exception:
+                except (ValueError, AttributeError):
                     pass
 
             mention = Mention(

@@ -5,9 +5,14 @@ Connection discovery: find how contacts are related using existing mention text 
 - Via search: NewsAPI query "Name A" AND "Name B" to find co-mentions in news.
 - LLM: when Anthropic key is set, infer relationship type from context (co_author, same_panel, etc.).
 """
+import logging
 import time
+
+import httpx
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.config import settings
 from app.models import Contact, Mention, ContactConnection
@@ -107,7 +112,6 @@ def discover_via_search(
     When articles are found, add contact_connection (co_mentioned_news) with first article URL.
     Returns { "added": N, "searched_pairs": M, "message": str }.
     """
-    import httpx
     from datetime import UTC, datetime, timedelta
 
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
@@ -141,7 +145,8 @@ def discover_via_search(
                 )
                 r.raise_for_status()
                 data = r.json()
-        except Exception:
+        except (httpx.HTTPError, ValueError, KeyError) as exc:
+            logger.debug("NewsAPI search failed for %s vs %s: %s", contact.name, other.name, exc)
             time.sleep(delay_seconds)
             continue
         total = data.get("totalResults", 0)

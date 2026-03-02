@@ -2,7 +2,10 @@
 LLM-based relationship extraction from mention text.
 Uses Claude to infer relationship type and evidence when two people are co-mentioned.
 """
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 # Relationship types we use (aligned with ContactDetail UI)
 RELATIONSHIP_TYPES = [
@@ -21,7 +24,7 @@ def infer_relationship(
     text: str,
     person_a: str,
     person_b: str,
-    model: str = "claude-3-5-haiku-20241022",
+    model: str | None = None,
 ) -> Optional[dict]:
     """
     Use Claude to infer how person_a and person_b are related based on the text.
@@ -29,6 +32,10 @@ def infer_relationship(
     """
     if not text or not person_a or not person_b:
         return None
+
+    if model is None:
+        from app.config import settings
+        model = settings.anthropic_model
 
     # Truncate to stay within context
     text = text[:3000] if len(text) > 3000 else text
@@ -73,5 +80,9 @@ Use mentioned_together only if unclear. Prefer specific types (co_author, same_p
                     break
 
         return {"relationship_type": rel_type, "evidence": evidence}
-    except Exception:
+    except ImportError:
+        logger.error("anthropic package is not installed")
+        return None
+    except Exception as exc:
+        logger.debug("LLM relationship inference failed for %s / %s: %s", person_a, person_b, exc)
         return None
