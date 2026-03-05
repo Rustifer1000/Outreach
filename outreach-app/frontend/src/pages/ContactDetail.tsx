@@ -473,7 +473,7 @@ export default function ContactDetail() {
   return (
     <div>
       <Link to="/contacts" className="mb-4 inline-block text-sm text-slate-600 hover:text-slate-800">
-        ← Back to Contacts
+        &larr; Back to Contacts
       </Link>
 
       {error && (

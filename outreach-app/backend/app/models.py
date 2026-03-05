@@ -62,7 +62,7 @@ class Mention(Base):
     source_url = Column(String(1000), nullable=True)
     title = Column(String(500), nullable=True)
     snippet = Column(Text, nullable=True)
-    published_at = Column(DateTime, nullable=True)
+    published_at = Column(DateTime, nullable=True, index=True)
     relevance_score = Column(Float, nullable=True)  # Phase 3
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
@@ -78,7 +78,7 @@ class OutreachLog(Base):
     method = Column(String(50), nullable=False)  # email, linkedin, etc.
     subject = Column(String(500), nullable=True)
     content = Column(Text, nullable=True)
-    sent_at = Column(DateTime, nullable=True)
+    sent_at = Column(DateTime, nullable=True, index=True)
     response_status = Column(String(50), nullable=True)  # sent, replied, no_response, bounced
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 

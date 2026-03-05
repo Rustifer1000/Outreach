@@ -82,15 +82,13 @@ def main():
     args = parser.parse_args()
 
     # Load API key from env (check outreach-app/.env or backend/.env)
+    from dotenv import load_dotenv
+
     base = Path(__file__).parent.parent
     for env_path in [base / ".env", base / "backend" / ".env"]:
-        if not env_path.exists():
-            continue
-        for line in env_path.read_text().splitlines():
-            if "=" in line and not line.strip().startswith("#"):
-                k, v = line.split("=", 1)
-                os.environ.setdefault(k.strip(), v.strip())
-        break
+        if env_path.exists():
+            load_dotenv(env_path)
+            break
 
     api_key = os.environ.get("NEWSAPI_KEY")
     if not api_key:
@@ -102,70 +100,72 @@ def main():
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    # Exclude contacts we've already reached out to
-    contacted_ids = {r.contact_id for r in session.query(OutreachLog.contact_id).distinct().all()}
-    query = session.query(Contact).order_by(Contact.list_number)
-    # If any contact is in the "mention rotation", fetch only those (daily core group)
-    use_rotation = session.query(Contact).filter(Contact.in_mention_rotation == 1).limit(1).first() is not None
-    if use_rotation:
-        query = query.filter(Contact.in_mention_rotation == 1)
-        print("Using mention rotation: only fetching for tagged contacts.")
-    if contacted_ids:
-        query = query.filter(Contact.id.notin_(contacted_ids))
-    contacts = query.all()
-    if args.limit:
-        contacts = contacts[: args.limit]
+    try:
+        # Exclude contacts we've already reached out to
+        contacted_ids = {r.contact_id for r in session.query(OutreachLog.contact_id).distinct().all()}
+        query = session.query(Contact).order_by(Contact.list_number)
+        # If any contact is in the "mention rotation", fetch only those (daily core group)
+        use_rotation = session.query(Contact).filter(Contact.in_mention_rotation == 1).limit(1).first() is not None
+        if use_rotation:
+            query = query.filter(Contact.in_mention_rotation == 1)
+            print("Using mention rotation: only fetching for tagged contacts.")
+        if contacted_ids:
+            query = query.filter(Contact.id.notin_(contacted_ids))
+        if args.limit:
+            query = query.limit(args.limit)
+        contacts = query.all()
 
-    max_per = max(1, min(args.max_per_contact, 2))  # Clamp to 1 or 2
-    print(f"Fetching mentions for {len(contacts)} contacts (last {args.days} days, max {max_per} per contact)...")
-    if contacted_ids:
-        print(f"  (Skipping {len(contacted_ids)} contacts already contacted)")
+        max_per = max(1, min(args.max_per_contact, 2))  # Clamp to 1 or 2
+        print(f"Fetching mentions for {len(contacts)} contacts (last {args.days} days, max {max_per} per contact)...")
+        if contacted_ids:
+            print(f"  (Skipping {len(contacted_ids)} contacts already contacted)")
 
-    contact_ids = [c.id for c in contacts]
-    existing_mentions = session.query(Mention).filter(Mention.contact_id.in_(contact_ids)).all()
-    seen_urls: set[tuple[int, str]] = set()
-    for m in existing_mentions:
-        n = _normalize_url(m.source_url)
-        if n:
-            seen_urls.add((m.contact_id, n))
+        contact_ids = [c.id for c in contacts]
+        existing_mentions = session.query(Mention).filter(Mention.contact_id.in_(contact_ids)).all()
+        seen_urls: set[tuple[int, str]] = set()
+        for m in existing_mentions:
+            n = _normalize_url(m.source_url)
+            if n:
+                seen_urls.add((m.contact_id, n))
 
-    added = 0
-    for i, contact in enumerate(contacts):
-        articles = fetch_newsapi(api_key, contact.name, args.days)
-        for a in articles[:max_per]:  # Only take first 1-2 (most recent)
-            raw_url = a.get("source_url")
-            norm_url = _normalize_url(raw_url)
-            if not norm_url:
-                continue
-            if (contact.id, norm_url) in seen_urls:
-                continue
-            seen_urls.add((contact.id, norm_url))
+        added = 0
+        for i, contact in enumerate(contacts):
+            articles = fetch_newsapi(api_key, contact.name, args.days)
+            for a in articles[:max_per]:  # Only take first 1-2 (most recent)
+                raw_url = a.get("source_url")
+                norm_url = _normalize_url(raw_url)
+                if not norm_url:
+                    continue
+                if (contact.id, norm_url) in seen_urls:
+                    continue
+                seen_urls.add((contact.id, norm_url))
 
-            pub = None
-            if a.get("published_at"):
-                try:
-                    pub = datetime.fromisoformat(a["published_at"].replace("Z", "+00:00"))
-                except Exception:
-                    pass
+                pub = None
+                if a.get("published_at"):
+                    try:
+                        pub = datetime.fromisoformat(a["published_at"].replace("Z", "+00:00"))
+                    except ValueError:
+                        pass
 
-            mention = Mention(
-                contact_id=contact.id,
-                source_type="news",
-                source_url=raw_url,  # Keep original for working links
-                title=a["title"],
-                snippet=a["snippet"],
-                published_at=pub,
-            )
-            session.add(mention)
-            added += 1
+                mention = Mention(
+                    contact_id=contact.id,
+                    source_type="news",
+                    source_url=raw_url,  # Keep original for working links
+                    title=a["title"],
+                    snippet=a["snippet"],
+                    published_at=pub,
+                )
+                session.add(mention)
+                added += 1
 
-        if articles:
-            print(f"  [{i+1}/{len(contacts)}] {contact.name}: +{len(articles)} articles")
-        time.sleep(args.delay)
+            if articles:
+                print(f"  [{i+1}/{len(contacts)}] {contact.name}: +{len(articles)} articles")
+            time.sleep(args.delay)
 
-    session.commit()
-    session.close()
-    print(f"Done. Added {added} new mentions.")
+        session.commit()
+        print(f"Done. Added {added} new mentions.")
+    finally:
+        session.close()
     return 0
 
 

@@ -21,7 +21,7 @@ class OutreachCreate(BaseModel):
 
 
 @router.get("")
-async def list_outreach(
+def list_outreach(
     contact_id: int | None = Query(None, description="Filter by contact"),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
@@ -54,7 +54,7 @@ async def list_outreach(
 
 
 @router.post("")
-async def create_outreach(data: OutreachCreate, db: Session = Depends(get_db)):
+def create_outreach(data: OutreachCreate, db: Session = Depends(get_db)):
     """Add a new outreach log entry."""
     contact = db.query(Contact).filter(Contact.id == data.contact_id).first()
     if not contact:

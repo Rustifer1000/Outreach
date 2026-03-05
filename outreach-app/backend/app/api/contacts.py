@@ -137,7 +137,7 @@ router = APIRouter()
 
 
 @router.get("")
-async def list_contacts(
+def list_contacts(
     q: str | None = Query(None, description="Search by name or category"),
     category: str | None = Query(None, description="Filter by category"),
     in_rotation: bool | None = Query(None, description="Filter to contacts in mention rotation"),
@@ -199,7 +199,7 @@ class RotationSetBody(BaseModel):
 
 
 @router.put("/rotation")
-async def set_mention_rotation(body: RotationSetBody, db: Session = Depends(get_db)):
+def set_mention_rotation(body: RotationSetBody, db: Session = Depends(get_db)):
     """Set the daily mention rotation: only these contact IDs will be included in the next mention fetch. Clears others."""
     # Set all to 0 first
     db.query(Contact).update({Contact.in_mention_rotation: 0}, synchronize_session=False)
@@ -214,7 +214,7 @@ async def set_mention_rotation(body: RotationSetBody, db: Session = Depends(get_
 
 
 @router.get("/rotation")
-async def get_mention_rotation(db: Session = Depends(get_db)):
+def get_mention_rotation(db: Session = Depends(get_db)):
     """List contact IDs and names currently in the mention rotation."""
     contacts = db.query(Contact).filter(Contact.in_mention_rotation == 1).order_by(Contact.list_number).all()
     return {
@@ -236,7 +236,7 @@ _CSV_COLUMN_TYPE_MAP = {
 
 
 @router.post("/import-csv")
-async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Import contacts and contact info from a CSV file.
 
     CSV columns: name, email, linkedin, x, phone, other
@@ -327,7 +327,7 @@ async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
 
 
 @router.get("/{contact_id}")
-async def get_contact(contact_id: int, db: Session = Depends(get_db)):
+def get_contact(contact_id: int, db: Session = Depends(get_db)):
     """Get a single contact by ID with contact info and first-contact recommendation."""
     contact = (
         db.query(Contact)
@@ -373,7 +373,7 @@ class ContactPatch(BaseModel):
 
 
 @router.patch("/{contact_id}")
-async def patch_contact(contact_id: int, data: ContactPatch, db: Session = Depends(get_db)):
+def patch_contact(contact_id: int, data: ContactPatch, db: Session = Depends(get_db)):
     """Update contact (e.g. relationship stage, in_mention_rotation, mission_alignment)."""
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:
@@ -404,7 +404,7 @@ class NoteCreate(BaseModel):
 
 
 @router.get("/{contact_id}/notes")
-async def list_notes(contact_id: int, db: Session = Depends(get_db)):
+def list_notes(contact_id: int, db: Session = Depends(get_db)):
     """List notes for a contact, newest first."""
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:
@@ -425,7 +425,7 @@ async def list_notes(contact_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{contact_id}/notes")
-async def create_note(contact_id: int, data: NoteCreate, db: Session = Depends(get_db)):
+def create_note(contact_id: int, data: NoteCreate, db: Session = Depends(get_db)):
     """Add a conversation note."""
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:
@@ -459,7 +459,7 @@ class ConnectionCreate(BaseModel):
 
 
 @router.get("/{contact_id}/connections")
-async def list_connections(contact_id: int, db: Session = Depends(get_db)):
+def list_connections(contact_id: int, db: Session = Depends(get_db)):
     """List how this contact is related to others on the list."""
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:
@@ -486,7 +486,7 @@ async def list_connections(contact_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{contact_id}/connections")
-async def create_connection(contact_id: int, data: ConnectionCreate, db: Session = Depends(get_db)):
+def create_connection(contact_id: int, data: ConnectionCreate, db: Session = Depends(get_db)):
     """Record how this contact is related to another on the list."""
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:
@@ -525,7 +525,7 @@ async def create_connection(contact_id: int, data: ConnectionCreate, db: Session
 
 
 @router.delete("/{contact_id}/connections/{connection_id}")
-async def delete_connection(
+def delete_connection(
     contact_id: int, connection_id: int, db: Session = Depends(get_db)
 ):
     """Remove a connection."""
@@ -551,7 +551,7 @@ class ContactInfoCreate(BaseModel):
 
 
 @router.post("/{contact_id}/info")
-async def add_contact_info(
+def add_contact_info(
     contact_id: int, data: ContactInfoCreate, db: Session = Depends(get_db)
 ):
     """Add contact info (email, LinkedIn, etc.) for first-contact recommendations."""
@@ -571,7 +571,7 @@ async def add_contact_info(
 
 
 @router.post("/{contact_id}/enrich")
-async def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
+def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
     """Look up email (and LinkedIn if available) via Hunter API and add to contact_info."""
     if not settings.hunter_api_key:
         raise HTTPException(
@@ -634,7 +634,7 @@ async def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{contact_id}/enrich-bio")
-async def enrich_bio(contact_id: int, db: Session = Depends(get_db)):
+def enrich_bio(contact_id: int, db: Session = Depends(get_db)):
     """Generate a short bio summary from mention snippets using Claude."""
     if not settings.anthropic_api_key:
         raise HTTPException(
@@ -679,13 +679,13 @@ async def enrich_bio(contact_id: int, db: Session = Depends(get_db)):
 # --- Tags ---
 
 @router.get("/tags/preset")
-async def get_preset_tags():
+def get_preset_tags():
     """Return the list of preset tag options."""
     return {"tags": PRESET_TAGS}
 
 
 @router.get("/{contact_id}/tags")
-async def list_tags(contact_id: int, db: Session = Depends(get_db)):
+def list_tags(contact_id: int, db: Session = Depends(get_db)):
     """List tags for a contact."""
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:
@@ -699,7 +699,7 @@ class TagCreate(BaseModel):
 
 
 @router.post("/{contact_id}/tags")
-async def add_tag(contact_id: int, data: TagCreate, db: Session = Depends(get_db)):
+def add_tag(contact_id: int, data: TagCreate, db: Session = Depends(get_db)):
     """Add a tag to a contact (preset or custom)."""
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:
@@ -722,7 +722,7 @@ async def add_tag(contact_id: int, data: TagCreate, db: Session = Depends(get_db
 
 
 @router.delete("/{contact_id}/tags/{tag_id}")
-async def remove_tag(contact_id: int, tag_id: int, db: Session = Depends(get_db)):
+def remove_tag(contact_id: int, tag_id: int, db: Session = Depends(get_db)):
     """Remove a tag from a contact."""
     tag = (
         db.query(ContactTag)
@@ -739,7 +739,7 @@ async def remove_tag(contact_id: int, tag_id: int, db: Session = Depends(get_db)
 # --- Warm Intros ---
 
 @router.get("/{contact_id}/warm-intros")
-async def get_warm_intros(contact_id: int, db: Session = Depends(get_db)):
+def get_warm_intros(contact_id: int, db: Session = Depends(get_db)):
     """Find warm intro paths to this contact.
 
     Returns ranked list of people who could introduce you,
@@ -755,7 +755,7 @@ async def get_warm_intros(contact_id: int, db: Session = Depends(get_db)):
 # --- Mission Alignment ---
 
 @router.post("/{contact_id}/compute-alignment")
-async def compute_alignment(contact_id: int, db: Session = Depends(get_db)):
+def compute_alignment(contact_id: int, db: Session = Depends(get_db)):
     """Auto-compute mission alignment score from category/interests. User can override via PATCH."""
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:
