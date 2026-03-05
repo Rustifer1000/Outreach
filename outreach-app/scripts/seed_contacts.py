@@ -26,7 +26,7 @@ def main():
     parser.add_argument(
         "--db",
         type=str,
-        default="sqlite:///./outreach.db",
+        default=f"sqlite:///{Path(__file__).parent.parent / 'backend' / 'outreach.db'}",
         help="Database URL",
     )
     parser.add_argument(
@@ -55,7 +55,17 @@ def main():
 
     session = Session()
     try:
+        added = 0
+        skipped = 0
         for r in records:
+            # Check for existing contact with same name and list_number
+            existing = session.query(Contact).filter(
+                Contact.name == r["name"],
+                Contact.list_number == r.get("list_number"),
+            ).first()
+            if existing:
+                skipped += 1
+                continue
             contact = Contact(
                 list_number=r.get("list_number"),
                 name=r["name"],
@@ -65,8 +75,9 @@ def main():
                 connection_to_solomon=r.get("connection_to_solomon"),
             )
             session.add(contact)
+            added += 1
         session.commit()
-        print(f"Seeded {len(records)} contacts into database")
+        print(f"Seeded {added} contacts into database ({skipped} duplicates skipped)")
     finally:
         session.close()
 

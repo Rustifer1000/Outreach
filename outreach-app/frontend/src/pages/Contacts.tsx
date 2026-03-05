@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 interface Contact {
@@ -15,10 +15,15 @@ export default function Contacts() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [skip, setSkip] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const pageSize = 50
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 300)
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setSkip(0)
+    }, 300)
     return () => clearTimeout(timer)
   }, [search])
 
@@ -26,7 +31,7 @@ export default function Contacts() {
     const controller = new AbortController()
     setLoading(true)
     setError(null)
-    const params = new URLSearchParams({ limit: '50' })
+    const params = new URLSearchParams({ limit: String(pageSize), skip: String(skip) })
     if (debouncedSearch) params.set('q', debouncedSearch)
     fetch(`/api/contacts?${params}`, { signal: controller.signal })
       .then((res) => {
@@ -44,7 +49,7 @@ export default function Contacts() {
       })
       .finally(() => setLoading(false))
     return () => controller.abort()
-  }, [debouncedSearch])
+  }, [debouncedSearch, skip])
 
   return (
     <div>
@@ -114,7 +119,27 @@ export default function Contacts() {
         </div>
       )}
 
-      <p className="mt-4 text-sm text-slate-500">Showing {contacts.length} of {total} contacts</p>
+      <div className="mt-4 flex items-center justify-between">
+        <p className="text-sm text-slate-500">
+          Showing {skip + 1}–{Math.min(skip + contacts.length, total)} of {total} contacts
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setSkip(Math.max(0, skip - pageSize))}
+            disabled={skip === 0}
+            className="rounded-md border border-slate-300 px-3 py-1 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            &larr; Previous
+          </button>
+          <button
+            onClick={() => setSkip(skip + pageSize)}
+            disabled={skip + pageSize >= total}
+            className="rounded-md border border-slate-300 px-3 py-1 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Next &rarr;
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -8,6 +8,7 @@ interface Contact {
   category: string | null
   role_org: string | null
   connection_to_solomon: string | null
+  primary_interests: string | null
 }
 
 interface Mention {
@@ -116,6 +117,12 @@ export default function ContactDetail() {
           <div className="mt-4 rounded bg-slate-50 p-4">
             <h3 className="text-sm font-medium text-slate-800">Connection to Solomon</h3>
             <p className="mt-2 text-slate-600">{contact.connection_to_solomon}</p>
+          </div>
+        )}
+        {contact.primary_interests && (
+          <div className="mt-4 rounded bg-slate-50 p-4">
+            <h3 className="text-sm font-medium text-slate-800">Primary Interests</h3>
+            <p className="mt-2 text-slate-600">{contact.primary_interests}</p>
           </div>
         )}
       </div>

@@ -19,11 +19,14 @@ def list_contacts(
     """List contacts with optional search and filter."""
     query = db.query(Contact)
     if q:
+        escaped = q.replace("%", r"\%").replace("_", r"\_")
         query = query.filter(
-            Contact.name.ilike(f"%{q}%") | Contact.category.ilike(f"%{q}%")
+            Contact.name.ilike(f"%{escaped}%", escape="\\")
+            | Contact.category.ilike(f"%{escaped}%", escape="\\")
         )
     if category:
-        query = query.filter(Contact.category.ilike(f"%{category}%"))
+        escaped_cat = category.replace("%", r"\%").replace("_", r"\_")
+        query = query.filter(Contact.category.ilike(f"%{escaped_cat}%", escape="\\"))
     total = query.count()
     contacts = query.order_by(Contact.list_number).offset(skip).limit(limit).all()
     return {"total": total, "contacts": contacts, "skip": skip, "limit": limit}

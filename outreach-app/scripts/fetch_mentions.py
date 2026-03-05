@@ -10,7 +10,6 @@ Usage:
     python fetch_mentions.py [--limit 50] [--days 7]
 """
 import argparse
-import hashlib
 import os
 import sys
 import time
@@ -63,7 +62,7 @@ def fetch_newsapi(api_key: str, name: str, days: int) -> list[dict]:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--db", type=str, default="sqlite:///./backend/outreach.db")
+    parser.add_argument("--db", type=str, default=f"sqlite:///{Path(__file__).parent.parent / 'backend' / 'outreach.db'}")
     parser.add_argument("--limit", type=int, default=None, help="Max contacts to process (for rate limits)")
     parser.add_argument("--days", type=int, default=7, help="Look back days")
     parser.add_argument("--max-per-contact", type=int, default=2, help="Max mentions to store per contact (1 or 2)")

@@ -1,9 +1,21 @@
 """Outreach log API endpoints."""
-from fastapi import APIRouter, Depends, Query
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import OutreachLog
+from app.models import Contact, OutreachLog
+
+
+class OutreachCreate(BaseModel):
+    contact_id: int
+    method: str
+    subject: str | None = None
+    content: str | None = None
+    sent_at: datetime | None = None
+    response_status: str | None = None
 
 router = APIRouter()
 
@@ -22,3 +34,23 @@ def list_outreach(
     total = query.count()
     entries = query.order_by(OutreachLog.sent_at.desc().nullslast()).offset(skip).limit(limit).all()
     return {"total": total, "entries": entries, "skip": skip, "limit": limit}
+
+
+@router.post("", status_code=201)
+def create_outreach(body: OutreachCreate, db: Session = Depends(get_db)):
+    """Create a new outreach log entry."""
+    contact = db.query(Contact).filter(Contact.id == body.contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    entry = OutreachLog(
+        contact_id=body.contact_id,
+        method=body.method,
+        subject=body.subject,
+        content=body.content,
+        sent_at=body.sent_at,
+        response_status=body.response_status,
+    )
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return entry

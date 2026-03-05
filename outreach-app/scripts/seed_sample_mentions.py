@@ -80,15 +80,10 @@ SAMPLE_MENTIONS = [
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--db", type=str, default="sqlite:///./backend/outreach.db")
+    parser.add_argument("--db", type=str, default=f"sqlite:///{Path(__file__).parent.parent / 'backend' / 'outreach.db'}")
     args = parser.parse_args()
 
-    db_url = args.db
-    if not db_url.startswith("sqlite"):
-        print("Use default SQLite path for this script")
-        db_url = "sqlite:///./backend/outreach.db"
-
-    engine = create_engine(db_url, connect_args={"check_same_thread": False})
+    engine = create_engine(args.db, connect_args={"check_same_thread": False} if "sqlite" in args.db else {})
     Session = sessionmaker(bind=engine)
 
     session = Session()
