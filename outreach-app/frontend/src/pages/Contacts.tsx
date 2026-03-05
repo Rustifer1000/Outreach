@@ -29,8 +29,20 @@ export default function Contacts() {
   const [togglingId, setTogglingId] = useState<number | null>(null)
   const [bulkEnriching, setBulkEnriching] = useState(false)
   const [enrichStatus, setEnrichStatus] = useState<string | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<{
+    created: number
+    updated: number
+    info_added: number
+    info_skipped_duplicates: number
+    skipped_rows: { row: number; reason: string }[]
+    created_names: string[]
+    updated_names: string[]
+  } | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const enrichPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Cleanup polling on unmount
   useEffect(() => {
@@ -124,6 +136,42 @@ export default function Contacts() {
       })
   }
 
+  const handleImportCSV = () => fileInputRef.current?.click()
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImporting(true)
+    setImportResult(null)
+    setImportError(null)
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    fetch('/api/contacts/import-csv', { method: 'POST', body: formData })
+      .then(async (res) => {
+        if (!res.ok) {
+          let detail = res.statusText
+          try {
+            const body = await res.json()
+            detail = body.detail || body.message || JSON.stringify(body)
+          } catch { /* keep statusText */ }
+          throw new Error(`${res.status}: ${detail}`)
+        }
+        return res.json()
+      })
+      .then((data) => {
+        setImportResult(data)
+        loadContacts()
+      })
+      .catch((err) => setImportError(err.message || 'Import failed'))
+      .finally(() => {
+        setImporting(false)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      })
+  }
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-slate-800">Contacts</h1>
@@ -162,10 +210,65 @@ export default function Contacts() {
         >
           {bulkEnriching ? 'Enriching...' : 'Bulk enrich emails'}
         </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          onChange={handleFileSelected}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={handleImportCSV}
+          disabled={importing}
+          className="rounded border border-blue-500 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+        >
+          {importing ? 'Importing...' : 'Import CSV'}
+        </button>
         {enrichStatus && (
           <span className="text-sm text-slate-600">{enrichStatus}</span>
         )}
       </div>
+
+      {importError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-center justify-between">
+            <span>CSV import failed: {importError}</span>
+            <button type="button" onClick={() => setImportError(null)}
+              className="ml-4 text-xs font-medium text-red-600 hover:text-red-800">Dismiss</button>
+          </div>
+        </div>
+      )}
+
+      {importResult && (
+        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-4 text-sm">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-green-800">CSV Import Complete</h3>
+            <button type="button" onClick={() => setImportResult(null)}
+              className="text-xs text-green-600 hover:text-green-800">Dismiss</button>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-4 text-green-700">
+            <span>{importResult.created} created</span>
+            <span>{importResult.updated} updated</span>
+            <span>{importResult.info_added} info entries added</span>
+            {importResult.info_skipped_duplicates > 0 && (
+              <span className="text-slate-500">{importResult.info_skipped_duplicates} duplicates skipped</span>
+            )}
+          </div>
+          {importResult.created_names.length > 0 && (
+            <p className="mt-2 text-xs text-green-600">
+              New contacts: {importResult.created_names.join(', ')}
+            </p>
+          )}
+          {importResult.skipped_rows.length > 0 && (
+            <div className="mt-2 text-xs text-amber-700">
+              Skipped rows: {importResult.skipped_rows.map(
+                (s) => `Row ${s.row}: ${s.reason}`
+              ).join('; ')}
+            </div>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <p className="text-slate-500">Loading...</p>

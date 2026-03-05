@@ -1,7 +1,9 @@
 """Contacts API endpoints."""
+import csv
+import io
 from collections import Counter
 from datetime import UTC, datetime
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, File, Query, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 
@@ -218,6 +220,109 @@ async def get_mention_rotation(db: Session = Depends(get_db)):
     return {
         "contacts": [{"id": c.id, "name": c.name, "category": c.category} for c in contacts],
         "count": len(contacts),
+    }
+
+
+# --- CSV Import -----------------------------------------------------------
+
+# Maps CSV column names to ContactInfo.type values
+_CSV_COLUMN_TYPE_MAP = {
+    "email": "email",
+    "linkedin": "linkedin",
+    "x": "twitter",
+    "phone": "phone",
+    "other": "other",
+}
+
+
+@router.post("/import-csv")
+async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Import contacts and contact info from a CSV file.
+
+    CSV columns: name, email, linkedin, x, phone, other
+    - Matches rows to existing contacts by name (case-insensitive).
+    - Adds new ContactInfo entries; skips duplicates.
+    - Creates new contacts when no name match is found.
+    """
+    # 1. Validate file type
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="File must be a .csv file")
+
+    # 2. Read and decode (utf-8-sig handles Excel BOM)
+    try:
+        raw = await file.read()
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="File must be UTF-8 encoded")
+
+    # 3. Parse CSV
+    reader = csv.DictReader(io.StringIO(text))
+    if reader.fieldnames is None:
+        raise HTTPException(status_code=400, detail="CSV file is empty or has no header row")
+
+    headers = [h.strip().lower() for h in reader.fieldnames]
+    if "name" not in headers:
+        raise HTTPException(
+            status_code=400,
+            detail=f"CSV must have a 'name' column. Found columns: {', '.join(headers)}",
+        )
+
+    # 4. Pre-load all contacts for O(1) name matching
+    all_contacts = db.query(Contact).all()
+    name_to_contact = {c.name.strip().lower(): c for c in all_contacts}
+
+    # 5. Process rows
+    created: list[str] = []
+    updated: list[str] = []
+    skipped_rows: list[dict] = []
+    info_added = 0
+    info_skipped = 0
+
+    for row_num, row in enumerate(reader, start=2):  # row 1 = header
+        row = {k.strip().lower(): (v.strip() if v else "") for k, v in row.items()}
+        name = row.get("name", "").strip()
+        if not name:
+            skipped_rows.append({"row": row_num, "reason": "Empty name"})
+            continue
+
+        # Match or create contact
+        lookup = name.lower()
+        contact = name_to_contact.get(lookup)
+        if contact is None:
+            contact = Contact(name=name)
+            db.add(contact)
+            db.flush()  # assign id within the transaction
+            name_to_contact[lookup] = contact
+            created.append(name)
+        else:
+            updated.append(name)
+
+        # Existing ContactInfo for dedup
+        existing_info = db.query(ContactInfo).filter(ContactInfo.contact_id == contact.id).all()
+        existing_pairs = {(ci.type.lower(), ci.value.lower()) for ci in existing_info}
+
+        # Add new ContactInfo from each mapped column
+        for col, info_type in _CSV_COLUMN_TYPE_MAP.items():
+            value = row.get(col, "").strip()
+            if not value:
+                continue
+            if (info_type, value.lower()) in existing_pairs:
+                info_skipped += 1
+                continue
+            db.add(ContactInfo(contact_id=contact.id, type=info_type, value=value, is_primary=0))
+            existing_pairs.add((info_type, value.lower()))
+            info_added += 1
+
+    db.commit()
+
+    return {
+        "created": len(created),
+        "updated": len(updated),
+        "info_added": info_added,
+        "info_skipped_duplicates": info_skipped,
+        "skipped_rows": skipped_rows,
+        "created_names": created,
+        "updated_names": updated,
     }
 
 
