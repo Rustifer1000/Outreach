@@ -36,14 +36,17 @@ export default function ContactDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const safeFetch = async (url: string) => {
-    const res = await fetch(url)
-    if (!res.ok) throw new Error(`Server error (${res.status})`)
-    return res.json()
-  }
-
   useEffect(() => {
     if (!id) return
+    const controller = new AbortController()
+    const opts = { signal: controller.signal }
+
+    const safeFetch = async (url: string) => {
+      const res = await fetch(url, opts)
+      if (!res.ok) throw new Error(`Server error (${res.status})`)
+      return res.json()
+    }
+
     setError(null)
     setLoading(true)
 
@@ -53,6 +56,8 @@ export default function ContactDetail() {
       safeFetch(`/api/outreach?contact_id=${id}`),
     ])
       .then(([contactResult, mentionsResult, outreachResult]) => {
+        if (controller.signal.aborted) return
+
         if (contactResult.status === 'fulfilled') {
           setContact(contactResult.value)
         } else {
@@ -73,6 +78,7 @@ export default function ContactDetail() {
         }
       })
       .finally(() => setLoading(false))
+    return () => controller.abort()
   }, [id])
 
   if (loading) {
@@ -99,7 +105,7 @@ export default function ContactDetail() {
   return (
     <div>
       <Link to="/contacts" className="mb-4 inline-block text-sm text-slate-600 hover:text-slate-800">
-        ← Back to Contacts
+        &larr; Back to Contacts
       </Link>
 
       <div className="mb-8 rounded-lg bg-white p-6 shadow">

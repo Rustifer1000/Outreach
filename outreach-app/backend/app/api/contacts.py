@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 @router.get("")
-async def list_contacts(
+def list_contacts(
     q: str | None = Query(None, description="Search by name or category"),
     category: str | None = Query(None, description="Filter by category"),
     skip: int = Query(0, ge=0),
@@ -30,7 +30,7 @@ async def list_contacts(
 
 
 @router.get("/{contact_id}")
-async def get_contact(contact_id: int, db: Session = Depends(get_db)):
+def get_contact(contact_id: int, db: Session = Depends(get_db)):
     """Get a single contact by ID."""
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:

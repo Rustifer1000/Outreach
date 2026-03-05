@@ -35,20 +35,10 @@ def parse_names_file(input_path: Path) -> list[Contact]:
     current_category = ""
     current_subcategory: Optional[str] = None
 
-    # Split into sections by category headers
-    # Match: ## Category N: Name (range) or ### Subcategory Name
-    category_pattern = re.compile(
-        r'^##\s+(.+?)(?:\s+\(\d+[–-]\d+\))?\s*$|^###\s+(.+?)\s*$',
-        re.MULTILINE
-    )
-
-    # Match contact entries: **N. Name** — Role or **Name** — Role or **N. Name** (no role)
-    # Also handles: **N. Name — Subname** — Role and **N. Name (parenthetical)**
-    entry_pattern = re.compile(
-        r'\*\*\s*(\d+)?\.?\s*(.+?)\s*\*\*\s*'
-        r'(?:—\s*(.+?))?(?:\s*\(([^)]+)\))?\s*$',
-        re.MULTILINE
-    )
+    # Precompiled patterns
+    category_re = re.compile(r'^##\s+(.+?)(?:\s+\(\d+[–-]\d+\))?\s*$')
+    subcategory_re = re.compile(r'^###\s+(.+?)\s*$')
+    entry_re = re.compile(r'^\*\*\s*(\d+)?\.?\s*(.+?)\s*\*\*\s*(.*)$')
 
     lines = text.split("\n")
     i = 0
@@ -57,7 +47,7 @@ def parse_names_file(input_path: Path) -> list[Contact]:
         line = lines[i]
 
         # Check for category header (## Category X: Name)
-        cat_match = re.match(r'^##\s+(.+?)(?:\s+\(\d+[–-]\d+\))?\s*$', line)
+        cat_match = category_re.match(line)
         if cat_match:
             current_category = cat_match.group(1).strip()
             current_subcategory = None
@@ -65,7 +55,7 @@ def parse_names_file(input_path: Path) -> list[Contact]:
             continue
 
         # Check for subcategory header (### Name)
-        subcat_match = re.match(r'^###\s+(.+?)\s*$', line)
+        subcat_match = subcategory_re.match(line)
         if subcat_match:
             current_subcategory = subcat_match.group(1).strip()
             i += 1
@@ -77,7 +67,7 @@ def parse_names_file(input_path: Path) -> list[Contact]:
             continue
 
         # Match contact entry: **N. Name** — Role
-        entry_match = re.match(r'^\*\*\s*(\d+)?\.?\s*(.+?)\s*\*\*\s*(.*)$', line)
+        entry_match = entry_re.match(line)
         if entry_match:
             num_str, name_part, rest = entry_match.groups()
             list_number = int(num_str) if num_str else None
@@ -99,12 +89,13 @@ def parse_names_file(input_path: Path) -> list[Contact]:
             while j < len(lines):
                 next_line = lines[j]
                 if next_line.strip().startswith("Connection:"):
-                    connection = next_line.replace("Connection:", "").strip()
+                    parts = [next_line.replace("Connection:", "").strip()]
                     # Connection might continue on following lines until we hit blank or next **
                     j += 1
                     while j < len(lines) and lines[j].strip() and not lines[j].strip().startswith("**"):
-                        connection += " " + lines[j].strip()
+                        parts.append(lines[j].strip())
                         j += 1
+                    connection = " ".join(parts)
                     break
                 elif next_line.strip() == "" or next_line.strip().startswith("**"):
                     break

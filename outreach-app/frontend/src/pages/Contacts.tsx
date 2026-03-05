@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 interface Contact {
@@ -14,14 +14,21 @@ export default function Contacts() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
+    const controller = new AbortController()
     setLoading(true)
     setError(null)
     const params = new URLSearchParams({ limit: '50' })
-    if (search) params.set('q', search)
-    fetch(`/api/contacts?${params}`)
+    if (debouncedSearch) params.set('q', debouncedSearch)
+    fetch(`/api/contacts?${params}`, { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error(`Server error (${res.status})`)
         return res.json()
@@ -31,11 +38,13 @@ export default function Contacts() {
         setTotal(data.total || 0)
       })
       .catch((err) => {
+        if (err.name === 'AbortError') return
         console.error(err)
         setError('Failed to load contacts. Please try refreshing the page.')
       })
       .finally(() => setLoading(false))
-  }, [search])
+    return () => controller.abort()
+  }, [debouncedSearch])
 
   return (
     <div>

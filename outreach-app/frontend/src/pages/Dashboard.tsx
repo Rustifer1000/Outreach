@@ -19,8 +19,9 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    const controller = new AbortController()
     setError(null)
-    fetch('/api/mentions?days=7&limit=20')
+    fetch('/api/mentions?days=7&limit=20', { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error(`Server error (${res.status})`)
         return res.json()
@@ -29,10 +30,12 @@ export default function Dashboard() {
         setMentions(data.mentions || [])
       })
       .catch((err) => {
+        if (err.name === 'AbortError') return
         console.error(err)
         setError('Failed to load recent mentions. Please try refreshing the page.')
       })
       .finally(() => setLoading(false))
+    return () => controller.abort()
   }, [])
 
   return (

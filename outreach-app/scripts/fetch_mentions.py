@@ -71,15 +71,13 @@ def main():
     args = parser.parse_args()
 
     # Load API key from env (check outreach-app/.env or backend/.env)
+    from dotenv import load_dotenv
+
     base = Path(__file__).parent.parent
     for env_path in [base / ".env", base / "backend" / ".env"]:
-        if not env_path.exists():
-            continue
-        for line in env_path.read_text().splitlines():
-            if "=" in line and not line.strip().startswith("#"):
-                k, v = line.split("=", 1)
-                os.environ.setdefault(k.strip(), v.strip())
-        break
+        if env_path.exists():
+            load_dotenv(env_path)
+            break
 
     api_key = os.environ.get("NEWSAPI_KEY")
     if not api_key:
@@ -91,56 +89,59 @@ def main():
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    contacts = session.query(Contact).order_by(Contact.list_number).all()
-    if args.limit:
-        contacts = contacts[: args.limit]
+    try:
+        query = session.query(Contact).order_by(Contact.list_number)
+        if args.limit:
+            query = query.limit(args.limit)
+        contacts = query.all()
 
-    max_per = max(1, min(args.max_per_contact, 2))  # Clamp to 1 or 2
-    print(f"Fetching mentions for {len(contacts)} contacts (last {args.days} days, max {max_per} per contact)...")
+        max_per = max(1, min(args.max_per_contact, 2))  # Clamp to 1 or 2
+        print(f"Fetching mentions for {len(contacts)} contacts (last {args.days} days, max {max_per} per contact)...")
 
-    added = 0
-    for i, contact in enumerate(contacts):
-        articles = fetch_newsapi(api_key, contact.name, args.days)
-        for a in articles[:max_per]:  # Only take first 1-2 (most recent)
-            if not a.get("source_url"):
-                continue
-            # Dedupe: check if we already have this URL for this contact
-            existing = (
-                session.query(Mention)
-                .filter(
-                    Mention.contact_id == contact.id,
-                    Mention.source_url == a["source_url"],
+        added = 0
+        for i, contact in enumerate(contacts):
+            articles = fetch_newsapi(api_key, contact.name, args.days)
+            for a in articles[:max_per]:  # Only take first 1-2 (most recent)
+                if not a.get("source_url"):
+                    continue
+                # Dedupe: check if we already have this URL for this contact
+                existing = (
+                    session.query(Mention)
+                    .filter(
+                        Mention.contact_id == contact.id,
+                        Mention.source_url == a["source_url"],
+                    )
+                    .first()
                 )
-                .first()
-            )
-            if existing:
-                continue
+                if existing:
+                    continue
 
-            pub = None
-            if a.get("published_at"):
-                try:
-                    pub = datetime.fromisoformat(a["published_at"].replace("Z", "+00:00"))
-                except Exception:
-                    pass
+                pub = None
+                if a.get("published_at"):
+                    try:
+                        pub = datetime.fromisoformat(a["published_at"].replace("Z", "+00:00"))
+                    except ValueError:
+                        pass
 
-            mention = Mention(
-                contact_id=contact.id,
-                source_type="news",
-                source_url=a["source_url"],
-                title=a["title"],
-                snippet=a["snippet"],
-                published_at=pub,
-            )
-            session.add(mention)
-            added += 1
+                mention = Mention(
+                    contact_id=contact.id,
+                    source_type="news",
+                    source_url=a["source_url"],
+                    title=a["title"],
+                    snippet=a["snippet"],
+                    published_at=pub,
+                )
+                session.add(mention)
+                added += 1
 
-        session.commit()
-        if articles:
-            print(f"  [{i+1}/{len(contacts)}] {contact.name}: +{len(articles)} articles")
-        time.sleep(args.delay)
+            session.commit()
+            if articles:
+                print(f"  [{i+1}/{len(contacts)}] {contact.name}: +{len(articles)} articles")
+            time.sleep(args.delay)
 
-    session.close()
-    print(f"Done. Added {added} new mentions.")
+        print(f"Done. Added {added} new mentions.")
+    finally:
+        session.close()
     return 0
 
 

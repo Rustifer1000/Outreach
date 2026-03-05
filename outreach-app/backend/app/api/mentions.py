@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 @router.get("")
-async def list_mentions(
+def list_mentions(
     days: int = Query(7, ge=1, le=90, description="Mentions from last N days"),
     contact_id: int | None = Query(None, description="Filter by contact"),
     max_per_contact: int = Query(2, ge=1, le=5, description="Max mentions per contact (1-2 typical)"),
@@ -65,7 +65,7 @@ async def list_mentions(
 
 
 @router.get("/{mention_id}")
-async def get_mention(mention_id: int, db: Session = Depends(get_db)):
+def get_mention(mention_id: int, db: Session = Depends(get_db)):
     """Get a single mention by ID."""
     mention = db.query(Mention).filter(Mention.id == mention_id).first()
     if not mention:
