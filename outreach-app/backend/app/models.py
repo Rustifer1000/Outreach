@@ -1,6 +1,5 @@
 """SQLAlchemy models for Phase 1 data model."""
-from datetime import UTC, datetime
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float, func
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -18,8 +17,8 @@ class Contact(Base):
     role_org = Column(Text, nullable=True)
     connection_to_solomon = Column(Text, nullable=True)
     primary_interests = Column(Text, nullable=True)  # For future enrichment
-    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     mentions = relationship("Mention", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     outreach_log = relationship("OutreachLog", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
@@ -35,7 +34,7 @@ class ContactInfo(Base):
     type = Column(String(50), nullable=False)  # email, linkedin, twitter, phone, etc.
     value = Column(String(500), nullable=False)
     is_primary = Column(Integer, default=0)  # 0 or 1
-    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    created_at = Column(DateTime, server_default=func.now())
 
     contact = relationship("Contact", back_populates="contact_info")
 
@@ -52,7 +51,7 @@ class Mention(Base):
     snippet = Column(Text, nullable=True)
     published_at = Column(DateTime, nullable=True, index=True)
     relevance_score = Column(Float, nullable=True)  # Phase 3
-    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    created_at = Column(DateTime, server_default=func.now())
 
     contact = relationship("Contact", back_populates="mentions")
 
@@ -68,6 +67,6 @@ class OutreachLog(Base):
     content = Column(Text, nullable=True)
     sent_at = Column(DateTime, nullable=True, index=True)
     response_status = Column(String(50), nullable=True)  # sent, replied, no_response, bounced
-    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    created_at = Column(DateTime, server_default=func.now())
 
     contact = relationship("Contact", back_populates="outreach_log")

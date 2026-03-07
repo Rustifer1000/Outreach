@@ -59,10 +59,12 @@ def main():
         skipped = 0
         for r in records:
             # Check for existing contact with same name and list_number
-            existing = session.query(Contact).filter(
-                Contact.name == r["name"],
-                Contact.list_number == r.get("list_number"),
-            ).first()
+            q = session.query(Contact).filter(Contact.name == r["name"])
+            if r.get("list_number") is not None:
+                q = q.filter(Contact.list_number == r["list_number"])
+            else:
+                q = q.filter(Contact.list_number.is_(None))
+            existing = q.first()
             if existing:
                 skipped += 1
                 continue

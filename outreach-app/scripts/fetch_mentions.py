@@ -16,6 +16,8 @@ import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import httpx
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
 from sqlalchemy import create_engine
@@ -25,7 +27,6 @@ from app.models import Contact, Mention
 
 def fetch_newsapi(api_key: str, name: str, days: int) -> list[dict]:
     """Fetch articles from NewsAPI.org for a person's name."""
-    import httpx
 
     from_date = (datetime.now(UTC) - timedelta(days=days)).strftime("%Y-%m-%d")
     url = "https://newsapi.org/v2/everything"
@@ -84,7 +85,7 @@ def main():
         print("Get a free key at https://newsapi.org/register")
         return 1
 
-    engine = create_engine(args.db, connect_args={"check_same_thread": False})
+    engine = create_engine(args.db, connect_args={"check_same_thread": False} if "sqlite" in args.db else {})
     Session = sessionmaker(bind=engine)
     session = Session()
 

@@ -2,7 +2,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -11,11 +11,11 @@ from app.models import Contact, OutreachLog
 
 class OutreachCreate(BaseModel):
     contact_id: int
-    method: str
-    subject: str | None = None
+    method: str = Field(..., max_length=50)
+    subject: str | None = Field(None, max_length=500)
     content: str | None = None
     sent_at: datetime | None = None
-    response_status: str | None = None
+    response_status: str | None = Field(None, max_length=50)
 
 router = APIRouter()
 
@@ -29,7 +29,7 @@ def list_outreach(
 ):
     """List outreach log entries."""
     query = db.query(OutreachLog)
-    if contact_id:
+    if contact_id is not None:
         query = query.filter(OutreachLog.contact_id == contact_id)
     total = query.count()
     entries = query.order_by(OutreachLog.sent_at.desc().nullslast()).offset(skip).limit(limit).all()
@@ -38,7 +38,10 @@ def list_outreach(
 
 @router.post("", status_code=201)
 def create_outreach(body: OutreachCreate, db: Session = Depends(get_db)):
-    """Create a new outreach log entry."""
+    """Create a new outreach log entry.
+
+    TODO: Add authentication before deployment - this endpoint is currently unprotected.
+    """
     contact = db.query(Contact).filter(Contact.id == body.contact_id).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")

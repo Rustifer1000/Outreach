@@ -75,7 +75,7 @@ export default function Dashboard() {
                       {m.source_type} • {m.published_at ? new Date(m.published_at).toLocaleDateString() : 'Unknown date'}
                     </p>
                   </div>
-                  {m.source_url && (
+                  {m.source_url && /^https?:\/\//i.test(m.source_url) && (
                     <a
                       href={m.source_url}
                       target="_blank"

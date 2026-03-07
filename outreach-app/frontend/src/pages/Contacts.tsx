@@ -121,7 +121,7 @@ export default function Contacts() {
 
       <div className="mt-4 flex items-center justify-between">
         <p className="text-sm text-slate-500">
-          Showing {skip + 1}–{Math.min(skip + contacts.length, total)} of {total} contacts
+          Showing {total > 0 ? skip + 1 : 0}–{Math.min(skip + contacts.length, total)} of {total} contacts
         </p>
         <div className="flex gap-2">
           <button

@@ -19,15 +19,15 @@ def list_mentions(
     db: Session = Depends(get_db),
 ):
     """List recent mentions. Limits to max_per_contact per person on dashboard."""
-    cutoff = datetime.now(UTC) - timedelta(days=days)
+    cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=days)
     query = (
         db.query(Mention)
         .options(joinedload(Mention.contact))
         .filter(Mention.created_at >= cutoff)
     )
-    if contact_id:
+    if contact_id is not None:
         query = query.filter(Mention.contact_id == contact_id)
-    mentions = query.order_by(Mention.published_at.desc().nullslast()).all()
+    mentions = query.order_by(Mention.published_at.desc().nullslast()).limit(1000).all()
 
     # Limit to max_per_contact per contact on dashboard; contact detail (filtered by contact_id) shows all
     if contact_id:

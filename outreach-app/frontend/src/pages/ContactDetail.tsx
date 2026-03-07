@@ -139,7 +139,7 @@ export default function ContactDetail() {
                 <p className="text-sm text-slate-500">
                   {m.source_type} • {m.published_at ? new Date(m.published_at).toLocaleDateString() : 'Unknown'}
                 </p>
-                {m.source_url && (
+                {m.source_url && /^https?:\/\//i.test(m.source_url) && (
                   <a href={m.source_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
                     View source
                   </a>
