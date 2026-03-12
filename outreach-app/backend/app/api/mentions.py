@@ -1,10 +1,14 @@
 """Mentions API endpoints."""
+import os
 from datetime import UTC, datetime, timedelta
-from fastapi import APIRouter, Depends, Query, HTTPException
+
+import httpx
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
-from app.database import get_db
-from app.models import Mention
+from app.config import settings
+from app.database import get_db, SessionLocal
+from app.models import Contact, Mention
 
 router = APIRouter()
 
@@ -62,6 +66,121 @@ def list_mentions(
             "relevance_score": m.relevance_score,
         })
     return {"total": total, "mentions": result, "skip": skip, "limit": limit}
+
+
+_fetch_status: dict = {"running": False, "progress": "", "added": 0, "total_contacts": 0, "processed": 0, "error": None}
+
+
+def _fetch_newsapi(api_key: str, name: str, days: int) -> list[dict]:
+    """Fetch articles from NewsAPI.org for a person's name."""
+    from_date = (datetime.now(UTC) - timedelta(days=days)).strftime("%Y-%m-%d")
+    params = {
+        "q": f'"{name}"',
+        "from": from_date,
+        "sortBy": "publishedAt",
+        "language": "en",
+        "pageSize": 10,
+        "apiKey": api_key,
+    }
+    try:
+        with httpx.Client(timeout=30) as client:
+            r = client.get("https://newsapi.org/v2/everything", params=params)
+            r.raise_for_status()
+            data = r.json()
+    except Exception:
+        return []
+
+    return [
+        {
+            "source_url": a.get("url"),
+            "title": a.get("title"),
+            "snippet": a.get("description") or a.get("content", "")[:500],
+            "published_at": a.get("publishedAt"),
+        }
+        for a in data.get("articles", [])
+        if a.get("url") and a.get("title")
+    ]
+
+
+def _run_fetch(contact_limit: int | None, days: int, max_per_contact: int):
+    """Background task: fetch mentions for contacts via NewsAPI."""
+    global _fetch_status
+    _fetch_status = {"running": True, "progress": "Starting...", "added": 0, "total_contacts": 0, "processed": 0, "error": None}
+
+    api_key = settings.newsapi_key
+    if not api_key:
+        _fetch_status.update(running=False, error="No NEWSAPI_KEY configured. Add it to your .env file.")
+        return
+
+    db = SessionLocal()
+    try:
+        query = db.query(Contact).order_by(Contact.list_number)
+        if contact_limit:
+            query = query.limit(contact_limit)
+        contacts = query.all()
+        _fetch_status["total_contacts"] = len(contacts)
+        _fetch_status["progress"] = f"Fetching mentions for {len(contacts)} contacts..."
+
+        max_per = max(1, min(max_per_contact, 2))
+        added = 0
+
+        for i, contact in enumerate(contacts):
+            _fetch_status["processed"] = i + 1
+            _fetch_status["progress"] = f"Processing {contact.name} ({i+1}/{len(contacts)})"
+
+            articles = _fetch_newsapi(api_key, contact.name, days)
+            for a in articles[:max_per]:
+                if not a.get("source_url"):
+                    continue
+                existing = (
+                    db.query(Mention)
+                    .filter(Mention.contact_id == contact.id, Mention.source_url == a["source_url"])
+                    .first()
+                )
+                if existing:
+                    continue
+                pub = None
+                if a.get("published_at"):
+                    try:
+                        pub = datetime.fromisoformat(a["published_at"].replace("Z", "+00:00"))
+                    except ValueError:
+                        pass
+                db.add(Mention(
+                    contact_id=contact.id,
+                    source_type="news",
+                    source_url=a["source_url"],
+                    title=a["title"],
+                    snippet=a["snippet"],
+                    published_at=pub,
+                ))
+                added += 1
+            db.commit()
+
+        _fetch_status.update(running=False, added=added, progress=f"Done. Added {added} new mentions.")
+    except Exception as e:
+        _fetch_status.update(running=False, error=str(e))
+    finally:
+        db.close()
+
+
+@router.post("/fetch")
+def trigger_fetch(
+    background_tasks: BackgroundTasks,
+    limit: int | None = Query(None, description="Max contacts to process"),
+    days: int = Query(7, ge=1, le=90),
+    max_per_contact: int = Query(2, ge=1, le=5),
+):
+    """Trigger a background fetch of mentions from NewsAPI."""
+    if _fetch_status["running"]:
+        return {"status": "already_running", "progress": _fetch_status["progress"]}
+    background_tasks.add_task(_run_fetch, limit, days, max_per_contact)
+    return {"status": "started"}
+
+
+@router.get("/fetch/status")
+def fetch_status():
+    """Check progress of the background mention fetch."""
+    return _fetch_status
 
 
 @router.get("/{mention_id}")

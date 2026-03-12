@@ -17,6 +17,9 @@ export default function Layout({ children }: LayoutProps) {
               <Link to="/" className="text-slate-300 hover:text-white">
                 Dashboard
               </Link>
+              <Link to="/mentions" className="text-slate-300 hover:text-white">
+                Mentions
+              </Link>
               <Link to="/contacts" className="text-slate-300 hover:text-white">
                 Contacts
               </Link>
