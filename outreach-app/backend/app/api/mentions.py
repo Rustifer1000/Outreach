@@ -102,7 +102,13 @@ def _fetch_newsapi(api_key: str, name: str, days: int) -> list[dict]:
     ]
 
 
-def _run_fetch(contact_limit: int | None, days: int, max_per_contact: int):
+def _run_fetch(
+    contact_limit: int | None,
+    days: int,
+    max_per_contact: int,
+    start_list_number: int | None = None,
+    end_list_number: int | None = None,
+):
     """Background task: fetch mentions for contacts via NewsAPI."""
     global _fetch_status
     _fetch_status = {"running": True, "progress": "Starting...", "added": 0, "total_contacts": 0, "processed": 0, "error": None}
@@ -115,6 +121,10 @@ def _run_fetch(contact_limit: int | None, days: int, max_per_contact: int):
     db = SessionLocal()
     try:
         query = db.query(Contact).order_by(Contact.list_number)
+        if start_list_number is not None:
+            query = query.filter(Contact.list_number >= start_list_number)
+        if end_list_number is not None:
+            query = query.filter(Contact.list_number <= end_list_number)
         if contact_limit:
             query = query.limit(contact_limit)
         contacts = query.all()
@@ -169,11 +179,13 @@ def trigger_fetch(
     limit: int | None = Query(None, description="Max contacts to process"),
     days: int = Query(7, ge=1, le=90),
     max_per_contact: int = Query(2, ge=1, le=5),
+    start_list_number: int | None = Query(None, description="Start of list_number range (inclusive)"),
+    end_list_number: int | None = Query(None, description="End of list_number range (inclusive)"),
 ):
     """Trigger a background fetch of mentions from NewsAPI."""
     if _fetch_status["running"]:
         return {"status": "already_running", "progress": _fetch_status["progress"]}
-    background_tasks.add_task(_run_fetch, limit, days, max_per_contact)
+    background_tasks.add_task(_run_fetch, limit, days, max_per_contact, start_list_number, end_list_number)
     return {"status": "started"}
 
 

@@ -20,6 +20,9 @@ export default function Layout({ children }: LayoutProps) {
               <Link to="/mentions" className="text-slate-300 hover:text-white">
                 Mentions
               </Link>
+              <Link to="/rotation" className="text-slate-300 hover:text-white">
+                Rotation
+              </Link>
               <Link to="/contacts" className="text-slate-300 hover:text-white">
                 Contacts
               </Link>
