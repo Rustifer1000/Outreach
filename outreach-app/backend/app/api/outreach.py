@@ -3,7 +3,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.models import Contact, OutreachLog
@@ -17,6 +17,10 @@ class OutreachCreate(BaseModel):
     sent_at: datetime | None = None
     response_status: str | None = Field(None, max_length=50)
 
+
+class OutreachStatusUpdate(BaseModel):
+    response_status: str = Field(..., max_length=50)
+
 router = APIRouter()
 
 
@@ -28,12 +32,30 @@ def list_outreach(
     db: Session = Depends(get_db),
 ):
     """List outreach log entries."""
-    query = db.query(OutreachLog)
+    query = db.query(OutreachLog).options(joinedload(OutreachLog.contact))
     if contact_id is not None:
         query = query.filter(OutreachLog.contact_id == contact_id)
     total = query.count()
     entries = query.order_by(OutreachLog.sent_at.desc().nullslast()).offset(skip).limit(limit).all()
-    return {"total": total, "entries": entries, "skip": skip, "limit": limit}
+    return {
+        "total": total,
+        "entries": [
+            {
+                "id": e.id,
+                "contact_id": e.contact_id,
+                "contact_name": e.contact.name if e.contact else None,
+                "method": e.method,
+                "subject": e.subject,
+                "content": e.content,
+                "sent_at": e.sent_at.isoformat() if e.sent_at else None,
+                "response_status": e.response_status,
+                "created_at": e.created_at.isoformat() if e.created_at else None,
+            }
+            for e in entries
+        ],
+        "skip": skip,
+        "limit": limit,
+    }
 
 
 @router.post("", status_code=201)
@@ -54,6 +76,18 @@ def create_outreach(body: OutreachCreate, db: Session = Depends(get_db)):
         response_status=body.response_status,
     )
     db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return entry
+
+
+@router.patch("/{outreach_id}")
+def update_outreach_status(outreach_id: int, body: OutreachStatusUpdate, db: Session = Depends(get_db)):
+    """Update response status of an outreach entry."""
+    entry = db.query(OutreachLog).filter(OutreachLog.id == outreach_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Outreach entry not found")
+    entry.response_status = body.response_status
     db.commit()
     db.refresh(entry)
     return entry

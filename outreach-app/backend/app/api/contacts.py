@@ -1,10 +1,18 @@
 """Contacts API endpoints."""
 from fastapi import APIRouter, Depends, Query, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Contact
+
+
+class ContactUpdate(BaseModel):
+    bio: str | None = None
+    relationship_stage: str | None = Field(None, max_length=50)
+    mission_alignment: int | None = Field(None, ge=1, le=10)
+    primary_interests: str | None = None
 
 router = APIRouter()
 
@@ -48,4 +56,23 @@ def get_contact(contact_id: int, db: Session = Depends(get_db)):
     contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
+    return contact
+
+
+@router.patch("/{contact_id}")
+def update_contact(contact_id: int, body: ContactUpdate, db: Session = Depends(get_db)):
+    """Update contact fields (bio, relationship stage, mission alignment)."""
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    if body.bio is not None:
+        contact.bio = body.bio
+    if body.relationship_stage is not None:
+        contact.relationship_stage = body.relationship_stage
+    if body.mission_alignment is not None:
+        contact.mission_alignment = body.mission_alignment
+    if body.primary_interests is not None:
+        contact.primary_interests = body.primary_interests
+    db.commit()
+    db.refresh(contact)
     return contact

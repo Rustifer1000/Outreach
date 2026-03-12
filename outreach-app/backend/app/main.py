@@ -4,7 +4,7 @@ Solomon Outreach API - FastAPI application entry point.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import contacts, mentions, outreach
+from app.api import analytics, contacts, digest, enrichment, mentions, network, notes, outreach, settings_api, templates
 from app.database import engine
 from app.models import Base
 
@@ -27,6 +27,13 @@ app.add_middleware(
 app.include_router(contacts.router, prefix="/api/contacts", tags=["contacts"])
 app.include_router(mentions.router, prefix="/api/mentions", tags=["mentions"])
 app.include_router(outreach.router, prefix="/api/outreach", tags=["outreach"])
+app.include_router(notes.router, prefix="/api/notes", tags=["notes"])
+app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
+app.include_router(network.router, prefix="/api/network", tags=["network"])
+app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
+app.include_router(enrichment.router, prefix="/api/enrichment", tags=["enrichment"])
+app.include_router(digest.router, prefix="/api/digest", tags=["digest"])
+app.include_router(settings_api.router, prefix="/api/settings", tags=["settings"])
 
 
 @app.get("/")

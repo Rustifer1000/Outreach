@@ -1,4 +1,4 @@
-"""SQLAlchemy models for Phase 1 data model."""
+"""SQLAlchemy models."""
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float, func
 from sqlalchemy.orm import relationship
 
@@ -16,13 +16,19 @@ class Contact(Base):
     subcategory = Column(String(255), nullable=True)
     role_org = Column(Text, nullable=True)
     connection_to_solomon = Column(Text, nullable=True)
-    primary_interests = Column(Text, nullable=True)  # For future enrichment
+    primary_interests = Column(Text, nullable=True)
+    bio = Column(Text, nullable=True)
+    relationship_stage = Column(String(50), nullable=True, default="cold")  # cold, warm, engaged, partner
+    mission_alignment = Column(Integer, nullable=True)  # 1-10
+    enrichment_status = Column(String(50), nullable=True)  # pending, enriched, failed
+    enriched_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     mentions = relationship("Mention", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     outreach_log = relationship("OutreachLog", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     contact_info = relationship("ContactInfo", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
+    notes = relationship("Note", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
 
 
 class ContactInfo(Base):
@@ -70,3 +76,45 @@ class OutreachLog(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     contact = relationship("Contact", back_populates="outreach_log")
+
+
+class Note(Base):
+    """Conversation note for a contact."""
+    __tablename__ = "notes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
+    note_text = Column(Text, nullable=False)
+    channel = Column(String(50), nullable=True)  # email, linkedin, phone, meeting, etc.
+    note_date = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    contact = relationship("Contact", back_populates="notes")
+
+
+class Template(Base):
+    """Message template for outreach."""
+    __tablename__ = "templates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    category = Column(String(255), nullable=True)  # ai_safety, philanthropy, general, etc.
+    subject = Column(String(500), nullable=True)
+    body = Column(Text, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class Interconnection(Base):
+    """Connection between two contacts."""
+    __tablename__ = "interconnections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contact_a_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
+    contact_b_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
+    connection_type = Column(String(100), nullable=False)  # shared_org, coauthor, panel, advisor, etc.
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    contact_a = relationship("Contact", foreign_keys=[contact_a_id])
+    contact_b = relationship("Contact", foreign_keys=[contact_b_id])
