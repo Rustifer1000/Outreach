@@ -58,6 +58,7 @@ def list_mentions(
             "contact_id": m.contact_id,
             "contact_name": m.contact.name if m.contact else None,
             "source_type": m.source_type,
+            "source_name": m.source_name,
             "source_url": m.source_url,
             "title": m.title,
             "snippet": m.snippet,
@@ -69,6 +70,27 @@ def list_mentions(
 
 
 _fetch_status: dict = {"running": False, "progress": "", "added": 0, "total_contacts": 0, "processed": 0, "error": None}
+
+
+def _extract_mention_snippet(text: str, name: str, window: int = 200) -> str | None:
+    """Extract a snippet centered around the first occurrence of name in text."""
+    if not text:
+        return None
+    lower = text.lower()
+    # Try full name first, then last name
+    parts = name.split()
+    for needle in [name.lower()] + ([parts[-1].lower()] if len(parts) > 1 else []):
+        pos = lower.find(needle)
+        if pos != -1:
+            start = max(0, pos - window // 2)
+            end = min(len(text), pos + len(needle) + window // 2)
+            snippet = text[start:end].strip()
+            if start > 0:
+                snippet = "..." + snippet
+            if end < len(text):
+                snippet = snippet + "..."
+            return snippet
+    return None
 
 
 def _fetch_newsapi(api_key: str, name: str, days: int) -> list[dict]:
@@ -90,16 +112,28 @@ def _fetch_newsapi(api_key: str, name: str, days: int) -> list[dict]:
     except Exception:
         return []
 
-    return [
-        {
+    results = []
+    for a in data.get("articles", []):
+        if not a.get("url") or not a.get("title"):
+            continue
+        # Build a mention-focused snippet from the article content
+        content = a.get("content") or ""
+        description = a.get("description") or ""
+        mention_snippet = (
+            _extract_mention_snippet(content, name)
+            or _extract_mention_snippet(description, name)
+            or description[:300]
+            or content[:300]
+        )
+        source = a.get("source") or {}
+        results.append({
             "source_url": a.get("url"),
+            "source_name": source.get("name"),
             "title": a.get("title"),
-            "snippet": a.get("description") or a.get("content", "")[:500],
+            "snippet": mention_snippet,
             "published_at": a.get("publishedAt"),
-        }
-        for a in data.get("articles", [])
-        if a.get("url") and a.get("title")
-    ]
+        })
+    return results
 
 
 def _run_fetch(
@@ -158,6 +192,7 @@ def _run_fetch(
                 db.add(Mention(
                     contact_id=contact.id,
                     source_type="news",
+                    source_name=a.get("source_name"),
                     source_url=a["source_url"],
                     title=a["title"],
                     snippet=a["snippet"],

@@ -6,6 +6,7 @@ interface Mention {
   contact_id: number
   contact_name?: string
   source_type: string
+  source_name: string | null
   source_url: string | null
   title: string | null
   snippet: string | null
@@ -20,6 +21,29 @@ interface FetchStatus {
   total_contacts: number
   processed: number
   error: string | null
+}
+
+function escapeHtml(str: string) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function highlightName(snippet: string, name: string): string {
+  const safe = escapeHtml(snippet)
+  if (!name) return safe
+  // Highlight full name, then last name
+  const names = [name]
+  const parts = name.split(' ')
+  if (parts.length > 1) names.push(parts[parts.length - 1])
+  let result = safe
+  for (const n of names) {
+    const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const re = new RegExp(`(${escaped})`, 'gi')
+    if (re.test(result)) {
+      result = result.replace(re, '<mark class="bg-yellow-200 rounded px-0.5">$1</mark>')
+      break
+    }
+  }
+  return result
 }
 
 export default function Mentions() {
@@ -204,42 +228,56 @@ export default function Mentions() {
           <ul className="divide-y divide-slate-200">
             {mentions.map((m) => (
               <li key={m.id} className="px-6 py-4">
-                <div className="flex items-start justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <Link
-                        to={`/contacts/${m.contact_id}`}
-                        className="font-medium text-slate-800 hover:text-slate-600"
-                      >
-                        {m.contact_name || `Contact #${m.contact_id}`}
-                      </Link>
-                      <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
-                        {m.source_type}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-slate-700">
-                      {m.title || 'Untitled'}
-                    </p>
-                    {m.snippet && (
-                      <p className="mt-1 text-sm text-slate-500 line-clamp-2">{m.snippet}</p>
-                    )}
-                    <p className="mt-1 text-xs text-slate-400">
-                      {m.published_at
-                        ? new Date(m.published_at).toLocaleDateString()
-                        : 'Unknown date'}
-                    </p>
-                  </div>
-                  {m.source_url && /^https?:\/\//i.test(m.source_url) && (
+                {/* Row 1: Contact name + media badge + date */}
+                <div className="flex items-center gap-2">
+                  <Link
+                    to={`/contacts/${m.contact_id}`}
+                    className="font-medium text-slate-800 hover:text-slate-600"
+                  >
+                    {m.contact_name || `Contact #${m.contact_id}`}
+                  </Link>
+                  {m.source_name && (
+                    <span className="rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                      {m.source_name}
+                    </span>
+                  )}
+                  {!m.source_name && (
+                    <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                      {m.source_type}
+                    </span>
+                  )}
+                  <span className="text-xs text-slate-400">
+                    {m.published_at
+                      ? new Date(m.published_at).toLocaleDateString()
+                      : 'Unknown date'}
+                  </span>
+                </div>
+
+                {/* Row 2: Headline as link to source */}
+                <p className="mt-1 text-sm font-semibold text-slate-700">
+                  {m.source_url && /^https?:\/\//i.test(m.source_url) ? (
                     <a
                       href={m.source_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="ml-4 shrink-0 text-sm text-blue-600 hover:underline"
+                      className="hover:text-blue-600 hover:underline"
                     >
-                      View source
+                      {m.title || 'Untitled'}
                     </a>
+                  ) : (
+                    m.title || 'Untitled'
                   )}
-                </div>
+                </p>
+
+                {/* Row 3: Mention excerpt with contact name highlighted */}
+                {m.snippet && (
+                  <p
+                    className="mt-1.5 rounded bg-slate-50 px-3 py-2 text-sm text-slate-600 line-clamp-3"
+                    dangerouslySetInnerHTML={{
+                      __html: highlightName(m.snippet, m.contact_name || ''),
+                    }}
+                  />
+                )}
               </li>
             ))}
           </ul>

@@ -52,6 +52,7 @@ class Mention(Base):
     id = Column(Integer, primary_key=True, index=True)
     contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
     source_type = Column(String(50), nullable=False)  # news, podcast, etc.
+    source_name = Column(String(255), nullable=True)  # e.g. "NYTimes", "BBC News"
     source_url = Column(String(1000), nullable=True)
     title = Column(String(500), nullable=True)
     snippet = Column(Text, nullable=True)
