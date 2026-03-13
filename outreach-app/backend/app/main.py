@@ -1,6 +1,8 @@
 """
 Solomon Outreach API - FastAPI application entry point.
 """
+import logging
+from sqlalchemy import inspect, text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,7 +10,23 @@ from app.api import analytics, contacts, digest, enrichment, mentions, network, 
 from app.database import engine
 from app.models import Base
 
+logger = logging.getLogger(__name__)
+
 Base.metadata.create_all(bind=engine)
+
+# Add any missing columns to existing tables (lightweight auto-migration)
+inspector = inspect(engine)
+for table_name, table in Base.metadata.tables.items():
+    if table_name in inspector.get_table_names():
+        existing_cols = {col["name"] for col in inspector.get_columns(table_name)}
+        for column in table.columns:
+            if column.name not in existing_cols:
+                col_type = column.type.compile(engine.dialect)
+                with engine.begin() as conn:
+                    conn.execute(text(
+                        f'ALTER TABLE {table_name} ADD COLUMN {column.name} {col_type}'
+                    ))
+                logger.info(f"Added missing column {table_name}.{column.name}")
 
 app = FastAPI(
     title="Solomon Outreach API",
