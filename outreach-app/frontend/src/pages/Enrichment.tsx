@@ -55,7 +55,7 @@ export default function Enrichment() {
 
   const triggerEnrichment = () => {
     fetch('/api/enrichment/run', { method: 'POST' })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(`Server error (${r.status})`); return r.json() })
       .then((data) => {
         if (data.status === 'already_running') {
           setStatus({ running: true, progress: data.progress, enriched: 0, total_contacts: 0, processed: 0, error: null })

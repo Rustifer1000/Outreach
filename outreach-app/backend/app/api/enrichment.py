@@ -136,7 +136,7 @@ def trigger_enrichment(
 @router.get("/status")
 def enrichment_status():
     """Check enrichment progress."""
-    return _enrichment_status
+    return dict(_enrichment_status)
 
 
 @router.get("/summary")

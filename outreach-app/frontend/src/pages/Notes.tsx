@@ -73,9 +73,10 @@ export default function Notes() {
   }
 
   const deleteNote = (id: number) => {
+    if (!confirm('Delete this note?')) return
     fetch(`/api/notes/${id}`, { method: 'DELETE' })
-      .then((r) => { if (r.ok) loadNotes() })
-      .catch(() => {})
+      .then((r) => { if (r.ok) loadNotes(); else setError(`Delete failed (${r.status})`) })
+      .catch((err) => setError(err.message))
   }
 
   const totalPages = Math.ceil(total / limit)

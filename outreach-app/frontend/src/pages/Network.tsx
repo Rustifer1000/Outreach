@@ -90,7 +90,10 @@ export default function Network() {
   }
 
   const deleteConnection = (id: number) => {
-    fetch(`/api/network/${id}`, { method: 'DELETE' }).then((r) => { if (r.ok) loadConnections() })
+    if (!confirm('Remove this connection?')) return
+    fetch(`/api/network/${id}`, { method: 'DELETE' })
+      .then((r) => { if (r.ok) loadConnections(); else setError(`Delete failed (${r.status})`) })
+      .catch((err) => setError(err.message))
   }
 
   const findWarmIntros = () => {

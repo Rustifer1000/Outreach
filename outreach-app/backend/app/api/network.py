@@ -103,10 +103,16 @@ def find_warm_intros(contact_id: int, db: Session = Depends(get_db)):
         .all()
     )
 
+    # Batch-load all connected contacts to avoid N+1 queries
+    intro_ids = set()
+    for c in conns:
+        intro_ids.add(c.contact_b_id if c.contact_a_id == contact_id else c.contact_a_id)
+    contacts_map = {ct.id: ct for ct in db.query(Contact).filter(Contact.id.in_(intro_ids)).all()} if intro_ids else {}
+
     intros = []
     for c in conns:
         intro_id = c.contact_b_id if c.contact_a_id == contact_id else c.contact_a_id
-        intro_contact = db.query(Contact).filter(Contact.id == intro_id).first()
+        intro_contact = contacts_map.get(intro_id)
         if intro_contact:
             intros.append({
                 "intro_contact_id": intro_contact.id,

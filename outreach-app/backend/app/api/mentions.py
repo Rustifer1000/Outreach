@@ -192,7 +192,7 @@ def trigger_fetch(
 @router.get("/fetch/status")
 def fetch_status():
     """Check progress of the background mention fetch."""
-    return _fetch_status
+    return dict(_fetch_status)
 
 
 @router.get("/{mention_id}")

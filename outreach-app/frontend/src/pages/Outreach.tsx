@@ -101,8 +101,8 @@ export default function Outreach() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ response_status: status }),
     })
-      .then((r) => { if (r.ok) loadEntries() })
-      .catch(() => {})
+      .then((r) => { if (r.ok) loadEntries(); else setError(`Status update failed (${r.status})`) })
+      .catch((err) => setError(err.message))
   }
 
   const totalPages = Math.ceil(total / limit)

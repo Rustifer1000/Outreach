@@ -43,14 +43,21 @@ export default function Analytics() {
   const [lag, setLag] = useState<LagData | null>(null)
   const [activity, setActivity] = useState<ActivityWeek[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    const safeFetch = (url: string) =>
+      fetch(url).then((r) => {
+        if (!r.ok) throw new Error(`${url} returned ${r.status}`)
+        return r.json()
+      })
+
     Promise.all([
-      fetch('/api/analytics/funnel').then((r) => r.json()),
-      fetch('/api/analytics/conversion').then((r) => r.json()),
-      fetch('/api/analytics/channel-effectiveness').then((r) => r.json()),
-      fetch('/api/analytics/mention-lag').then((r) => r.json()),
-      fetch('/api/analytics/activity?days=90').then((r) => r.json()),
+      safeFetch('/api/analytics/funnel'),
+      safeFetch('/api/analytics/conversion'),
+      safeFetch('/api/analytics/channel-effectiveness'),
+      safeFetch('/api/analytics/mention-lag'),
+      safeFetch('/api/analytics/activity?days=90'),
     ])
       .then(([f, conv, ch, l, act]) => {
         setFunnel(f)
@@ -59,10 +66,12 @@ export default function Analytics() {
         setLag(l)
         setActivity(act.timeline || [])
       })
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
 
   if (loading) return <p className="text-slate-500">Loading analytics...</p>
+  if (error) return <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
 
   const stageLabels = ['cold', 'warm', 'engaged', 'partner']
   const stageColors: Record<string, string> = { cold: 'bg-slate-400', warm: 'bg-yellow-400', engaged: 'bg-blue-500', partner: 'bg-green-500' }

@@ -123,7 +123,7 @@ export default function Rotation() {
     })
     activeBatchRef.current = batch
     fetch(`/api/mentions/fetch?${params}`, { method: 'POST' })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(`Server error (${r.status})`); return r.json() })
       .then((data) => {
         if (data.status === 'already_running') {
           setFetchStatus({

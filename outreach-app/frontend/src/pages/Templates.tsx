@@ -67,7 +67,10 @@ export default function Templates() {
   }
 
   const deleteTemplate = (id: number) => {
-    fetch(`/api/templates/${id}`, { method: 'DELETE' }).then((r) => { if (r.ok) loadTemplates() })
+    if (!confirm('Delete this template?')) return
+    fetch(`/api/templates/${id}`, { method: 'DELETE' })
+      .then((r) => { if (r.ok) loadTemplates(); else setError(`Delete failed (${r.status})`) })
+      .catch((err) => setError(err.message))
   }
 
   const insertPlaceholder = (ph: string) => {

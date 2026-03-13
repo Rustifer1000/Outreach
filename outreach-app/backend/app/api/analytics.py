@@ -106,7 +106,11 @@ def mention_to_contact_lag(
 
     lags.sort()
     avg = round(sum(lags) / len(lags), 1)
-    median = round(lags[len(lags) // 2], 1)
+    n = len(lags)
+    if n % 2 == 1:
+        median = round(lags[n // 2], 1)
+    else:
+        median = round((lags[n // 2 - 1] + lags[n // 2]) / 2, 1)
     within_48h = round(sum(1 for l in lags if l <= 2) / len(lags) * 100, 1)
     return {
         "average_lag_days": avg,
@@ -145,29 +149,27 @@ def activity_over_time(
 ):
     """Get mention and outreach counts per week."""
     cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=days)
-    mentions = (
-        db.query(Mention)
-        .filter(Mention.created_at >= cutoff)
+    mention_dates = (
+        db.query(Mention.created_at)
+        .filter(Mention.created_at >= cutoff, Mention.created_at.isnot(None))
         .all()
     )
-    outreaches = (
-        db.query(OutreachLog)
-        .filter(OutreachLog.created_at >= cutoff)
+    outreach_dates = (
+        db.query(OutreachLog.created_at)
+        .filter(OutreachLog.created_at >= cutoff, OutreachLog.created_at.isnot(None))
         .all()
     )
 
     # Group by ISO week
     weeks: dict[str, dict] = {}
-    for m in mentions:
-        week = m.created_at.strftime("%Y-W%W") if m.created_at else None
-        if week:
-            weeks.setdefault(week, {"mentions": 0, "outreaches": 0})
-            weeks[week]["mentions"] += 1
-    for o in outreaches:
-        week = o.created_at.strftime("%Y-W%W") if o.created_at else None
-        if week:
-            weeks.setdefault(week, {"mentions": 0, "outreaches": 0})
-            weeks[week]["outreaches"] += 1
+    for (dt,) in mention_dates:
+        week = dt.strftime("%Y-W%W")
+        weeks.setdefault(week, {"mentions": 0, "outreaches": 0})
+        weeks[week]["mentions"] += 1
+    for (dt,) in outreach_dates:
+        week = dt.strftime("%Y-W%W")
+        weeks.setdefault(week, {"mentions": 0, "outreaches": 0})
+        weeks[week]["outreaches"] += 1
 
     timeline = [{"week": w, **data} for w, data in sorted(weeks.items())]
     return {"timeline": timeline}

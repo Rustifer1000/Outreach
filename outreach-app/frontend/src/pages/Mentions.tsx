@@ -87,7 +87,7 @@ export default function Mentions() {
     const params = new URLSearchParams({ days: String(fetchDays) })
     if (fetchLimit) params.set('limit', fetchLimit)
     fetch(`/api/mentions/fetch?${params}`, { method: 'POST' })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(`Server error (${r.status})`); return r.json() })
       .then((data) => {
         if (data.status === 'already_running') {
           setFetchStatus({ running: true, progress: data.progress, added: 0, total_contacts: 0, processed: 0, error: null })
