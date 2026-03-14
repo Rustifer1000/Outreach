@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 Base.metadata.create_all(bind=engine)
 
+# TODO(production): Replace this auto-migration with Alembic. This approach has race
+# conditions with multiple workers and no rollback/history. Fine for single-worker SQLite dev.
 # Add any missing columns to existing tables (lightweight auto-migration)
 inspector = inspect(engine)
 for table_name, table in Base.metadata.tables.items():
