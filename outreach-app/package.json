@@ -6,7 +6,7 @@
     "start": "concurrently --names backend,frontend --prefix-colors blue,green \"npm run start:backend\" \"npm run start:frontend\"",
     "start:backend": "cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
     "start:frontend": "cd frontend && npm run dev",
-    "install:all": "cd frontend && npm install"
+    "install:all": "npm install && cd frontend && npm install"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

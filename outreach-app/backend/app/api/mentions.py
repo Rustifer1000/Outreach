@@ -1,5 +1,5 @@
 """Mentions API endpoints."""
-import os
+import asyncio
 from datetime import UTC, datetime, timedelta
 
 import httpx
@@ -136,7 +136,7 @@ def _fetch_newsapi(api_key: str, name: str, days: int) -> list[dict]:
     return results
 
 
-def _run_fetch(
+async def _run_fetch(
     contact_limit: int | None,
     days: int,
     max_per_contact: int,
@@ -173,6 +173,8 @@ def _run_fetch(
             _fetch_status["progress"] = f"Processing {contact.name} ({i+1}/{len(contacts)})"
 
             articles = _fetch_newsapi(api_key, contact.name, days)
+            if i > 0:
+                await asyncio.sleep(1.0)  # Rate-limit: 1 second between NewsAPI calls
             for a in articles[:max_per]:
                 if not a.get("source_url"):
                     continue

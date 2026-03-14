@@ -79,4 +79,4 @@ outreach-app/
 2. **Outreach log form** — Add POST endpoint and UI to log outreach
 3. **Contact info display** — Show email, LinkedIn when enriched (Phase 2)
 
-See `IMPLEMENTATION_PLAN.md` in the repo root for the full roadmap.
+See the Next Steps above for the current roadmap.
