@@ -21,6 +21,14 @@ _job_results: dict[str, dict | None] = {
     "media": None,
 }
 
+# Fetch-mentions progress state
+_fetch_status: dict = {"status": "idle", "started_at": None, "completed_at": None, "mentions_added": None, "message": "No fetch has run yet."}
+
+
+def get_fetch_status() -> dict:
+    with _job_results_lock:
+        return dict(_fetch_status)
+
 
 def _run_discover_from_mentions():
     db = SessionLocal()
@@ -41,11 +49,63 @@ def _run_discover_via_search(contact_id: int, max_pairs: int = 20):
         db.close()
 
 
+def _run_fetch_mentions_tracked():
+    """Wrapper around run_fetch_mentions that tracks progress in _fetch_status."""
+    from datetime import UTC, datetime
+    import subprocess, sys
+    from pathlib import Path
+
+    with _job_results_lock:
+        _fetch_status.update({"status": "running", "started_at": datetime.now(UTC).isoformat(), "completed_at": None, "mentions_added": None, "message": "Fetch in progress..."})
+
+    try:
+        base = Path(__file__).resolve().parent.parent.parent.parent  # outreach-app/
+        script = base / "scripts" / "fetch_mentions.py"
+        result = subprocess.run(
+            [sys.executable, str(script), "--limit", "50", "--days", "3", "--max-per-contact", "2"],
+            cwd=str(base),
+            env={**__import__("os").environ, "PYTHONPATH": str(base / "backend")},
+            capture_output=True,
+            text=True,
+            timeout=600,
+        )
+        # Parse "Added N new mentions." from stdout
+        added = None
+        for line in (result.stdout or "").splitlines():
+            if line.startswith("Done. Added "):
+                try:
+                    added = int(line.split("Added ")[1].split(" ")[0])
+                except (IndexError, ValueError):
+                    pass
+        # Run post-fetch jobs (connection discovery + scoring)
+        from app.database import SessionLocal
+        from app.discovery import discover_from_mentions
+        from app.scoring import score_all_mentions
+        db = SessionLocal()
+        try:
+            discover_from_mentions(db)
+            score_all_mentions(db)
+        finally:
+            db.close()
+
+        with _job_results_lock:
+            _fetch_status.update({
+                "status": "complete",
+                "completed_at": datetime.now(UTC).isoformat(),
+                "mentions_added": added,
+                "message": f"Done. {added} new mentions added." if added is not None else "Done.",
+            })
+    except Exception as e:
+        from datetime import UTC, datetime
+        with _job_results_lock:
+            _fetch_status.update({"status": "error", "completed_at": datetime.now(UTC).isoformat(), "message": str(e)})
+
+
 @router.post("/fetch-mentions")
 async def trigger_fetch_mentions(background_tasks: BackgroundTasks):
     """Trigger mention fetch now (runs in background)."""
-    background_tasks.add_task(run_fetch_mentions)
-    return {"status": "started", "message": "Fetching mentions in background. Check dashboard in a few minutes."}
+    background_tasks.add_task(_run_fetch_mentions_tracked)
+    return {"status": "started", "message": "Fetching mentions in background. Check /api/mentions/fetch/status for progress."}
 
 
 @router.post("/discover-connections-from-mentions")

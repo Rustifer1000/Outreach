@@ -61,41 +61,40 @@ export default function Dashboard() {
     }
   }, [])
 
+  const [fetchMessage, setFetchMessage] = useState<string | null>(null)
+
   const handleRefresh = () => {
     setRefreshing(true)
+    setFetchMessage('Starting fetch...')
     if (pollIntervalRef.current) {
       clearInterval(pollIntervalRef.current)
       pollIntervalRef.current = null
     }
-    const beforeCount = mentions.length
     apiFetch('/api/jobs/fetch-mentions', { method: 'POST' })
       .then(() => {
-        let attempts = 0
         pollIntervalRef.current = setInterval(() => {
-          attempts++
-          apiFetch<{ mentions: Mention[] }>('/api/mentions?days=7&limit=20')
-            .then((data) => {
-              const newMentions = data.mentions || []
-              setMentions(newMentions)
-              if (newMentions.length !== beforeCount || attempts >= 6) {
+          apiFetch<{ status: string; message: string; mentions_added: number | null }>('/api/mentions/fetch/status')
+            .then((s) => {
+              setFetchMessage(s.message)
+              if (s.status === 'complete' || s.status === 'error') {
                 if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
                 pollIntervalRef.current = null
                 setRefreshing(false)
+                loadMentions()
+                loadHotLeads()
               }
             })
-            .catch((err) => {
-              if (attempts >= 6) {
-                if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
-                pollIntervalRef.current = null
-                setRefreshing(false)
-                setError(`Polling failed: ${err.message}`)
-              }
+            .catch(() => {
+              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+              pollIntervalRef.current = null
+              setRefreshing(false)
             })
-        }, 10000)
+        }, 5000)
       })
       .catch((err) => {
         setError(`Refresh failed: ${err.message}`)
         setRefreshing(false)
+        setFetchMessage(null)
       })
   }
 
@@ -204,8 +203,9 @@ export default function Dashboard() {
             disabled={refreshing}
             className="rounded-md bg-slate-600 px-4 py-2 text-white hover:bg-slate-500 disabled:opacity-50"
           >
-            {refreshing ? 'Fetching... (updates every 10s)' : 'Refresh mentions now'}
+            {refreshing ? 'Fetching...' : 'Refresh mentions now'}
           </button>
+          {fetchMessage && <span className="text-sm text-slate-500">{fetchMessage}</span>}
           <Link
             to="/contacts"
             className="rounded-md bg-slate-800 px-4 py-2 text-white hover:bg-slate-700"

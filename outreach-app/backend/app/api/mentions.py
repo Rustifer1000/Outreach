@@ -10,6 +10,13 @@ from app.models import Mention
 router = APIRouter()
 
 
+@router.get("/fetch/status")
+def get_fetch_status():
+    """Return the status of the current or last mention fetch job."""
+    from app.api.jobs import get_fetch_status as _get
+    return _get()
+
+
 @router.get("")
 def list_mentions(
     days: int = Query(7, ge=1, le=90, description="Mentions from last N days"),
