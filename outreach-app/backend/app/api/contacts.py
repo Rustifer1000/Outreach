@@ -223,6 +223,48 @@ def get_mention_rotation(db: Session = Depends(get_db)):
     }
 
 
+# --- Add contacts by name -------------------------------------------------
+
+class AddContactsBody(BaseModel):
+    names: str  # Comma-separated names, or a single name
+
+
+@router.post("")
+def add_contacts(body: AddContactsBody, db: Session = Depends(get_db)):
+    """Add one or more contacts by name. Accepts comma-separated names.
+    Skips duplicates (case-insensitive). Auto-increments list_number."""
+    raw_names = [n.strip() for n in body.names.split(",") if n.strip()]
+    if not raw_names:
+        raise HTTPException(status_code=400, detail="No names provided.")
+
+    existing_names = {c.name.lower() for c in db.query(Contact.name).all()}
+    max_list_number = db.query(Contact.list_number).order_by(Contact.list_number.desc()).first()
+    next_number = (max_list_number[0] or 0) + 1 if max_list_number else 1
+
+    added = []
+    skipped = []
+    for name in raw_names:
+        if name.lower() in existing_names:
+            skipped.append(name)
+            continue
+        contact = Contact(
+            name=name,
+            list_number=next_number,
+            relationship_stage="Cold",
+        )
+        db.add(contact)
+        existing_names.add(name.lower())
+        added.append(name)
+        next_number += 1
+
+    db.commit()
+    return {
+        "added": added,
+        "skipped": skipped,
+        "message": f"Added {len(added)} contact(s). Skipped {len(skipped)} duplicate(s).",
+    }
+
+
 # --- CSV Import -----------------------------------------------------------
 
 # Maps CSV column names to ContactInfo.type values

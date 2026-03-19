@@ -136,6 +136,28 @@ export default function Contacts() {
       })
   }
 
+  const [addNames, setAddNames] = useState('')
+  const [addingContacts, setAddingContacts] = useState(false)
+  const [addResult, setAddResult] = useState<string | null>(null)
+
+  const handleAddContacts = () => {
+    if (!addNames.trim()) return
+    setAddingContacts(true)
+    setAddResult(null)
+    apiFetch<{ added: string[]; skipped: string[]; message: string }>('/api/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ names: addNames }),
+    })
+      .then((d) => {
+        setAddResult(d.message)
+        setAddNames('')
+        loadContacts()
+      })
+      .catch((err) => setAddResult(`Failed: ${err.message}`))
+      .finally(() => setAddingContacts(false))
+  }
+
   const handleImportCSV = () => fileInputRef.current?.click()
 
   const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,6 +203,26 @@ export default function Contacts() {
           {error}
         </div>
       )}
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <input
+          type="text"
+          placeholder="Add contacts by name (comma-separated)..."
+          value={addNames}
+          onChange={(e) => setAddNames(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleAddContacts() }}
+          className="w-full max-w-md rounded-md border border-slate-300 px-4 py-2 text-sm focus:border-slate-500 focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={handleAddContacts}
+          disabled={addingContacts || !addNames.trim()}
+          className="rounded-md bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 disabled:opacity-50"
+        >
+          {addingContacts ? 'Adding...' : 'Add'}
+        </button>
+        {addResult && <span className="text-sm text-slate-600">{addResult}</span>}
+      </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <input
