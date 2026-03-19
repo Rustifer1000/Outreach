@@ -17,7 +17,9 @@ class Contact(Base):
     subcategory = Column(String(255), nullable=True)
     role_org = Column(Text, nullable=True)
     connection_to_solomon = Column(Text, nullable=True)
-    primary_interests = Column(Text, nullable=True)  # For future enrichment
+    primary_interests = Column(Text, nullable=True)
+    bio = Column(Text, nullable=True)  # Free-text biography
+    enrichment_status = Column(String(20), default="pending")  # pending, enriched, failed
     relationship_stage = Column(String(50), nullable=True)  # Cold, Warm, Engaged, Partner-Advocate
     mission_alignment = Column(Float, nullable=True)  # 1-10 score; auto-set from category, user-overridable
     in_mention_rotation = Column(Integer, default=0)  # 1 = include in daily mention fetch (tagged core group)

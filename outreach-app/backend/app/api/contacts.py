@@ -393,6 +393,8 @@ def get_contact(contact_id: int, db: Session = Depends(get_db)):
         "role_org": contact.role_org,
         "connection_to_solomon": contact.connection_to_solomon,
         "primary_interests": contact.primary_interests,
+        "bio": contact.bio,
+        "enrichment_status": contact.enrichment_status or "pending",
         "relationship_stage": contact.relationship_stage,
         "mission_alignment": contact.mission_alignment,
         "in_mention_rotation": bool(contact.in_mention_rotation),
@@ -640,6 +642,8 @@ def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
         role_org=contact.role_org,
     )
     if not result:
+        contact.enrichment_status = "failed"
+        db.commit()
         return {"found": False, "message": "No email found (check role_org has recognizable org)."}
 
     # Add email to contact_info
@@ -664,6 +668,7 @@ def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
             )
             db.add(li_info)
 
+    contact.enrichment_status = "enriched"
     db.commit()
     db.refresh(info)
     return {
@@ -712,8 +717,7 @@ def enrich_bio(contact_id: int, db: Session = Depends(get_db)):
     except BioGenerationError as exc:
         return {"generated": False, "message": str(exc)}
 
-    # Store in primary_interests field (used for bio/interests)
-    contact.primary_interests = bio
+    contact.bio = bio
     db.commit()
     return {"generated": True, "bio": bio}
 

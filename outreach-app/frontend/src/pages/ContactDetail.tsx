@@ -22,6 +22,8 @@ interface Contact {
   role_org: string | null
   connection_to_solomon: string | null
   primary_interests: string | null
+  bio: string | null
+  enrichment_status?: string | null
   relationship_stage?: string | null
   mission_alignment?: number | null
   tags?: string[]
@@ -551,10 +553,12 @@ export default function ContactDetail() {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-slate-800">Bio / Interests</h3>
             <button type="button" onClick={handleEnrichBio} disabled={enrichingBio} className="rounded border border-blue-400 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50">
-              {enrichingBio ? 'Generating...' : contact.primary_interests ? 'Regenerate bio' : 'Generate bio (AI)'}
+              {enrichingBio ? 'Generating...' : (contact.bio || contact.primary_interests) ? 'Regenerate bio' : 'Generate bio (AI)'}
             </button>
           </div>
-          {contact.primary_interests ? (
+          {contact.bio ? (
+            <p className="mt-2 text-slate-600">{contact.bio}</p>
+          ) : contact.primary_interests ? (
             <p className="mt-2 text-slate-600">{contact.primary_interests}</p>
           ) : (
             <p className="mt-2 text-sm text-slate-400">No bio yet. Click &quot;Generate bio&quot; to create one from mentions and role info.</p>
