@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     listennotes_api_key: str | None = None  # Podcast search (Listen Notes)
     youtube_api_key: str | None = None  # YouTube Data API v3
     serpapi_key: str | None = None  # SerpApi (speech/presentation search)
+    serper_api_key: str | None = None  # Serper.dev (LinkedIn post search via Google)
 
     # LLM
     anthropic_model: str = "claude-haiku-4-5-20251001"

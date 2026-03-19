@@ -72,6 +72,45 @@ def fetch_newsapi(api_key: str, name: str, days: int) -> list[dict]:
     ]
 
 
+def fetch_serper_linkedin(api_key: str, name: str, days: int) -> list[dict]:
+    """Fetch LinkedIn posts via Serper.dev Google search."""
+    import httpx
+
+    from_date = (datetime.now(UTC) - timedelta(days=days)).strftime("%Y-%m-%d")
+    try:
+        with httpx.Client(timeout=30) as client:
+            r = client.post(
+                "https://google.serper.dev/search",
+                headers={"X-API-KEY": api_key, "Content-Type": "application/json"},
+                json={
+                    "q": f'site:linkedin.com/posts "{name}"',
+                    "num": 5,
+                    "tbs": f"cdr:1,cd_min:{from_date}",
+                },
+            )
+            r.raise_for_status()
+            data = r.json()
+    except Exception as e:
+        print(f"  Serper error for '{name}': {e}")
+        return []
+
+    results = []
+    for item in data.get("organic", []):
+        url = item.get("link")
+        title = item.get("title")
+        snippet = item.get("snippet", "")
+        if not url or "linkedin.com/posts" not in url:
+            continue
+        results.append({
+            "source_url": url,
+            "title": title or f"LinkedIn post — {name}",
+            "snippet": snippet,
+            "published_at": None,  # Serper doesn't reliably return dates
+            "source_name": f"LinkedIn — {name}",
+        })
+    return results
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", type=str, default="sqlite:///./backend/outreach.db")
@@ -91,10 +130,14 @@ def main():
             break
 
     api_key = os.environ.get("NEWSAPI_KEY")
-    if not api_key:
-        print("No NEWSAPI_KEY in .env. Add to outreach-app/backend/.env")
-        print("Get a free key at https://newsapi.org/register")
+    serper_key = os.environ.get("SERPER_API_KEY")
+    if not api_key and not serper_key:
+        print("No NEWSAPI_KEY or SERPER_API_KEY in .env — nothing to fetch.")
         return 1
+    if not api_key:
+        print("No NEWSAPI_KEY — skipping news fetch.")
+    if not serper_key:
+        print("No SERPER_API_KEY — skipping LinkedIn fetch.")
 
     engine = create_engine(args.db, connect_args={"check_same_thread": False})
     Session = sessionmaker(bind=engine)
@@ -130,37 +173,58 @@ def main():
 
         added = 0
         for i, contact in enumerate(contacts):
-            articles = fetch_newsapi(api_key, contact.name, args.days)
-            for a in articles[:max_per]:  # Only take first 1-2 (most recent)
-                raw_url = a.get("source_url")
-                norm_url = _normalize_url(raw_url)
-                if not norm_url:
-                    continue
-                if (contact.id, norm_url) in seen_urls:
-                    continue
-                seen_urls.add((contact.id, norm_url))
+            contact_added = 0
 
-                pub = None
-                if a.get("published_at"):
-                    try:
-                        pub = datetime.fromisoformat(a["published_at"].replace("Z", "+00:00"))
-                    except ValueError:
-                        pass
+            # News via NewsAPI
+            if api_key:
+                articles = fetch_newsapi(api_key, contact.name, args.days)
+                for a in articles[:max_per]:
+                    raw_url = a.get("source_url")
+                    norm_url = _normalize_url(raw_url)
+                    if not norm_url or (contact.id, norm_url) in seen_urls:
+                        continue
+                    seen_urls.add((contact.id, norm_url))
+                    pub = None
+                    if a.get("published_at"):
+                        try:
+                            pub = datetime.fromisoformat(a["published_at"].replace("Z", "+00:00"))
+                        except ValueError:
+                            pass
+                    session.add(Mention(
+                        contact_id=contact.id,
+                        source_type="news",
+                        source_url=raw_url,
+                        title=a["title"],
+                        snippet=a["snippet"],
+                        published_at=pub,
+                    ))
+                    added += 1
+                    contact_added += 1
+                time.sleep(args.delay)
 
-                mention = Mention(
-                    contact_id=contact.id,
-                    source_type="news",
-                    source_url=raw_url,  # Keep original for working links
-                    title=a["title"],
-                    snippet=a["snippet"],
-                    published_at=pub,
-                )
-                session.add(mention)
-                added += 1
+            # LinkedIn posts via Serper.dev
+            if serper_key:
+                posts = fetch_serper_linkedin(serper_key, contact.name, args.days)
+                for p in posts[:max_per]:
+                    raw_url = p.get("source_url")
+                    norm_url = _normalize_url(raw_url)
+                    if not norm_url or (contact.id, norm_url) in seen_urls:
+                        continue
+                    seen_urls.add((contact.id, norm_url))
+                    session.add(Mention(
+                        contact_id=contact.id,
+                        source_type="linkedin",
+                        source_url=raw_url,
+                        title=p["title"],
+                        snippet=p["snippet"],
+                        published_at=None,
+                    ))
+                    added += 1
+                    contact_added += 1
+                time.sleep(args.delay)
 
-            if articles:
-                print(f"  [{i+1}/{len(contacts)}] {contact.name}: +{len(articles)} articles")
-            time.sleep(args.delay)
+            if contact_added:
+                print(f"  [{i+1}/{len(contacts)}] {contact.name}: +{contact_added} mentions")
 
         session.commit()
         print(f"Done. Added {added} new mentions.")
