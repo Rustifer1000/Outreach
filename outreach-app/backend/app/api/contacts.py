@@ -198,6 +198,13 @@ class RotationSetBody(BaseModel):
     contact_ids: list[int]
 
 
+@router.get("/categories")
+def list_categories(db: Session = Depends(get_db)):
+    """Return distinct contact categories sorted alphabetically."""
+    rows = db.query(Contact.category).filter(Contact.category.isnot(None)).distinct().order_by(Contact.category).all()
+    return {"categories": [r[0] for r in rows if r[0]]}
+
+
 @router.put("/rotation")
 def set_mention_rotation(body: RotationSetBody, db: Session = Depends(get_db)):
     """Set the daily mention rotation: only these contact IDs will be included in the next mention fetch. Clears others."""

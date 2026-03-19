@@ -26,6 +26,8 @@ export default function Contacts() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [rotationOnly, setRotationOnly] = useState(false)
+  const [category, setCategory] = useState('')
+  const [categories, setCategories] = useState<string[]>([])
   const [togglingId, setTogglingId] = useState<number | null>(null)
   const [bulkEnriching, setBulkEnriching] = useState(false)
   const [enrichStatus, setEnrichStatus] = useState<string | null>(null)
@@ -58,10 +60,17 @@ export default function Contacts() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [search])
 
+  useEffect(() => {
+    apiFetch<{ categories: string[] }>('/api/contacts/categories')
+      .then((d) => setCategories(d.categories || []))
+      .catch(() => {})
+  }, [])
+
   const loadContacts = () => {
     const params = new URLSearchParams({ limit: '100' })
     if (debouncedSearch) params.set('q', debouncedSearch)
     if (rotationOnly) params.set('in_rotation', '1')
+    if (category) params.set('category', category)
     return apiFetch<{ contacts: Contact[]; total: number }>(`/api/contacts?${params}`)
       .then((data) => {
         setContacts(data.contacts || [])
@@ -74,7 +83,7 @@ export default function Contacts() {
   useEffect(() => {
     setLoading(true)
     loadContacts().finally(() => setLoading(false))
-  }, [debouncedSearch, rotationOnly])
+  }, [debouncedSearch, rotationOnly, category])
 
   const toggleRotation = (c: Contact) => {
     setTogglingId(c.id)
@@ -232,6 +241,16 @@ export default function Contacts() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full max-w-md rounded-md border border-slate-300 px-4 py-2 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
         />
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+        >
+          <option value="">All categories</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>{c.replace(/^Category \d+: /, '')}</option>
+          ))}
+        </select>
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <input
             type="checkbox"
