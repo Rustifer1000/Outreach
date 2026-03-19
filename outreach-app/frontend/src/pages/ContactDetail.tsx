@@ -229,7 +229,10 @@ export default function ContactDetail() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ dismissed: true, reason: 'not this person' }),
     })
-      .then(() => setMentions((prev) => prev.filter((m) => m.id !== mentionId)))
+      .then(() => {
+        setMentions((prev) => prev.filter((m) => m.id !== mentionId))
+        setDraftModal((prev) => (prev?.mentionId === mentionId ? null : prev))
+      })
       .catch((err) => setError(`Failed to dismiss mention: ${err.message}`))
   }
 

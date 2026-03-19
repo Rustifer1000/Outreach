@@ -230,6 +230,14 @@ def get_mention_rotation(db: Session = Depends(get_db)):
     }
 
 
+# --- Tags preset (must appear before /{contact_id} to avoid route shadowing) ---
+
+@router.get("/tags/preset")
+def get_preset_tags():
+    """Return the list of preset tag options."""
+    return {"tags": PRESET_TAGS}
+
+
 # --- Add contacts by name -------------------------------------------------
 
 class AddContactsBody(BaseModel):
@@ -285,7 +293,7 @@ _CSV_COLUMN_TYPE_MAP = {
 
 
 @router.post("/import-csv")
-def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Import contacts and contact info from a CSV file.
 
     CSV columns: name, email, linkedin, x, phone, other
@@ -641,6 +649,9 @@ def enrich_contact(contact_id: int, db: Session = Depends(get_db)):
     # Skip if already has email
     existing_emails = {ci.value.lower() for ci in (contact.contact_info or []) if ci.type == "email"}
     if existing_emails:
+        if contact.enrichment_status != "enriched":
+            contact.enrichment_status = "enriched"
+            db.commit()
         return {"found": False, "message": "Contact already has email(s).", "emails": list(existing_emails)}
 
     result = enrich_contact_email(
@@ -730,12 +741,6 @@ def enrich_bio(contact_id: int, db: Session = Depends(get_db)):
 
 
 # --- Tags ---
-
-@router.get("/tags/preset")
-def get_preset_tags():
-    """Return the list of preset tag options."""
-    return {"tags": PRESET_TAGS}
-
 
 @router.get("/{contact_id}/tags")
 def list_tags(contact_id: int, db: Session = Depends(get_db)):

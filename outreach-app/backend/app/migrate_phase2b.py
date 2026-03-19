@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
 from sqlalchemy import text
 from app.database import engine
-from app.models import Base, Note, ContactConnection  # noqa: F401 - register models
+from app.models import Base, Note, ContactConnection, ReplyDraft  # noqa: F401 - register models
 
 
 def run():
