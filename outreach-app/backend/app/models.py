@@ -26,6 +26,7 @@ class Contact(Base):
 
     tags = relationship("ContactTag", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     mentions = relationship("Mention", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
+    reply_drafts = relationship("ReplyDraft", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     outreach_log = relationship("OutreachLog", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     contact_info = relationship("ContactInfo", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
     notes = relationship("Note", back_populates="contact", cascade="all, delete-orphan", passive_deletes=True)
@@ -67,6 +68,7 @@ class Mention(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     contact = relationship("Contact", back_populates="mentions")
+    reply_drafts = relationship("ReplyDraft", back_populates="mention", cascade="all, delete-orphan", passive_deletes=True)
 
 
 class OutreachLog(Base):
@@ -112,6 +114,22 @@ class ContactConnection(Base):
 
     contact = relationship("Contact", back_populates="connections", foreign_keys=[contact_id])
     other_contact = relationship("Contact", foreign_keys=[other_contact_id])
+
+
+class ReplyDraft(Base):
+    """AI-generated LinkedIn reply draft for a mention."""
+    __tablename__ = "reply_drafts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
+    mention_id = Column(Integer, ForeignKey("mentions.id", ondelete="CASCADE"), nullable=False, index=True)
+    reply_text = Column(Text, nullable=False)
+    themes = Column(Text, nullable=True)  # JSON array of theme strings
+    status = Column(String(20), default="draft")  # draft, used, archived
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+
+    contact = relationship("Contact", back_populates="reply_drafts")
+    mention = relationship("Mention", back_populates="reply_drafts")
 
 
 class ContactTag(Base):

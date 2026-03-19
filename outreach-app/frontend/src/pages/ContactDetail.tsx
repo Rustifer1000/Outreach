@@ -47,6 +47,16 @@ interface Mention {
   published_at: string | null
 }
 
+interface ReplyDraft {
+  id: number
+  reply_text: string
+  themes: string[]
+  status: string
+  mention_id: number
+  contact_id: number
+  created_at: string | null
+}
+
 interface OutreachEntry {
   id: number
   method: string
@@ -110,6 +120,7 @@ export default function ContactDetail() {
   const [customTag, setCustomTag] = useState('')
   const [warmIntros, setWarmIntros] = useState<WarmIntroPath[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [draftModal, setDraftModal] = useState<{ mentionId: number; draft: ReplyDraft | null; generating: boolean; editText: string } | null>(null)
   const mediaPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Cleanup polling on unmount
@@ -183,6 +194,38 @@ export default function ContactDetail() {
     apiFetch<{ mission_alignment: number }>(`/api/contacts/${id}/compute-alignment`, { method: 'POST' })
       .then((d) => setContact((c) => (c ? { ...c, mission_alignment: d.mission_alignment } : c)))
       .catch((err) => setError(`Failed to compute alignment: ${err.message}`))
+  }
+
+  const handleGenerateDraft = (mentionId: number) => {
+    setDraftModal({ mentionId, draft: null, generating: true, editText: '' })
+    apiFetch<ReplyDraft>('/api/reply-drafts/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mention_id: mentionId }),
+    })
+      .then((d) => setDraftModal({ mentionId, draft: d, generating: false, editText: d.reply_text }))
+      .catch((err) => {
+        setError(`Failed to generate draft: ${err.message}`)
+        setDraftModal(null)
+      })
+  }
+
+  const handleUpdateDraftStatus = (status: string) => {
+    if (!draftModal?.draft) return
+    apiFetch(`/api/reply-drafts/${draftModal.draft.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+      .then(() => setDraftModal((d) => d ? { ...d, draft: d.draft ? { ...d.draft, status } : null } : null))
+      .catch((err) => setError(`Failed to update draft: ${err.message}`))
+  }
+
+  const handleDeleteDraft = () => {
+    if (!draftModal?.draft) return
+    apiFetch(`/api/reply-drafts/${draftModal.draft.id}`, { method: 'DELETE' })
+      .then(() => setDraftModal(null))
+      .catch((err) => setError(`Failed to delete draft: ${err.message}`))
   }
 
   const handleStageChange = (stage: string) => {
@@ -777,6 +820,11 @@ export default function ContactDetail() {
                 {m.source_url && (
                   <a href={m.source_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">View source</a>
                 )}
+                {m.source_type === 'linkedin' && (
+                  <button type="button" onClick={() => handleGenerateDraft(m.id)} className="mt-2 rounded border border-indigo-400 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100">
+                    Draft Reply
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -828,6 +876,61 @@ export default function ContactDetail() {
           </ul>
         )}
       </div>
+      {draftModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-800">LinkedIn Reply Draft</h2>
+              <button type="button" onClick={() => setDraftModal(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+
+            {draftModal.generating ? (
+              <p className="py-8 text-center text-slate-500">Generating draft via Claude...</p>
+            ) : (
+              <>
+                {draftModal.draft?.themes && draftModal.draft.themes.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-1">
+                    {draftModal.draft.themes.map((t) => (
+                      <span key={t} className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700">{t}</span>
+                    ))}
+                  </div>
+                )}
+                <textarea
+                  value={draftModal.editText}
+                  onChange={(e) => setDraftModal((d) => d ? { ...d, editText: e.target.value } : null)}
+                  rows={6}
+                  className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                />
+                {draftModal.draft && (
+                  <p className="mt-1 text-xs text-slate-400">
+                    Status: <span className="font-medium">{draftModal.draft.status}</span>
+                  </p>
+                )}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => copyToClipboard(draftModal.editText, 'draft')} className={`rounded border px-3 py-1.5 text-sm font-medium ${copiedIndex === 'draft' ? 'border-green-400 bg-green-50 text-green-700' : 'border-slate-400 bg-slate-50 text-slate-700 hover:bg-slate-100'}`}>
+                    {copiedIndex === 'draft' ? 'Copied!' : 'Copy to clipboard'}
+                  </button>
+                  {draftModal.draft && draftModal.draft.status !== 'used' && (
+                    <button type="button" onClick={() => handleUpdateDraftStatus('used')} className="rounded border border-green-500 bg-green-50 px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100">
+                      Mark as Used
+                    </button>
+                  )}
+                  {draftModal.draft && draftModal.draft.status !== 'archived' && (
+                    <button type="button" onClick={() => handleUpdateDraftStatus('archived')} className="rounded border border-amber-400 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 hover:bg-amber-100">
+                      Archive
+                    </button>
+                  )}
+                  {draftModal.draft && (
+                    <button type="button" onClick={handleDeleteDraft} className="rounded border border-red-400 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100">
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
