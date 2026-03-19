@@ -1,6 +1,7 @@
 """Mentions API endpoints."""
 from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, Depends, Query, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session, joinedload
 
@@ -38,7 +39,7 @@ def list_mentions(
         query = (
             db.query(Mention)
             .options(joinedload(Mention.contact))
-            .filter(date_filter, Mention.contact_id == contact_id)
+            .filter(date_filter, Mention.contact_id == contact_id, Mention.dismissed == 0)
             .order_by(Mention.published_at.desc().nullslast())
         )
         total = query.count()
@@ -49,7 +50,7 @@ def list_mentions(
             partition_by=Mention.contact_id,
             order_by=Mention.published_at.desc().nullslast(),
         ).label("rn")
-        subq = db.query(Mention, rn).filter(date_filter).subquery()
+        subq = db.query(Mention, rn).filter(date_filter, Mention.dismissed == 0).subquery()
         mention_alias = db.query(Mention).join(
             subq, Mention.id == subq.c.id
         ).filter(subq.c.rn <= max_per_contact)
@@ -79,6 +80,23 @@ def list_mentions(
             "relevance_score": m.relevance_score,
         })
     return {"total": total, "mentions": result, "skip": skip, "limit": limit}
+
+
+class DismissMentionRequest(BaseModel):
+    dismissed: bool
+    reason: str | None = None
+
+
+@router.patch("/{mention_id}")
+def update_mention(mention_id: int, req: DismissMentionRequest, db: Session = Depends(get_db)):
+    """Dismiss a mention as 'not this person' (or un-dismiss)."""
+    mention = db.query(Mention).filter(Mention.id == mention_id).first()
+    if not mention:
+        raise HTTPException(status_code=404, detail="Mention not found")
+    mention.dismissed = 1 if req.dismissed else 0
+    mention.dismissed_reason = req.reason if req.dismissed else None
+    db.commit()
+    return {"id": mention.id, "dismissed": bool(mention.dismissed), "dismissed_reason": mention.dismissed_reason}
 
 
 @router.get("/{mention_id}")

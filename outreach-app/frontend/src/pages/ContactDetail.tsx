@@ -221,6 +221,16 @@ export default function ContactDetail() {
       .catch((err) => setError(`Failed to update draft: ${err.message}`))
   }
 
+  const handleDismissMention = (mentionId: number) => {
+    apiFetch(`/api/mentions/${mentionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dismissed: true, reason: 'not this person' }),
+    })
+      .then(() => setMentions((prev) => prev.filter((m) => m.id !== mentionId)))
+      .catch((err) => setError(`Failed to dismiss mention: ${err.message}`))
+  }
+
   const handleDeleteDraft = () => {
     if (!draftModal?.draft) return
     apiFetch(`/api/reply-drafts/${draftModal.draft.id}`, { method: 'DELETE' })
@@ -820,11 +830,16 @@ export default function ContactDetail() {
                 {m.source_url && (
                   <a href={m.source_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">View source</a>
                 )}
-                {m.source_type === 'linkedin' && (
-                  <button type="button" onClick={() => handleGenerateDraft(m.id)} className="mt-2 rounded border border-indigo-400 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100">
-                    Draft Reply
+                <div className="mt-2 flex gap-2">
+                  {m.source_type === 'linkedin' && (
+                    <button type="button" onClick={() => handleGenerateDraft(m.id)} className="rounded border border-indigo-400 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100">
+                      Draft Reply
+                    </button>
+                  )}
+                  <button type="button" onClick={() => handleDismissMention(m.id)} className="rounded border border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600">
+                    Not this person
                   </button>
-                )}
+                </div>
               </li>
             ))}
           </ul>

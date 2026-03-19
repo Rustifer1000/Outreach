@@ -65,6 +65,8 @@ class Mention(Base):
     snippet = Column(Text, nullable=True)
     published_at = Column(DateTime, nullable=True, index=True)
     relevance_score = Column(Float, nullable=True)  # Phase 3
+    dismissed = Column(Integer, default=0)  # 1 = dismissed as "not this person"
+    dismissed_reason = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     contact = relationship("Contact", back_populates="mentions")
