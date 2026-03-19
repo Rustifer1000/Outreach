@@ -351,6 +351,51 @@ Open `http://localhost:5173` in your browser.
 | **Phase 6 (Bluesky)** | Re-enable Bluesky probe once auth flow is implemented |
 | **Phase 7 (Production)** | Migrate to PostgreSQL, Alembic migrations, cloud deployment |
 
+### Feature Backlog (Priority Order)
+
+**Outreach Intelligence**
+- Follow-up reminders — if outreach sent with no reply after N days (default 7), surface contact on dashboard with snooze option
+- Channel effectiveness — aggregate response rates by method (email, LinkedIn, etc.); display in Analytics
+- Send-time insights — track hour/day of outreach vs reply; surface best windows once data exists
+
+**Relationship Intelligence**
+- Decay alerts — flag contacts with no activity in 90+ days; show "Consider re-engaging" list on dashboard
+- Relationship health score — composite of recency, response rate, and stage; visible on contact card
+- Conversation summarization — LLM-assisted summary of long notes; extract action items
+
+**Analytics (deeper)**
+- Mention-to-contact lag — average days between first mention and first outreach; track trend over time
+- Pipeline value — count of "Engaged" or "Partner" contacts tagged with "Funding potential" or "Amplification potential"
+
+**Integrations**
+- Slack notifications — webhook alert on high-relevance mentions (score > 8) or hot leads
+- Calendar integration — "Add follow-up to calendar" from contact detail; detect meetings via OAuth
+- Additional media sources — podcast episodes (Listen Notes), YouTube talks, conference presentations (SerpApi)
+
+**Compliance**
+- Opt-out list — store opted-out contacts; check before any outreach action
+- Data retention — configurable retention period for mentions and notes
+- Audit log — record view, export, outreach, and delete actions with timestamp
+
+### Risk Mitigation
+
+| Risk | Mitigation |
+|------|------------|
+| API rate limits | Queue jobs; batch requests; cache enrichment results |
+| Name disambiguation | Manual "not this person" dismiss on mention cards; improve with feedback over time |
+| LLM costs | Make summarization and scoring optional; monitor token usage |
+| Scope creep | Implement features in priority order; defer integrations until core loop is proven |
+
+### Success Metrics
+
+| Metric | Target |
+|--------|--------|
+| Mention coverage | 95%+ of 300 names fetched per run |
+| Enrichment rate | 50%+ of contacts have email or LinkedIn URL |
+| Outreach velocity | 10+ first-contact outreaches per week |
+| Response rate | Track baseline; improve with templates and timing data |
+| Warm intro usage | 5+ warm intros facilitated per quarter |
+
 ---
 
 ## 12. Design Principles
