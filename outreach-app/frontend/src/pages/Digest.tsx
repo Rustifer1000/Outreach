@@ -35,6 +35,7 @@ interface DigestData {
   new_mentions: {
     total: number
     by_source_type: Record<string, number>
+    by_category: Record<string, number>
     contacts_mentioned: number
   }
   hot_leads: HotLead[]
@@ -207,6 +208,21 @@ export default function Digest() {
               </div>
             )}
           </div>
+
+          {/* By Category */}
+          {digest.new_mentions.total > 0 && Object.keys(digest.new_mentions.by_category).length > 0 && (
+            <div className="rounded-lg bg-white p-6 shadow">
+              <h2 className="mb-3 text-lg font-semibold text-slate-800">Mentions by Category</h2>
+              <div className="flex flex-wrap gap-3">
+                {Object.entries(digest.new_mentions.by_category).map(([cat, count]) => (
+                  <div key={cat} className="rounded-lg border border-slate-200 px-4 py-3">
+                    <p className="text-xl font-bold text-slate-800">{count}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{cat.replace(/^Category \d+: /, '')}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Hot Leads */}
           <div className="rounded-lg bg-white p-6 shadow">

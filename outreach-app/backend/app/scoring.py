@@ -266,6 +266,18 @@ def generate_daily_digest(db: Session, hours: int = 24) -> dict:
         by_source[m.source_type] = by_source.get(m.source_type, 0) + 1
         by_contact[m.contact_id] = by_contact.get(m.contact_id, 0) + 1
 
+    # Group by contact category
+    by_category: dict[str, int] = {}
+    if by_contact:
+        cat_map = {
+            c.id: (c.category or "Uncategorized")
+            for c in db.query(Contact).filter(Contact.id.in_(list(by_contact.keys()))).all()
+        }
+        for cid, count in by_contact.items():
+            cat = cat_map.get(cid, "Uncategorized")
+            by_category[cat] = by_category.get(cat, 0) + count
+    by_category = dict(sorted(by_category.items(), key=lambda x: x[1], reverse=True))
+
     # --- Hot leads ---
     hot_leads = get_hot_leads(db, days=7, limit=5)
 
@@ -362,6 +374,7 @@ def generate_daily_digest(db: Session, hours: int = 24) -> dict:
         "new_mentions": {
             "total": len(new_mentions),
             "by_source_type": by_source,
+            "by_category": by_category,
             "contacts_mentioned": len(by_contact),
         },
         "hot_leads": hot_leads,
